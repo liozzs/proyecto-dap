@@ -5,23 +5,71 @@
 RTC_DS3231 rtc;
 
 Planificador::Planificador(){
+  loadAlarms();
   setInitTime();
 };
 
 void Planificador::setAlarm(DateTime startTime, int interval, int quantity, int plateID)
 {    
-  PlateConfig config;
+  Alarm config;
 
   config.plateID = plateID;
   config.startTime = startTime;
   config.interval = interval;
   config.quantity = quantity;
   config.times = 0;
-
-  this->configDataList.Add(config);
+  config.valid = 100;
+  
+  //verifico si ya existe ese plateID para reemplazar la alarma o agregar nueva
+  int index = getIndexForPlateID(plateID);
+  if (index != -1) {
+    this->configDataList.Replace(index, config);
+    Log.Debug("Reemplazo alarma para plateID: %d, index: %d", plateID, index);
+  } else {
+    this->configDataList.Add(config);
+    this->storedAlarms = this->storedAlarms +  1;   
+    Log.Debug("Agregado de alarma para plateID: %d", plateID);
+  }
+  saveAlarms();
 }
 
-PlateConfig Planificador::getAlarm(int index){
+void Planificador::loadAlarms(){
+  //Cargar datos guardados
+  EEPROM.get(0, this->storedAlarms);
+  Log.Debug("Alarmas guardadas: %d\n", this->storedAlarms);
+  if (storedAlarms == 0) {
+    Log.Debug("No hay alarmas en guardadas en EEPROM\n");
+  } else {
+    for (int i = 0; i < this->storedAlarms; i++)
+      {
+        Alarm configData;
+        EEPROM.get(sizeof(int) +  sizeof(Alarm) * i, configData);
+        this->configDataList.Add(configData);
+        Log.Debug("EEPROM get config para plateID %d:\n", this->configDataList[i].plateID); 
+      }
+  } 
+}
+
+void Planificador::saveAlarms(){
+   //guardo la configuracion
+   EEPROM.put(0, this->storedAlarms);
+   Log.Debug("Guardando %d alarmas:\n", this->storedAlarms); 
+   for (int i = 0; i < this->configDataList.Count(); i++) {
+    EEPROM.put(sizeof(int) +  sizeof(Alarm) * i, this->configDataList[i]);
+    Log.Debug("EEPROM put config para plateID %d:\n", this->configDataList[i].plateID); 
+   }
+}
+
+
+int Planificador::getIndexForPlateID(int plateID) {
+  for (int i = 0; i < this->configDataList.Count(); i++) {
+    if (this->configDataList[i].plateID == plateID) 
+      return i;
+  }
+  return -1;
+}
+
+Alarm Planificador::getAlarm(int index){
   return this->configDataList[index];
 }
 
@@ -47,7 +95,7 @@ String Planificador::getTimeString(){
   return str;
 }
 
-String Planificador::getPlateConfigString(PlateConfig config){
+String Planificador::getAlarmString(Alarm config){
   DateTime t = config.startTime;
   
   String str = "\nPlateID: " + String(config.plateID) + '\n';
@@ -61,14 +109,6 @@ String Planificador::getPlateConfigString(PlateConfig config){
   return str;
 }
 
-void Planificador::loadAlarms(){
-  
-}
-
-void Planificador::saveAlarms(){
-  
-}
-
 bool Planificador::isDispenseTime(){
   DateTime nextDispense;
 
@@ -78,17 +118,23 @@ bool Planificador::isDispenseTime(){
 
   for (int i = 0; i < this->configDataList.Count(); i++)
   {
-    PlateConfig config = this->configDataList[i];
-    Log.Debug("Verificando dispendio platoID: %d\n", config.plateID);
-    nextDispense = config.startTime + TimeSpan(config.times * config.interval);
-    TimeSpan diff = nextDispense - this->getTime();
-    int sec=abs(diff.seconds());
+    Alarm* config = &this->configDataList[i];
+    Log.Debug("Verificando dispendio platoID: %d, veces a dispensado: %d, cantidad: %d\n", config->plateID, config->times, config->quantity);
+    if (config->times < config->quantity) {
+      nextDispense = config->startTime + TimeSpan(config->times * config->interval);
+      TimeSpan diff = nextDispense - this->getTime();
+      Log.Debug("Horario: dia:%d, hora:%d, min:%d, seg:%d", diff.days(), diff.hours(), diff.minutes(), diff.seconds());
+      long sec=abs(diff.days()*86400 + diff.hours()*3600 + diff.minutes()*60 + diff.seconds());
 
-    if (sec <= UMBRAL_ALARMA_SEG) {
-      Log.Debug("Dispendio SI: segundos de diferencia: %d\n", sec);
-      return true;
+      if (sec <= UMBRAL_ALARMA_SEG) {
+        Log.Debug("Dispendio SI: segundos de diferencia: %l\n", sec);
+        config->times++;
+        return true;
+      }
+      Log.Debug("Dispendio NO: segundos de diferencia: %l\n", sec);
+    } else {
+      Log.Debug("Plan terminado\n");
     }
-    Log.Debug("Dispendio NO: segundos de diferencia: %d\n", sec);
   }
   return false;
 }

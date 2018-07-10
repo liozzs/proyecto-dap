@@ -26,6 +26,7 @@ extern Planificador* planif;
 const char *testGetTimeStringToken       = "getTimeString";       
 const char *testSetAlarmToken            = "setAlarm";                
 const char *testGetAlarmToken            = "getAlarm";     
+const char *testClearEEPROMToken         = "clearEEPROM";
 
 
 /*************************************************************************************************************
@@ -120,11 +121,19 @@ void testSetAlarm() {
 String testGetAlarm() {    
   int index = readNumber();
   
-  PlateConfig config;
+  Alarm config;
 
   config = planif->getAlarm(index);
-  return planif->getPlateConfigString(config);                     
+  return planif->getAlarmString(config);                     
 
+}
+
+void testClearEEPROM() {
+  for (int i = 0 ; i < EEPROM.length() ; i++) {
+    EEPROM.write(i, 0);
+  }
+  planif->storedAlarms = 0;
+  planif->configDataList = NULL;
 }
 
 /****************************************************
@@ -152,6 +161,12 @@ bool executeTestCommand(char * commandLine) {
     String result;
     result = testGetAlarm();
     print2(">    La alarma es = ", result);
+    return true;
+  } 
+
+  if (strcmp(ptrToCommandName, testClearEEPROMToken) == 0) {
+    testClearEEPROM();
+    print2(">    EEPROM borrada = ", "");
     return true;
   } 
   

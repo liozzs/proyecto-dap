@@ -5,35 +5,38 @@
 #include "RTClib.h"
 #include "ListLib.h"
 #include <Logging.h>
+#include <EEPROM.h>
 #include <Servo.h>
 
 
-struct PlateConfig {
-  int plateID;
+struct Alarm {
+  byte plateID;
   DateTime startTime; //fecha y hora de inicio
   int interval; //invervalo de toma
-  int quantity; //cantidad a tomar
-  int times; //total de veces que se dispenso
+  byte quantity; //cantidad a tomar
+  byte times; //total de veces que se dispenso
+  byte valid; //data valida
 };
 
 class Planificador{
 
    protected:
 
-    int modoOperacion;
+   
     void setInitTime();
-    List<PlateConfig> configDataList;
     
+    int getIndexForPlateID(int plateID);
     
    
    public: 
     Planificador();
-    
+    int storedAlarms = 0;
+     List<Alarm> configDataList;
     DateTime getTime();
     String getTimeString();
     void setAlarm(DateTime startTime, int period, int times, int plateID);
-    PlateConfig getAlarm(int index);
-    String getPlateConfigString(PlateConfig config);
+    Alarm getAlarm(int index);
+    String getAlarmString(Alarm config);
     void loadAlarms();
     void saveAlarms();
     bool isDispenseTime();
