@@ -21,7 +21,7 @@ extern Planificador* planif;
 #define print2(x,y) (Serial.print(x), Serial.println(y))
 
 /*************************************************************************************************************
-     your Command Names Here
+     Agregar aca los metodos/comandos que se quieren testear
 */
 const char *testGetTimeStringToken       = "getTimeString";       
 const char *testSetAlarmToken            = "setAlarm";                
@@ -94,7 +94,7 @@ nullCommand(char * ptrToCommandName) {
 }
 
 /****************************************************
-   Nuestras funciones de testing
+   Nuestras funciones de testing / Agregar aca la implementacion de los nombres definidos arriba
 */
 
 String testGetTimeString() {                                      
