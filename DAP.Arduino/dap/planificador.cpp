@@ -1,6 +1,5 @@
 #include "arduino.h"
 #include "planificador.h"
-// Date and time functions using a DS3231 RTC connected via I2C and Wire lib
 
 RTC_DS3231 rtc;
 
@@ -10,7 +9,8 @@ Planificador::Planificador(){
 };
 
 /*
- * Agrega una alarma (configuracion de dispendio) asociada a un plateID
+ * Agrega una alarma (configuracion de dispendio) asociada a un plateID. Si ya existe el plateID, reemplaza la configuracion, de lo contrario agrega una
+ * nueva configuracion.
  */
 void Planificador::setAlarm(DateTime startTime, int interval, int quantity, int plateID)
 {    
@@ -138,21 +138,18 @@ bool Planificador::isDispenseTime(){
   {
     Alarm* config = &this->configDataList[i];
     Log.Debug("Verificando dispendio platoID: %d, veces a dispensado: %d, cantidad: %d\n", config->plateID, config->times, config->quantity);
-    if (config->times < config->quantity) {
-      nextDispense = config->startTime + TimeSpan(config->times * config->interval);
-      TimeSpan diff = nextDispense - this->getTime();
-      Log.Debug("Horario: dia:%d, hora:%d, min:%d, seg:%d", diff.days(), diff.hours(), diff.minutes(), diff.seconds());
-      long sec=abs(diff.days()*86400 + diff.hours()*3600 + diff.minutes()*60 + diff.seconds());
 
-      if (sec <= UMBRAL_ALARMA_SEG) {
-        Log.Debug("Dispendio SI: segundos de diferencia: %l\n", sec);
-        config->times++;
-        return true;
-      }
-      Log.Debug("Dispendio NO: segundos de diferencia: %l\n", sec);
-    } else {
-      Log.Debug("Plan terminado\n");
+    nextDispense = config->startTime + TimeSpan(config->times * config->interval);
+    TimeSpan diff = nextDispense - this->getTime();
+    Log.Debug("Horario: dia:%d, hora:%d, min:%d, seg:%d", diff.days(), diff.hours(), diff.minutes(), diff.seconds());
+    long sec=abs(diff.days()*86400 + diff.hours()*3600 + diff.minutes()*60 + diff.seconds());
+
+    if (sec <= UMBRAL_ALARMA_SEG) {
+      Log.Debug("Dispendio SI: segundos de diferencia: %l\n", sec);
+      config->times++;
+      return true;
     }
+    Log.Debug("Dispendio NO: segundos de diferencia: %l\n", sec);
   }
   return false;
 }
