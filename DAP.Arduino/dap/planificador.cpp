@@ -9,6 +9,9 @@ Planificador::Planificador(){
   setInitTime();
 };
 
+/*
+ * Agrega una alarma (configuracion de dispendio) asociada a un plateID
+ */
 void Planificador::setAlarm(DateTime startTime, int interval, int quantity, int plateID)
 {    
   Alarm config;
@@ -33,6 +36,9 @@ void Planificador::setAlarm(DateTime startTime, int interval, int quantity, int 
   saveAlarms();
 }
 
+/*
+ * Carga las configuraciones de alarma guardadas en la memoria EEPROM
+ */
 void Planificador::loadAlarms(){
   //Cargar datos guardados
   EEPROM.get(0, this->storedAlarms);
@@ -50,6 +56,9 @@ void Planificador::loadAlarms(){
   } 
 }
 
+/*
+ * Guarda las configuraciones de alarma en la memoria EEPROM
+ */
 void Planificador::saveAlarms(){
    //guardo la configuracion
    EEPROM.put(0, this->storedAlarms);
@@ -60,7 +69,9 @@ void Planificador::saveAlarms(){
    }
 }
 
-
+/*
+ * Retorna la posicion en la lista de configuraciones de alarma para un plateID determinado
+ */
 int Planificador::getIndexForPlateID(int plateID) {
   for (int i = 0; i < this->configDataList.Count(); i++) {
     if (this->configDataList[i].plateID == plateID) 
@@ -73,6 +84,9 @@ Alarm Planificador::getAlarm(int index){
   return this->configDataList[index];
 }
 
+/*
+ * Inicializa la hora del modulo RTC
+ */
 void Planificador::setInitTime() {
   if (! rtc.begin()) {
       Serial.println("Couldn't find RTC");
@@ -109,6 +123,10 @@ String Planificador::getAlarmString(Alarm config){
   return str;
 }
 
+/*
+ * Indica si hay que dispensar en este preciso momento al comaparar las alarmas de los platos con la hora actual del RTC
+ * (en proceso)
+ */
 bool Planificador::isDispenseTime(){
   DateTime nextDispense;
 
