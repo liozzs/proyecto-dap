@@ -5,7 +5,7 @@ RTC_DS3231 rtc;
 
 Planificador::Planificador(){
   loadAlarms();
-  setInitTime();
+  setInitTime(0);
 };
 
 /*
@@ -87,14 +87,16 @@ Alarm Planificador::getAlarm(int index){
 /*
  * Inicializa la hora del modulo RTC
  */
-void Planificador::setInitTime() {
+void Planificador::setInitTime(time_t initTime) {
   if (! rtc.begin()) {
       Serial.println("Couldn't find RTC");
   while (1);
   }
-
-  //TODO: Por ahora setea la hora inicial con la fecha de compilación.
-  rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  
+  if (initTime == 0)
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  else
+    rtc.adjust(DateTime(initTime));
 }
 
 DateTime Planificador::getTime(){
@@ -177,3 +179,44 @@ bool Planificador::isDispensed(int plateID){
   return digitalRead(pin);
       
 }
+
+//Devuelve unix time en horario local
+time_t Planificador::getLocalTime(time_t utc){
+  TimeChangeRule ART = { "ART", First, Sun, Jan, 0, -180 }; 
+  Timezone artTimezone(ART);
+  
+  return artTimezone.toLocal(utc);
+}
+char* string2char(String str){
+    if(str.length()!=0){
+        char *p = const_cast<char*>(str.c_str());
+        return p;
+    }
+}
+void Planificador::procesarAcciones()
+{
+  
+  //Procesa mensajes de WIFI / Dashboard
+  String str = readFromWIFI();
+  
+  //Log.Debug("Recibido de WIFI: %s\n", string2char(str));
+  
+  if (str != "" && !str.startsWith("debug:", 0)) {
+    StaticJsonBuffer<130> jsonBuffer;
+    JsonObject& root = jsonBuffer.parseObject(str);
+    if (!root.success()) {
+      Log.Debug("parseObject() failed");
+
+    }
+
+    if (root.containsKey("time")){
+      Log.Debug("Recibido time_t de wifi! %l", root["time"].as<time_t>());
+      this->setInitTime(root["time"].as<time_t>());
+    } 
+ }
+}
+
+
+
+
+

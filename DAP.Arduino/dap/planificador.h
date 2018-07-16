@@ -7,7 +7,9 @@
 #include <Logging.h>
 #include <EEPROM.h>
 #include <Servo.h>
-
+#include <Timezone.h> 
+#include "conectividad.h"
+#include <ArduinoJson.h>
 
 struct Alarm {
   byte plateID;
@@ -18,12 +20,12 @@ struct Alarm {
   byte valid; //data valida
 };
 
+
 class Planificador{
 
    protected:
 
-   
-    void setInitTime();
+    void setInitTime(time_t initTime);
     
     int getIndexForPlateID(int plateID);
     
@@ -41,6 +43,8 @@ class Planificador{
     void saveAlarms();
     bool isDispenseTime();
     void logEvento(String evento, String msg="");
+    time_t getLocalTime(time_t utc);
+    void procesarAcciones();
 
     //MOTOR
     void initServo(Servo servo, int plateID);
