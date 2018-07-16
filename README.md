@@ -5,6 +5,11 @@ Arduino:
   - https://github.com/mrRobot62/Arduino-logging-library
   - https://github.com/luisllamasbinaburo/Arduino-List
   - https://github.com/adafruit/RTClib
+  - https://github.com/bblanchon/ArduinoJson
+  - https://github.com/JChristensen/Timezone
+  - https://github.com/PaulStoffregen/Time
+  - https://github.com/tzapu/WiFiManager
+  - https://github.com/bportaluri/WiFiEsp
 
 - Conexiones:
   - Los pines están definidos en config.h
@@ -15,3 +20,4 @@ Arduino:
 - WiFi
   - Existe un .ino propio para el sketch principal (en otra carpeta) que corre sobre la placa ESP. Se compila aparte y se sube directo al ESP.
   - Se comunica via serial con la placa Arduino para intercambiar los mensajes.
+  
