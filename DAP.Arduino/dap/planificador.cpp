@@ -8,11 +8,16 @@ Planificador::Planificador(){
   setInitTime(0);
 };
 
+void Planificador::setAlarm(DateTime startTime, int interval, int quantity, int plateID)
+{    
+  this->setAlarm(startTime, interval, quantity, 1000, 1, "1111111", plateID);
+}
+
 /*
  * Agrega una alarma (configuracion de dispendio) asociada a un plateID. Si ya existe el plateID, reemplaza la configuracion, de lo contrario agrega una
  * nueva configuracion.
  */
-void Planificador::setAlarm(DateTime startTime, int interval, int quantity, int plateID)
+void Planificador::setAlarm(DateTime startTime, int interval, int quantity, int criticalStock, byte periodicity, char* days, int plateID)
 {    
   Alarm config;
 
@@ -20,9 +25,13 @@ void Planificador::setAlarm(DateTime startTime, int interval, int quantity, int 
   config.startTime = startTime;
   config.interval = interval;
   config.quantity = quantity;
+  config.criticalStock = criticalStock;
+  config.periodicity = periodicity; 
+  strcpy( config.days, days);
   config.times = 0;
   config.valid = 100;
-  
+
+  Log.Debug("seteando %d,%d,%d,%d, %s,%d\n", interval, quantity, criticalStock, periodicity, days, plateID);
   //verifico si ya existe ese plateID para reemplazar la alarma o agregar nueva
   int index = getIndexForPlateID(plateID);
   if (index != -1) {
@@ -56,6 +65,9 @@ void Planificador::loadAlarms(){
   } 
 }
 
+void Planificador::resetAlarms(){
+  this->configDataList.Clear();
+}
 /*
  * Guarda las configuraciones de alarma en la memoria EEPROM
  */
@@ -103,8 +115,7 @@ DateTime Planificador::getTime(){
   return rtc.now();
 }
 
-String Planificador::getTimeString(){
-  DateTime t = this->getTime();
+String Planificador::getTimeString(DateTime t){
   String str = String(t.year()) + '/' + t.month() + '/' + t.day() + ' ';
   str = str + t.hour() + ':' + t.minute() + ':' + t.second() + '\n';
 
@@ -141,14 +152,34 @@ bool Planificador::isDispenseTime(){
     Alarm* config = &this->configDataList[i];
     Log.Debug("Verificando dispendio platoID: %d, veces a dispensado: %d, cantidad: %d\n", config->plateID, config->times, config->quantity);
 
-    nextDispense = config->startTime + TimeSpan(config->times * config->interval);
+    //verificar si corresponde el dia
+    byte day = getTime().dayOfTheWeek() - 1;
+    if (day == -1) day = 6;
+
+    if (config->days[day] != '1') {
+       Log.Debug("Dispendio no configurado para este dia");
+       return false;
+    }
+
+    // Si es periodicidad diaria o semanal tiene un intervalo de toma
+    if (config->periodicity == PERIODICIDAD_DIARIA || config->periodicity == PERIODICIDAD_PERSONALIZADA ) {
+      nextDispense = config->startTime + TimeSpan(config->times * config->interval); 
+    // Si es semanal, existe un solo horario de toma
+    } else if (config->periodicity == PERIODICIDAD_SEMANAL) {
+      nextDispense = config->startTime + TimeSpan(config->times * 1,0,0,0); // intervalo seria 24 hs en segundos
+    } else {
+      Log.Debug("Configuracion de alarma incorrecta");
+      return false;
+    }
     TimeSpan diff = nextDispense - this->getTime();
-    Log.Debug("Horario: dia:%d, hora:%d, min:%d, seg:%d", diff.days(), diff.hours(), diff.minutes(), diff.seconds());
-    long sec=abs(diff.days()*86400 + diff.hours()*3600 + diff.minutes()*60 + diff.seconds());
+
+    Log.Debug("Horario: dia:%d, hora:%d, min:%d, seg:%d\n", diff.days(), diff.hours(), diff.minutes(), diff.seconds());
+    long sec=abs(diff.days()*86400L + diff.hours()*3600L + diff.minutes()*60L + diff.seconds());
 
     if (sec <= UMBRAL_ALARMA_SEG) {
       Log.Debug("Dispendio SI: segundos de diferencia: %l\n", sec);
       config->times++;
+      saveAlarms(); //guardar el cambio en times
       return true;
     }
     Log.Debug("Dispendio NO: segundos de diferencia: %l\n", sec);
@@ -193,10 +224,12 @@ char* string2char(String str){
         return p;
     }
 }
+
+//Procesar mensajes y acciones recibidas del server
 void Planificador::procesarAcciones()
 {
   
-  //Procesa mensajes de WIFI / Dashboard
+  //Lee mensajes de WIFI 
   String str = readFromWIFI();
   
   //Log.Debug("Recibido de WIFI: %s\n", string2char(str));
@@ -205,14 +238,15 @@ void Planificador::procesarAcciones()
     StaticJsonBuffer<130> jsonBuffer;
     JsonObject& root = jsonBuffer.parseObject(str);
     if (!root.success()) {
-      Log.Debug("parseObject() failed");
-
+      Log.Debug("Json parseObject() failed");
     }
 
     if (root.containsKey("time")){
       Log.Debug("Recibido time_t de wifi! %l", root["time"].as<time_t>());
       this->setInitTime(root["time"].as<time_t>());
     } 
+
+    
  }
 }
 

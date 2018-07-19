@@ -25,8 +25,9 @@ void loop() {
   //leer mensajes de control desde WiFi
   planif->procesarAcciones();
 
-  Serial.println(planif->getTimeString());
-  //planif->isDispenseTime();
+  Serial.println(planif->getTimeString(planif->getTime()));
+  
+  planif->isDispenseTime();
   delay(MAIN_LOOP_DELAY+1000);
 }
 

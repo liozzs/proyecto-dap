@@ -98,7 +98,7 @@ nullCommand(char * ptrToCommandName) {
 */
 
 String testGetTimeString() {                                      
-  return planif->getTimeString();
+  return planif->getTimeString(planif->getTime());
 }
 
 void testSetAlarm() {                            
@@ -133,7 +133,7 @@ void testClearEEPROM() {
     EEPROM.write(i, 0);
   }
   planif->storedAlarms = 0;
-  planif->configDataList = NULL;
+  planif->resetAlarms();
 }
 
 /****************************************************
