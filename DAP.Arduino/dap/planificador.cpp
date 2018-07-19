@@ -3,21 +3,46 @@
 
 RTC_DS3231 rtc;
 
+//variables globales necesarias para detectar el boton por interrupcion
+bool buttonReady = false; 
+bool buttonPressed = false; 
+
+/*
+ * Uso de interrupciones por grupo (50-53) para el boton, ya que no quedan pines libres de interrupcion (rtc, wifi y sensores)
+ * https://playground.arduino.cc/Main/PinChangeInterrupt
+ */
+void pciSetup(byte pin)
+{
+    *digitalPinToPCMSK(pin) |= bit (digitalPinToPCMSKbit(pin));  // enable pin
+    PCIFR  |= bit (digitalPinToPCICRbit(pin)); // clear any outstanding interrupt
+    PCICR  |= bit (digitalPinToPCICRbit(pin)); // enable interrupt for the group
+}
+
+ISR (PCINT0_vect) // handle pin change interrupt for D0 to D7 here
+{
+  if (buttonReady && digitalRead(PIN_BUTTON) == 0)
+    buttonPressed = true;
+    buttonReady = false;
+ }  
+
+
 Planificador::Planificador(){
+  //attachInterrupt(digitalPinToInterrupt(2), mostrar, RISING);
+  pciSetup(PIN_BUTTON);
   loadAlarms();
   setInitTime(0);
 };
 
 void Planificador::setAlarm(DateTime startTime, int interval, int quantity, int plateID)
 {    
-  this->setAlarm(startTime, interval, quantity, 1000, 1, "1111111", plateID);
+  this->setAlarm(startTime, interval, quantity, 1000, 0, "1111111", true, plateID);
 }
 
 /*
  * Agrega una alarma (configuracion de dispendio) asociada a un plateID. Si ya existe el plateID, reemplaza la configuracion, de lo contrario agrega una
  * nueva configuracion.
  */
-void Planificador::setAlarm(DateTime startTime, int interval, int quantity, int criticalStock, byte periodicity, char* days, int plateID)
+void Planificador::setAlarm(DateTime startTime, int interval, int quantity, int criticalStock, byte periodicity, char* days, bool block, int plateID)
 {    
   Alarm config;
 
@@ -28,6 +53,9 @@ void Planificador::setAlarm(DateTime startTime, int interval, int quantity, int 
   config.criticalStock = criticalStock;
   config.periodicity = periodicity; 
   strcpy( config.days, days);
+  config.block = block;
+  config.blocked = false;
+  config.waitingForButton = false;
   config.times = 0;
   config.valid = 100;
 
@@ -150,8 +178,26 @@ bool Planificador::isDispenseTime(){
   for (int i = 0; i < this->configDataList.Count(); i++)
   {
     Alarm* config = &this->configDataList[i];
+ 
     Log.Debug("Verificando dispendio platoID: %d, veces a dispensado: %d, cantidad: %d\n", config->plateID, config->times, config->quantity);
 
+    if (config->blocked == true) {
+      Log.Debug("Este plato se encuentra BLOQUEADO\n");
+      continue;
+    }
+
+    //verificar si existe dispendio pendiente - presionar boton
+    if (config->waitingForButton == true){
+      Log.Debug("Alarma %d esperando por boton\n", config->plateID);
+      if (isButtonPressed()){
+        Log.Debug("BOTON PRESIONADO\n");
+        config->times++;
+        config->waitingForButton = false;
+        saveAlarms();
+        buttonPressed = false;
+      }
+    }
+  
     //verificar si corresponde el dia
     byte day = getTime().dayOfTheWeek() - 1;
     if (day == -1) day = 6;
@@ -173,16 +219,29 @@ bool Planificador::isDispenseTime(){
     }
     TimeSpan diff = nextDispense - this->getTime();
 
-    Log.Debug("Horario: dia:%d, hora:%d, min:%d, seg:%d\n", diff.days(), diff.hours(), diff.minutes(), diff.seconds());
+    Log.Debug("Proximo dispendio: dia:%d, hora:%d, min:%d, seg:%d\n", diff.days(), diff.hours(), diff.minutes(), diff.seconds());
     long sec=abs(diff.days()*86400L + diff.hours()*3600L + diff.minutes()*60L + diff.seconds());
 
-    if (sec <= UMBRAL_ALARMA_SEG) {
+    if (sec <= UMBRAL_ALARMA_SEG && config->waitingForButton == false) {
       Log.Debug("Dispendio SI: segundos de diferencia: %l\n", sec);
-      config->times++;
+      buttonReady = true; //habilita el presionado del boton    
+      config->waitingForButton = true;
       saveAlarms(); //guardar el cambio en times
-      return true;
+      
+      //return true;
     }
-    Log.Debug("Dispendio NO: segundos de diferencia: %l\n", sec);
+    if (sec > UMBRAL_ALARMA_SEG && config->waitingForButton == true) {
+       config->waitingForButton = false;
+       if (config->block == true) {
+        config->blocked = true; // se bloquea
+       } else {
+        config->times++; // se reprograma 
+       }
+       
+       buttonReady = false; // se paso el tiempo de espera de presionado del boton
+       saveAlarms();
+    }
+
   }
   return false;
 }
@@ -201,7 +260,7 @@ void Planificador::stopPlate(Servo plate) {
 }
 
 bool Planificador::isButtonPressed(){
-  if (digitalRead(PIN_BUTTON) == 0)
+  if (buttonPressed == true)
     return true;
   return false;
 }
@@ -249,7 +308,6 @@ void Planificador::procesarAcciones()
     
  }
 }
-
 
 
 

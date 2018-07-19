@@ -15,15 +15,23 @@
 #define PERIODICIDAD_SEMANAL 1
 #define PERIODICIDAD_PERSONALIZADA 2
 
+#define BUTTON_THRESHOLD 10 //segundos a esperar para que se presione el boton que inicia el dispendio
+
+//ALARMA
+const int UMBRAL_ALARMA_SEG = 5; //umbral para determinar si es la hora actual coincide con alguna alarma
+
 struct Alarm {
   byte plateID;
   DateTime startTime; //fecha y hora de inicio
   int interval; //invervalo de toma
   byte quantity; //cantidad a tomar
-  byte times; //total de veces que se dispenso
+  byte times; //total de veces que se dispenso, para calcular el proximo dispendio
   int criticalStock; // stock critico
   byte periodicity; // enum Periodicidad
   char days[7] = "1111111"; //lun-dom dias a dispensar array con unos o ceros
+  bool block; // si block es true, se bloquea si no se reprograma
+  bool blocked; // indica que esta alarma/plato dispensador esta bloqueado
+  bool waitingForButton; // si tiene que dispensar y esta esperando el boton
   byte valid; //data valida
 };
 
@@ -39,13 +47,14 @@ class Planificador{
     time_t getLocalTime(time_t utc);
     void logEvento(String evento, String msg="");
    
+   
    public: 
     Planificador();
     int storedAlarms = 0;
     DateTime getTime();
     String getTimeString(DateTime t);
     void setAlarm(DateTime startTime, int interval, int quantity, int plateID);
-    void setAlarm(DateTime startTime, int interval, int quantity, int criticalStock, byte periodicity, char* days, int plateID);
+    void setAlarm(DateTime startTime, int interval, int quantity, int criticalStock, byte periodicity, char* days, bool block, int plateID);
     Alarm getAlarm(int index);
     String getAlarmString(Alarm config);
     void resetAlarms();

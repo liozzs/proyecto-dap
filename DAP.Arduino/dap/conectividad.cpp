@@ -19,7 +19,7 @@ String readFromWIFI(){
        msg_in_wifi += c;
       }
   }
-  Serial.println("readFromWiFI: " + String(msg_in_wifi));
+  //Serial.println("readFromWiFI: " + String(msg_in_wifi));
   // Serial.println("LENGTH:" + String(msg_in_wifi.length()));
    if (msg_in_wifi != "") {
   
