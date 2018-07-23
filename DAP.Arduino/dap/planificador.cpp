@@ -1,36 +1,21 @@
 #include "arduino.h"
 #include "planificador.h"
+#include "interrupcion.h"
 
 RTC_DS3231 rtc;
 
-//variables globales necesarias para detectar el boton por interrupcion
-bool buttonReady = false; 
-bool buttonPressed = false; 
-
-/*
- * Uso de interrupciones por grupo (50-53) para el boton, ya que no quedan pines libres de interrupcion (rtc, wifi y sensores)
- * https://playground.arduino.cc/Main/PinChangeInterrupt
- */
-void pciSetup(byte pin)
-{
-    *digitalPinToPCMSK(pin) |= bit (digitalPinToPCMSKbit(pin));  // enable pin
-    PCIFR  |= bit (digitalPinToPCICRbit(pin)); // clear any outstanding interrupt
-    PCICR  |= bit (digitalPinToPCICRbit(pin)); // enable interrupt for the group
-}
-
-ISR (PCINT0_vect) // handle pin change interrupt for D0 to D7 here
-{
-  if (buttonReady && digitalRead(PIN_BUTTON) == 0)
-    buttonPressed = true;
-    buttonReady = false;
- }  
-
-
 Planificador::Planificador(){
-  //attachInterrupt(digitalPinToInterrupt(2), mostrar, RISING);
   pciSetup(PIN_BUTTON);
+  for (int i=0; i < MAX_SUPPORTED_ALARMS; i++)
+     pciSetup(PIN_DISPENSE_SENSOR[i]);
+  
   loadAlarms();
   setInitTime(0);
+
+  //MOTOR
+  initServo();
+    
+  //
 };
 
 void Planificador::setAlarm(DateTime startTime, int interval, int quantity, int plateID)
@@ -57,6 +42,7 @@ void Planificador::setAlarm(DateTime startTime, int interval, int quantity, int 
   config.blocked = false;
   config.waitingForButton = false;
   config.times = 0;
+  config.movePlate = false;
   config.valid = 100;
 
   Log.Debug("seteando %d,%d,%d,%d, %s,%d\n", interval, quantity, criticalStock, periodicity, days, plateID);
@@ -103,6 +89,7 @@ void Planificador::saveAlarms(){
    //guardo la configuracion
    EEPROM.put(0, this->storedAlarms);
    Log.Debug("Guardando %d alarmas:\n", this->storedAlarms); 
+   
    for (int i = 0; i < this->configDataList.Count(); i++) {
     EEPROM.put(sizeof(int) +  sizeof(Alarm) * i, this->configDataList[i]);
     Log.Debug("EEPROM put config para plateID %d:\n", this->configDataList[i].plateID); 
@@ -145,7 +132,7 @@ DateTime Planificador::getTime(){
 
 String Planificador::getTimeString(DateTime t){
   String str = String(t.year()) + '/' + t.month() + '/' + t.day() + ' ';
-  str = str + t.hour() + ':' + t.minute() + ':' + t.second() + '\n';
+  str = str + t.hour() + ':' + t.minute() + ':' + t.second() ;
 
   return str;
 }
@@ -168,9 +155,8 @@ String Planificador::getAlarmString(Alarm config){
  * Indica si hay que dispensar en este preciso momento al comaparar las alarmas de los platos con la hora actual del RTC
  * (en proceso)
  */
-bool Planificador::isDispenseTime(){
-  DateTime nextDispense;
-
+bool Planificador::execute(){
+ 
   if (this->configDataList.Count() == 0) {
     Log.Debug("Verificando dispendio: No hay alarmas configuradas\n");
   }
@@ -193,42 +179,30 @@ bool Planificador::isDispenseTime(){
         Log.Debug("BOTON PRESIONADO\n");
         config->times++;
         config->waitingForButton = false;
+        config->movePlate = true;
         saveAlarms();
-        buttonPressed = false;
+        setButtonPressed(false);
+        continue;
       }
     }
-  
-    //verificar si corresponde el dia
-    byte day = getTime().dayOfTheWeek() - 1;
+
+    //verificar si corresponde el dia. Nosotros tomamos 1er dia de la semana el lunes.
+    int day = getTime().dayOfTheWeek() - 1;
     if (day == -1) day = 6;
 
     if (config->days[day] != '1') {
        Log.Debug("Dispendio no configurado para este dia");
-       return false;
+       continue;
     }
 
-    // Si es periodicidad diaria o semanal tiene un intervalo de toma
-    if (config->periodicity == PERIODICIDAD_DIARIA || config->periodicity == PERIODICIDAD_PERSONALIZADA ) {
-      nextDispense = config->startTime + TimeSpan(config->times * config->interval); 
-    // Si es semanal, existe un solo horario de toma
-    } else if (config->periodicity == PERIODICIDAD_SEMANAL) {
-      nextDispense = config->startTime + TimeSpan(config->times * 1,0,0,0); // intervalo seria 24 hs en segundos
-    } else {
-      Log.Debug("Configuracion de alarma incorrecta");
-      return false;
-    }
-    TimeSpan diff = nextDispense - this->getTime();
+    long sec = nextDispense(config);
 
-    Log.Debug("Proximo dispendio: dia:%d, hora:%d, min:%d, seg:%d\n", diff.days(), diff.hours(), diff.minutes(), diff.seconds());
-    long sec=abs(diff.days()*86400L + diff.hours()*3600L + diff.minutes()*60L + diff.seconds());
-
-    if (sec <= UMBRAL_ALARMA_SEG && config->waitingForButton == false) {
+    if (sec <= UMBRAL_ALARMA_SEG && config->waitingForButton == false && config->movePlate == false) {
       Log.Debug("Dispendio SI: segundos de diferencia: %l\n", sec);
-      buttonReady = true; //habilita el presionado del boton    
+      setButtonReady(true); //habilita el presionado del boton    
       config->waitingForButton = true;
-      saveAlarms(); //guardar el cambio en times
-      
-      //return true;
+      saveAlarms(); //guardar el cambio 
+
     }
     if (sec > UMBRAL_ALARMA_SEG && config->waitingForButton == true) {
        config->waitingForButton = false;
@@ -237,38 +211,80 @@ bool Planificador::isDispenseTime(){
        } else {
         config->times++; // se reprograma 
        }
-       
-       buttonReady = false; // se paso el tiempo de espera de presionado del boton
+       setButtonReady(false); // se paso el tiempo de espera de presionado del boton
        saveAlarms();
     }
 
   }
-  return false;
+}
+
+//Devuelve el tiempo en segundos para el proximo dispendio de la alarma 'config'
+long Planificador::nextDispense(Alarm* config) {
+  DateTime nextDispense;
+
+  // Si es periodicidad diaria o semanal tiene un intervalo de toma
+  if (config->periodicity == PERIODICIDAD_DIARIA || config->periodicity == PERIODICIDAD_PERSONALIZADA ) {
+    nextDispense = config->startTime + TimeSpan(config->times * config->interval); 
+  // Si es semanal, existe un solo horario de toma
+  } else if (config->periodicity == PERIODICIDAD_SEMANAL) {
+    nextDispense = config->startTime + TimeSpan(config->times * 1,0,0,0); // intervalo seria 1 dia
+  } else {
+    Log.Debug("Configuracion de alarma incorrecta");
+  }
+  TimeSpan diff = nextDispense - this->getTime();
+
+  Log.Debug("Proximo dispendio: dia:%d, hora:%d, min:%d, seg:%d\n", diff.days(), diff.hours(), diff.minutes(), diff.seconds());
+  long sec = diff.days()*86400L + diff.hours()*3600L + diff.minutes()*60L + diff.seconds();
+  
+  return sec;
+}
+
+//SECCION MANEJO MOTOR
+
+void Planificador::processPlates(){
+  for (int i = 0; i < this->configDataList.Count(); i++)
+  {
+    Alarm* config = &this->configDataList[i];
+
+    if (config->movePlate == true)
+      startPlate(plates[plateIDToIndex(config->plateID)]);
+
+  //Serial.println(sensorDetected);
+    if (getSensorDetected() != -1) {
+      stopPlate(plates[getSensorDetected()]);
+      setSensorDetected(-1);
+      config->movePlate = false;
+    }
+  }
+
+  
+}
+
+int Planificador::plateIDToIndex(int plateID) {
+  for (int i=0; i< MAX_SUPPORTED_ALARMS; i++) {
+    if (plateID == PLATE_IDS[i])
+      return i;
+  }
+  return -1;
 }
 
 
-//SECCION MANEJOR MOTOR
-void Planificador::initServo(Servo servo, int plateID){
-  servo.attach(PIN_PLATE_MOTOR[plateID]);
+void Planificador::initServo(){
+  for (int i=0; i< MAX_SUPPORTED_ALARMS; i++) 
+     plates[i].attach(PIN_PLATE_MOTOR[i]);
 }
 void Planificador::startPlate(Servo plate) {
-   plate.write(65);             
+
+    plate.write(180);
+    delay(20);
+    plate.writeMicroseconds(1500);
+    delay(90); 
 }
 
 void Planificador::stopPlate(Servo plate) {
   plate.write(90);                
 }
 
-bool Planificador::isButtonPressed(){
-  if (buttonPressed == true)
-    return true;
-  return false;
-}
-bool Planificador::isDispensed(int plateID){
-  int pin = PIN_DISPENSE_SENSOR[plateID];
-  return digitalRead(pin);
-      
-}
 
 //Devuelve unix time en horario local
 time_t Planificador::getLocalTime(time_t utc){
@@ -277,15 +293,9 @@ time_t Planificador::getLocalTime(time_t utc){
   
   return artTimezone.toLocal(utc);
 }
-char* string2char(String str){
-    if(str.length()!=0){
-        char *p = const_cast<char*>(str.c_str());
-        return p;
-    }
-}
 
 //Procesar mensajes y acciones recibidas del server
-void Planificador::procesarAcciones()
+void Planificador::processCommandsWIFI()
 {
   
   //Lee mensajes de WIFI 
@@ -304,11 +314,15 @@ void Planificador::procesarAcciones()
       Log.Debug("Recibido time_t de wifi! %l", root["time"].as<time_t>());
       this->setInitTime(root["time"].as<time_t>());
     } 
-
-    
  }
 }
 
-
+//UTILS
+char* string2char(String str){
+    if(str.length()!=0){
+        char *p = const_cast<char*>(str.c_str());
+        return p;
+    }
+}
 
 

@@ -23,10 +23,21 @@ extern Planificador* planif;
 /*************************************************************************************************************
      Agregar aca los metodos/comandos que se quieren testear
 */
+
+//Imprime la hora
 const char *testGetTimeStringToken       = "getTimeString";       
+
+//setea una alarma. setAlarm 2018(año) 7(mes) 22(dia) 30(min) 0(seg) 20(intervalo) 1(cantidad) 1(plateID)
 const char *testSetAlarmToken            = "setAlarm";                
+
+//Imprime la configuracion de la alarma. getAlarm 0(indice)
 const char *testGetAlarmToken            = "getAlarm";     
+
+//Borra las alarmas guardas en EEPROM
 const char *testClearEEPROMToken         = "clearEEPROM";
+
+//setea en true el sensor que detecta el dispendio. setDispenseTrue {PIN}
+const char *testSetDispenseTrueToken          = "setDispenseTrue"; 
 
 
 /*************************************************************************************************************
@@ -136,6 +147,12 @@ void testClearEEPROM() {
   planif->resetAlarms();
 }
 
+void testSetDispenseTrue() {
+  int sensor = readNumber();
+  
+  digitalWrite(sensor, HIGH);
+}
+
 /****************************************************
    DoMyCommand
 */
@@ -161,12 +178,18 @@ bool executeTestCommand(char * commandLine) {
     String result;
     result = testGetAlarm();
     print2(">    La alarma es = ", result);
-    return true;
+    return true; 
   } 
 
   if (strcmp(ptrToCommandName, testClearEEPROMToken) == 0) {
     testClearEEPROM();
     print2(">    EEPROM borrada = ", "");
+    return true;
+  } 
+
+  if (strcmp(ptrToCommandName, testSetDispenseTrueToken) == 0) {
+    testSetDispenseTrue();
+    print2(">    Seteado dispendio para sensor = ", "");
     return true;
   } 
   

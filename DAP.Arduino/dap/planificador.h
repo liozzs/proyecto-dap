@@ -10,6 +10,7 @@
 #include <Timezone.h> 
 #include "conectividad.h"
 #include <ArduinoJson.h>
+#include <HashMap.h>
 
 #define PERIODICIDAD_DIARIA 0
 #define PERIODICIDAD_SEMANAL 1
@@ -19,6 +20,7 @@
 
 //ALARMA
 const int UMBRAL_ALARMA_SEG = 5; //umbral para determinar si es la hora actual coincide con alguna alarma
+
 
 struct Alarm {
   byte plateID;
@@ -32,7 +34,10 @@ struct Alarm {
   bool block; // si block es true, se bloquea si no se reprograma
   bool blocked; // indica que esta alarma/plato dispensador esta bloqueado
   bool waitingForButton; // si tiene que dispensar y esta esperando el boton
+  bool movePlate; // si tiene que mover el plato
   byte valid; //data valida
+
+
 };
 
 
@@ -46,10 +51,17 @@ class Planificador{
     void saveAlarms();
     time_t getLocalTime(time_t utc);
     void logEvento(String evento, String msg="");
-   
+    int plateIDToIndex(int plateID);
+    long nextDispense(Alarm* config);
+    
+    //MOTOR
+    Servo plate1;
+    Servo plate2;
+    Servo plates[MAX_SUPPORTED_ALARMS] = {plate1, plate2};
    
    public: 
     Planificador();
+    bool execute();
     int storedAlarms = 0;
     DateTime getTime();
     String getTimeString(DateTime t);
@@ -58,17 +70,15 @@ class Planificador{
     Alarm getAlarm(int index);
     String getAlarmString(Alarm config);
     void resetAlarms();
-    bool isDispenseTime();
+    void processPlates();
     
-    
-    void procesarAcciones();
+    void processCommandsWIFI();
 
     //MOTOR
-    void initServo(Servo servo, int plateID);
+    void initServo();
     void startPlate(Servo plate);
     void stopPlate(Servo plate);
-    bool isButtonPressed();
-    bool isDispensed(int plateID);
+
 
 };
 
