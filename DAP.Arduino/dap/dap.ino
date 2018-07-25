@@ -8,6 +8,7 @@ Planificador *planif;
 
 //Manejo de la frecuencia de chequeo del tiempo de dispendio. Esto permite no interferir con la frecuencia de los motores.
 unsigned long previousMillis = 0;  
+unsigned long previousMillisWIFI = 0;  
 
 void setup() {
   Serial.begin(115200);  //Monitor Serial
@@ -27,8 +28,11 @@ void loop() {
   if (received) executeTestCommand(CommandLine);
   // Fin TEST
   
-  //leer mensajes de control desde WiFi
-  planif->processCommandsWIFI();
+  if (currentMillis - previousMillisWIFI >= LOOP_DELAY_WIFI) {
+    //leer mensajes de control desde WiFi
+    planif->processCommandsWIFI();
+    previousMillisWIFI = currentMillis;
+  }
 
   //Ejecutar solo cada "MAIN_LOOP_DELAY" millis para no perjudicar el loop principal
   if (currentMillis - previousMillis >= MAIN_LOOP_DELAY) {

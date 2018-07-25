@@ -122,8 +122,9 @@ void Planificador::setInitTime(time_t initTime) {
   
   if (initTime == 0)
     rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
-  else
-    rtc.adjust(DateTime(initTime));
+  else {
+    rtc.adjust(DateTime(getLocalTime(initTime)));
+  }
 }
 
 DateTime Planificador::getTime(){
@@ -177,13 +178,22 @@ bool Planificador::execute(){
       Log.Debug("Alarma %d esperando por boton\n", config->plateID);
       if (isButtonPressed()){
         Log.Debug("BOTON PRESIONADO\n");
-        config->times++;
+       // config->times++;
         config->waitingForButton = false;
         config->movePlate = true;
         saveAlarms();
         setButtonPressed(false);
         continue;
       }
+    }
+
+    //verificar si ya se hizo el dispendio
+    if (alarmDispensed(config) == true) {
+       config->times++;
+       config->movePlate = false;
+       setSensorDetected(-1);
+      
+       saveAlarms();
     }
 
     //verificar si corresponde el dia. Nosotros tomamos 1er dia de la semana el lunes.
@@ -204,7 +214,7 @@ bool Planificador::execute(){
       saveAlarms(); //guardar el cambio 
 
     }
-    if (sec > UMBRAL_ALARMA_SEG && config->waitingForButton == true) {
+    if (sec > BUTTON_THRESHOLD && config->waitingForButton == true) {
        config->waitingForButton = false;
        if (config->block == true) {
         config->blocked = true; // se bloquea
@@ -236,9 +246,15 @@ long Planificador::nextDispense(Alarm* config) {
   Log.Debug("Proximo dispendio: dia:%d, hora:%d, min:%d, seg:%d\n", diff.days(), diff.hours(), diff.minutes(), diff.seconds());
   long sec = diff.days()*86400L + diff.hours()*3600L + diff.minutes()*60L + diff.seconds();
   
-  return sec;
+  return abs(sec);
 }
 
+bool Planificador::alarmDispensed(Alarm *config) {
+  if (getSensorDetected() == -1)
+    return false;
+  return plateIDToIndex(config->plateID) == getSensorDetected();  
+
+}
 //SECCION MANEJO MOTOR
 
 void Planificador::processPlates(){
@@ -249,12 +265,8 @@ void Planificador::processPlates(){
     if (config->movePlate == true)
       startPlate(plates[plateIDToIndex(config->plateID)]);
 
-  //Serial.println(sensorDetected);
-    if (getSensorDetected() != -1) {
+    else if (getSensorDetected() != -1)
       stopPlate(plates[getSensorDetected()]);
-      setSensorDetected(-1);
-      config->movePlate = false;
-    }
   }
 
   
@@ -294,14 +306,23 @@ time_t Planificador::getLocalTime(time_t utc){
   return artTimezone.toLocal(utc);
 }
 
+//UTILS
+char* string2char(String str){
+    if(str.length()!=0){
+        char *p = const_cast<char*>(str.c_str());
+        return p;
+    }
+}
+
 //Procesar mensajes y acciones recibidas del server
 void Planificador::processCommandsWIFI()
 {
   
   //Lee mensajes de WIFI 
   String str = readFromWIFI();
-  
-  //Log.Debug("Recibido de WIFI: %s\n", string2char(str));
+
+  //if (str != "")
+  //  Log.Debug("Recibido de WIFI: %s\n", string2char(str));
   
   if (str != "" && !str.startsWith("debug:", 0)) {
     StaticJsonBuffer<130> jsonBuffer;
@@ -311,18 +332,12 @@ void Planificador::processCommandsWIFI()
     }
 
     if (root.containsKey("time")){
-      Log.Debug("Recibido time_t de wifi! %l", root["time"].as<time_t>());
+      Log.Debug("Recibido time_t de wifi! %l\n", root["time"].as<time_t>());
       this->setInitTime(root["time"].as<time_t>());
     } 
  }
 }
 
-//UTILS
-char* string2char(String str){
-    if(str.length()!=0){
-        char *p = const_cast<char*>(str.c_str());
-        return p;
-    }
-}
+
 
 

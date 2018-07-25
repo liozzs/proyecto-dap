@@ -3,6 +3,8 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include "interrupcion.h"
+
 
 #define CR '\r'
 #define LF '\n'
@@ -148,9 +150,10 @@ void testClearEEPROM() {
 }
 
 void testSetDispenseTrue() {
-  int sensor = readNumber();
-  
-  digitalWrite(sensor, HIGH);
+  int plateID = readNumber();
+
+  setSensorDetected(planif->getIndexForPlateID(plateID));
+ 
 }
 
 /****************************************************

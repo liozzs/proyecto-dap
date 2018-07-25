@@ -19,7 +19,7 @@
 #define BUTTON_THRESHOLD 10 //segundos a esperar para que se presione el boton que inicia el dispendio
 
 //ALARMA
-const int UMBRAL_ALARMA_SEG = 5; //umbral para determinar si es la hora actual coincide con alguna alarma
+const int UMBRAL_ALARMA_SEG = 2; //umbral para determinar si la hora actual coincide con alguna alarma
 
 
 struct Alarm {
@@ -46,13 +46,14 @@ class Planificador{
    protected:
     List<Alarm> configDataList;
     void setInitTime(time_t initTime);
-    int getIndexForPlateID(int plateID);
+    
     void loadAlarms();
     void saveAlarms();
     time_t getLocalTime(time_t utc);
     void logEvento(String evento, String msg="");
     int plateIDToIndex(int plateID);
     long nextDispense(Alarm* config);
+    bool alarmDispensed(Alarm* config);
     
     //MOTOR
     Servo plate1;
@@ -71,6 +72,7 @@ class Planificador{
     String getAlarmString(Alarm config);
     void resetAlarms();
     void processPlates();
+    int getIndexForPlateID(int plateID);
     
     void processCommandsWIFI();
 
