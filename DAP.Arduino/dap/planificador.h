@@ -10,7 +10,7 @@
 #include <Timezone.h> 
 #include "conectividad.h"
 #include <ArduinoJson.h>
-#include <HashMap.h>
+
 
 #define PERIODICIDAD_DIARIA 0
 #define PERIODICIDAD_SEMANAL 1
@@ -27,7 +27,9 @@ struct Alarm {
   DateTime startTime; //fecha y hora de inicio
   int interval; //invervalo de toma
   byte quantity; //cantidad a tomar
-  byte times; //total de veces que se dispenso, para calcular el proximo dispendio
+  byte times; //total de veces que se ejecuto la alarma, para calcular el proximo dispendio
+  byte dispensedTimes; //total de veces que se dispenso (usuario apreto el boton)
+  int stock; // stock
   int criticalStock; // stock critico
   byte periodicity; // enum Periodicidad
   char days[7] = "1111111"; //lun-dom dias a dispensar array con unos o ceros
@@ -44,6 +46,7 @@ struct Alarm {
 class Planificador{
 
    protected:
+    char * DAP_UNIQUE_ID = "DAP_001"; // ver si esto se puede hacer flexible para soportar mas de 1 DAP en el server.
     List<Alarm> configDataList;
     void setInitTime(time_t initTime);
     
@@ -62,18 +65,19 @@ class Planificador{
    
    public: 
     Planificador();
-    bool execute();
     int storedAlarms = 0;
+    
+    bool execute();   
     DateTime getTime();
     String getTimeString(DateTime t);
     void setAlarm(DateTime startTime, int interval, int quantity, int plateID);
-    void setAlarm(DateTime startTime, int interval, int quantity, int criticalStock, byte periodicity, char* days, bool block, int plateID);
+    void setAlarm(DateTime startTime, int interval, int quantity, int stock, int criticalStock, byte periodicity, char* days, bool block, int plateID);
     Alarm getAlarm(int index);
     String getAlarmString(Alarm config);
     void resetAlarms();
     void processPlates();
     int getIndexForPlateID(int plateID);
-    
+    void checkCriticalStock();
     void processCommandsWIFI();
 
     //MOTOR

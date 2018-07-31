@@ -20,14 +20,14 @@ Planificador::Planificador(){
 
 void Planificador::setAlarm(DateTime startTime, int interval, int quantity, int plateID)
 {    
-  this->setAlarm(startTime, interval, quantity, 1000, 0, "1111111", true, plateID);
+  this->setAlarm(startTime, interval, quantity, 1000, 2, 0, "1111111", false, plateID);
 }
 
 /*
  * Agrega una alarma (configuracion de dispendio) asociada a un plateID. Si ya existe el plateID, reemplaza la configuracion, de lo contrario agrega una
  * nueva configuracion.
  */
-void Planificador::setAlarm(DateTime startTime, int interval, int quantity, int criticalStock, byte periodicity, char* days, bool block, int plateID)
+void Planificador::setAlarm(DateTime startTime, int interval, int quantity, int stock, int criticalStock, byte periodicity, char* days, bool block, int plateID)
 {    
   Alarm config;
 
@@ -35,17 +35,19 @@ void Planificador::setAlarm(DateTime startTime, int interval, int quantity, int 
   config.startTime = startTime;
   config.interval = interval;
   config.quantity = quantity;
+  config.stock = stock;
   config.criticalStock = criticalStock;
   config.periodicity = periodicity; 
   strcpy( config.days, days);
   config.block = block;
   config.blocked = false;
   config.waitingForButton = false;
+  config.dispensedTimes = 0;
   config.times = 0;
   config.movePlate = false;
   config.valid = 100;
 
-  Log.Debug("seteando %d,%d,%d,%d, %s,%d\n", interval, quantity, criticalStock, periodicity, days, plateID);
+  Log.Debug("seteando %d,%d,%d,%d,%d, %s,%d\n", interval, quantity, stock, criticalStock, periodicity, days, plateID);
   //verifico si ya existe ese plateID para reemplazar la alarma o agregar nueva
   int index = getIndexForPlateID(plateID);
   if (index != -1) {
@@ -166,10 +168,16 @@ bool Planificador::execute(){
   {
     Alarm* config = &this->configDataList[i];
  
-    Log.Debug("Verificando dispendio platoID: %d, veces a dispensado: %d, cantidad: %d\n", config->plateID, config->times, config->quantity);
+    Log.Debug("Verificando dispendio platoID: %d, veces activado: %d, veces dispensado: %d, cantidad: %d\n", config->plateID, config->times, config->dispensedTimes,config->quantity);
 
     if (config->blocked == true) {
       Log.Debug("Este plato se encuentra BLOQUEADO\n");
+      continue;
+    }
+
+    //verificar stock disponible
+     if (config->stock == 0) {
+      Log.Debug("Este plato no tiene STOCK\n");
       continue;
     }
 
@@ -178,7 +186,8 @@ bool Planificador::execute(){
       Log.Debug("Alarma %d esperando por boton\n", config->plateID);
       if (isButtonPressed()){
         Log.Debug("BOTON PRESIONADO\n");
-       // config->times++;
+        config->dispensedTimes++;
+        config->stock--;
         config->waitingForButton = false;
         config->movePlate = true;
         saveAlarms();
@@ -254,6 +263,18 @@ bool Planificador::alarmDispensed(Alarm *config) {
     return false;
   return plateIDToIndex(config->plateID) == getSensorDetected();  
 
+}
+
+void Planificador::checkCriticalStock() {
+  for (int i = 0; i < this->configDataList.Count(); i++)
+  {
+    Alarm* config = &this->configDataList[i];
+
+    if (config->dispensedTimes == config->criticalStock){
+      Log.Debug("Alarma %d supero tiene stock critico de %d\n", config->plateID, config->criticalStock);
+      //enviar mensaje a server
+    }
+  }
 }
 //SECCION MANEJO MOTOR
 
@@ -332,8 +353,13 @@ void Planificador::processCommandsWIFI()
     }
 
     if (root.containsKey("time")){
-      Log.Debug("Recibido time_t de wifi! %l\n", root["time"].as<time_t>());
+      Log.Debug("WIFI: time_t! %l\n", root["time"].as<time_t>());
       this->setInitTime(root["time"].as<time_t>());
+    } 
+
+    if (root.containsKey("ip")){
+      Log.Debug("WIFI: IP ! %s\n", root["ip"].as<char *>());
+      //this->setInitTime(root["ip"].as<String>());
     } 
  }
 }

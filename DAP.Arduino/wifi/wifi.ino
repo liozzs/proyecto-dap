@@ -2,6 +2,7 @@
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager
+#include "ESP8266HTTPClient.h"
 
 //custom imports
 #include <ArduinoJson.h>
@@ -43,16 +44,30 @@ void setup() {
 
   ntp = new NTPClient();
 
-  //enviar a arduino primer mensaje con el horario correcto
+  //enviar a arduino primer mensaje con el horario correcto e IP publica
   time_t ntpTime = 0;
 
   while(ntpTime == 0) {
     ntpTime = ntp->getTime();
   }
+
+  // Obtener IP publica para enviar al arduino
+  String publicIP;
+  HTTPClient http;
+  http.begin("http://ipv4bot.whatismyipaddress.com/");
+  int httpCode = http.GET();
+  if(httpCode > 0) {
+    if(httpCode == HTTP_CODE_OK)
+      publicIP = http.getString();
+  }
+  http.end();
   
   JsonObject& root = jsonBuffer.createObject();
   root["time"] = ntpTime;
+  root["ip"] = WiFi.localIP().toString();
   root.printTo(Serial);
+
+
 }
 
 void loop() {

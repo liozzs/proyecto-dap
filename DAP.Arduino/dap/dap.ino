@@ -39,6 +39,7 @@ void loop() {
     Serial.println(planif->getTimeString(planif->getTime()));
     previousMillis = currentMillis;
     planif->execute();
+    planif->checkCriticalStock();
   }
 
   //Procesa las ordenes de movimiento y parada de los platos.

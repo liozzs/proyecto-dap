@@ -2,6 +2,7 @@
 #define _CONFIG_h
 
 //CONFIGURACION GLOBAL
+
 const int MAIN_LOOP_DELAY = 1000;
 const int LOOP_DELAY_WIFI = 500;
 const int MAX_SUPPORTED_ALARMS = 2;
