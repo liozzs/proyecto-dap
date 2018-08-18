@@ -11,9 +11,8 @@ namespace DAP.Mobile
 		public App ()
 		{
 			InitializeComponent();
-
-
-            MainPage = new MainPage();
+            
+            MainPage = new LoginPage();
         }
 
 		protected override void OnStart ()
