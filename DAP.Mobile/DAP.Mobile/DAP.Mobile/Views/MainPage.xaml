@@ -3,6 +3,7 @@
             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
             xmlns:views="clr-namespace:DAP.Mobile.Views"
             x:Class="DAP.Mobile.Views.MainPage">
+    <!--
     <TabbedPage.Children>
         <NavigationPage Title="Browse">
             <NavigationPage.Icon>
@@ -25,5 +26,5 @@
                 <views:AboutPage />
             </x:Arguments>
         </NavigationPage>
-    </TabbedPage.Children>
+    </TabbedPage.Children>-->
 </TabbedPage>

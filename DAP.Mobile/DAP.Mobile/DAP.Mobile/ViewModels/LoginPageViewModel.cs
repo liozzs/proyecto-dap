@@ -1,4 +1,5 @@
 ﻿using Prism.Mvvm;
+using Prism.Navigation;
 using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -7,13 +8,15 @@ using Xamarin.Forms;
 namespace DAP.Mobile.ViewModels
 {
     public class LoginPageViewModel : BindableBase
-	{
-        private string mensaje;
+    {
+        private readonly INavigationService navigationService;
 
-        public string Mensaje
+        private string message;
+
+        public string Message
         {
-            get { return mensaje; }
-            set { SetProperty(ref mensaje, value); }
+            get { return message; }
+            set { SetProperty(ref message, value); }
         }
 
         private bool isLoading;
@@ -24,35 +27,36 @@ namespace DAP.Mobile.ViewModels
             set { SetProperty(ref isLoading, value); }
         }
 
-        public string Usuario { get; set; }
+        public string User { get; set; }
         public string Password { get; set; }
 
-        public ICommand IngresarCommand { get; set; }
-        public ICommand RegistrarCommand { get; set; }
+        public ICommand LoginCommand { get; set; }
+        public ICommand SignUpCommand { get; set; }
         public ICommand ResetPasswordCommand { get; set; }
 
-        public LoginPageViewModel()
+        public LoginPageViewModel(INavigationService navigationService)
         {
-            IngresarCommand = new Command(async () => await Ingresar(), () => !IsLoading);
-            RegistrarCommand = new Command(async () => await Ingresar(), () => !IsLoading);
-            ResetPasswordCommand = new Command(async () => await Ingresar(), () => !IsLoading);
+            this.navigationService = navigationService;
+            LoginCommand = new Command(async () => await Login(), () => !IsLoading);
+            SignUpCommand = new Command(async () => await navigationService.NavigateAsync("SignUpPage"), () => !IsLoading);
+            ResetPasswordCommand = new Command(async () => await navigationService.NavigateAsync("ResetPasswordPage"), () => !IsLoading);
         }
 
-        async Task Ingresar()
+        private async Task Login()
         {
-            Mensaje = null;
+            Message = null;
             IsLoading = true;
 
             try
             {
                 //Validar datos
-                if (String.IsNullOrWhiteSpace(Usuario))
+                if (String.IsNullOrWhiteSpace(User))
                 {
-                    Mensaje = "Debe ingresar su usuario";
+                    Message = "Debe ingresar su usuario";
                 }
                 else if (String.IsNullOrWhiteSpace(Password))
                 {
-                    Mensaje = "Debe ingresar su contraseña";
+                    Message = "Debe ingresar su contraseña";
                 }
             }
             //catch 
@@ -60,7 +64,7 @@ namespace DAP.Mobile.ViewModels
             //}
             finally
             {
-                IsLoading = true;
+                IsLoading = false;
             }
         }
     }

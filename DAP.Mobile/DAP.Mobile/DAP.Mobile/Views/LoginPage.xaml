@@ -28,13 +28,13 @@
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
-                <Label Text="{Binding Mensaje}" TextColor="Red" Grid.Row="0" />
+                <Label Text="{Binding Message}" TextColor="Red" Grid.Row="0" />
                 <Grid Grid.Row="1">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <local:RoundedEntry Text="{Binding Usuario}" Placeholder="USUARIO" HorizontalTextAlignment="Center" Grid.ColumnSpan="2" MaxLength="50"/>
+                    <local:RoundedEntry Text="{Binding User}" Placeholder="USUARIO" HorizontalTextAlignment="Center" Grid.ColumnSpan="2" MaxLength="50" Keyboard="Email" />
                     <Image Source="user.png" HeightRequest="20" WidthRequest="20" Margin="10,0,0,0" />
                 </Grid>
                 <Grid Grid.Row="2">
@@ -45,7 +45,7 @@
                     <local:RoundedEntry Text="{Binding Password}" Placeholder="CONTRASEÑA" HorizontalTextAlignment="Center" IsPassword="True" Grid.ColumnSpan="2" MaxLength="50" />
                     <Image Source="pass.png" HeightRequest="20" WidthRequest="20" Margin="10,0,0,0" />
                 </Grid>
-                <Button Text="INGRESAR" Command="{Binding IngresarCommand}" Grid.Row="3"/>
+                <Button Text="INGRESAR" Command="{Binding LoginCommand}" Grid.Row="3"/>
                 <Grid Grid.Row="4">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -54,7 +54,7 @@
                     </Grid.ColumnDefinitions>
                     <Label Grid.Column="0" Text="REGISTRARSE" TextColor="{StaticResource LightOrange}" HorizontalOptions="End">
                         <Label.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding RegistrarCommand}" />
+                            <TapGestureRecognizer Command="{Binding SignUpCommand}" />
                         </Label.GestureRecognizers>
                     </Label>
                     <Label Grid.Column="2" Text="OLVIDASTE TU&#x0a; CONTRASEÑA" TextColor="{StaticResource LightOrange}" HorizontalOptions="Start">
