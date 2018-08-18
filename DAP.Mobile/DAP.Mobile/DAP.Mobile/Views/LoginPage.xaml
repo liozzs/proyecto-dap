@@ -6,53 +6,66 @@
              prism:ViewModelLocator.AutowireViewModel="True"
              x:Class="DAP.Mobile.Views.LoginPage">
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-        <StackLayout HorizontalOptions="Center" VerticalOptions="Center" Grid.Row="1" >
-            <ContentView Padding="0,40" VerticalOptions="FillAndExpand">
-                <Image Source="logo.png" VerticalOptions="Center"/>
-            </ContentView>
-        </StackLayout>
-        <StackLayout Margin="20" Grid.Row="2">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <local:RoundedEntry Text="{Binding Usuario}" Placeholder="USUARIO" HorizontalTextAlignment="Center" Grid.ColumnSpan="2" 
-                                    HorizontalOptions="FillAndExpand" MaxLength="50"/>
-                <Image Source="user.png" HeightRequest="20" WidthRequest="20" Margin="10,0,0,0" />
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="10*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="6*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Image Source="logo.png" HorizontalOptions="Center" VerticalOptions="Center" Grid.Row="1"/>
+            <Grid Grid.Row="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Label Text="{Binding Mensaje}" TextColor="Red" Grid.Row="0" />
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <local:RoundedEntry Text="{Binding Usuario}" Placeholder="USUARIO" HorizontalTextAlignment="Center" Grid.ColumnSpan="2" MaxLength="50"/>
+                    <Image Source="user.png" HeightRequest="20" WidthRequest="20" Margin="10,0,0,0" />
+                </Grid>
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <local:RoundedEntry Text="{Binding Password}" Placeholder="CONTRASEÑA" HorizontalTextAlignment="Center" IsPassword="True" Grid.ColumnSpan="2" MaxLength="50" />
+                    <Image Source="pass.png" HeightRequest="20" WidthRequest="20" Margin="10,0,0,0" />
+                </Grid>
+                <Button Text="INGRESAR" Command="{Binding IngresarCommand}" Grid.Row="3"/>
+                <Grid Grid.Row="4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Label Grid.Column="0" Text="REGISTRARSE" TextColor="{StaticResource LightOrange}" HorizontalOptions="End">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding RegistrarCommand}" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                    <Label Grid.Column="2" Text="OLVIDASTE TU&#x0a; CONTRASEÑA" TextColor="{StaticResource LightOrange}" HorizontalOptions="Start">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding ResetPasswordCommand}" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                </Grid>
             </Grid>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <local:RoundedEntry Text="{Binding Password}" Placeholder="CONTRASEÑA" HorizontalTextAlignment="Center" IsPassword="True" Grid.ColumnSpan="2" HorizontalOptions="FillAndExpand" MaxLength="50" />
-                <Image Source="pass.png" HeightRequest="20" WidthRequest="20" Margin="10,0,0,0" />
-            </Grid>
-            <Button Text="INGRESAR" Command="{Binding IngresarCommand}" />
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <Label Grid.Column="0" Text="REGISTRARSE" TextColor="{StaticResource LightOrange}" Margin="20" HorizontalOptions="End">
-                    <Label.GestureRecognizers>
-                        <TapGestureRecognizer Command="{Binding RegistrarCommand}" />
-                    </Label.GestureRecognizers>
-                </Label>
-                <Label Grid.Column="2" Text="OLVIDASTE TU&#x0a; CONTRASEÑA" TextColor="{StaticResource LightOrange}" Margin="20" HorizontalOptions="Start">
-                    <Label.GestureRecognizers>
-                        <TapGestureRecognizer Command="{Binding ResetPasswordCommand}" />
-                    </Label.GestureRecognizers>
-                </Label>
-            </Grid>
-        </StackLayout>
+            <ActivityIndicator IsRunning="{Binding IsLoading}" Grid.Row="3"/>
+        </Grid>
     </Grid>
+
 </ContentPage>

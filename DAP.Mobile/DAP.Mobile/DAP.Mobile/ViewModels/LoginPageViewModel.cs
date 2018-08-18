@@ -1,4 +1,5 @@
 ﻿using Prism.Mvvm;
+using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Xamarin.Forms;
@@ -7,7 +8,24 @@ namespace DAP.Mobile.ViewModels
 {
     public class LoginPageViewModel : BindableBase
 	{
-        public bool IsBusy { get; set; }
+        private string mensaje;
+
+        public string Mensaje
+        {
+            get { return mensaje; }
+            set { SetProperty(ref mensaje, value); }
+        }
+
+        private bool isLoading;
+
+        public bool IsLoading
+        {
+            get { return isLoading; }
+            set { SetProperty(ref isLoading, value); }
+        }
+
+        public string Usuario { get; set; }
+        public string Password { get; set; }
 
         public ICommand IngresarCommand { get; set; }
         public ICommand RegistrarCommand { get; set; }
@@ -15,25 +33,34 @@ namespace DAP.Mobile.ViewModels
 
         public LoginPageViewModel()
         {
-            IngresarCommand = new Command(async () => await ExecuteLoadItemsCommand());
+            IngresarCommand = new Command(async () => await Ingresar(), () => !IsLoading);
+            RegistrarCommand = new Command(async () => await Ingresar(), () => !IsLoading);
+            ResetPasswordCommand = new Command(async () => await Ingresar(), () => !IsLoading);
         }
 
-        async Task ExecuteLoadItemsCommand()
+        async Task Ingresar()
         {
-            if (IsBusy)
-                return;
-
-            IsBusy = true;
+            Mensaje = null;
+            IsLoading = true;
 
             try
             {
+                //Validar datos
+                if (String.IsNullOrWhiteSpace(Usuario))
+                {
+                    Mensaje = "Debe ingresar su usuario";
+                }
+                else if (String.IsNullOrWhiteSpace(Password))
+                {
+                    Mensaje = "Debe ingresar su contraseña";
+                }
             }
-            catch 
-            {
-            }
+            //catch 
+            //{
+            //}
             finally
             {
-                IsBusy = false;
+                IsLoading = true;
             }
         }
     }

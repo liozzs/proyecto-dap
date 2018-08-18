@@ -29,6 +29,12 @@
                 <Setter Property="HeightRequest" Value="35" />
                 <Setter Property="FontSize" Value="Small" />
             </Style>
+            <Style TargetType="Label">
+                <Setter Property="FontSize" Value="Small" />
+            </Style>
+            <Style TargetType="ActivityIndicator">
+                <Setter Property="Color" Value="{StaticResource LightOrange}" />
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
