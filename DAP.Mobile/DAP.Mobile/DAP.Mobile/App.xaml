@@ -21,13 +21,11 @@
             <Style TargetType="Button">
                 <Setter Property="BackgroundColor" Value="{StaticResource LightOrange}" />
                 <Setter Property="TextColor" Value="{StaticResource DarkOrange}" />
-                <Setter Property="BorderRadius" Value="20" />
-                <Setter Property="HeightRequest" Value="35" />
+                <Setter Property="BorderRadius" Value="50" />
+                <Setter Property="HeightRequest" Value="40" />
                 <Setter Property="FontSize" Value="Small" />
-                <Setter Property="VerticalOptions" Value="Center" />
             </Style>
             <Style TargetType="local:RoundedEntry">
-                <Setter Property="HeightRequest" Value="35" />
                 <Setter Property="FontSize" Value="Small" />
             </Style>
             <Style TargetType="Label">
