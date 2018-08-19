@@ -21,11 +21,12 @@ namespace DAP.Mobile
         {
             InitializeComponent();
 
-            this.NavigationService.NavigateAsync("LoginPage");
+            this.NavigationService.NavigateAsync("MainPage/LoginPage");
         }
 
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
+            containerRegistry.RegisterForNavigation<MainPage>();
             containerRegistry.RegisterForNavigation<LoginPage>();
             containerRegistry.RegisterForNavigation<SignUpPage>();
             containerRegistry.RegisterForNavigation<ResetPasswordPage>();

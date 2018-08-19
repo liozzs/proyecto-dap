@@ -4,7 +4,8 @@
              xmlns:prism="clr-namespace:Prism.Mvvm;assembly=Prism.Forms"
              xmlns:customcontrols="clr-namespace:DAP.Mobile.CustomControls"
              prism:ViewModelLocator.AutowireViewModel="True"
-             x:Class="DAP.Mobile.Views.SignUpPage">
+             x:Class="DAP.Mobile.Views.SignUpPage"
+             Title="Registrarse">    
     <Grid Margin="10">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
