@@ -3,13 +3,13 @@
                   xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
                   xmlns:prism="clr-namespace:Prism.Mvvm;assembly=Prism.Forms"
                   xmlns:enum="clr-namespace:DAP.Mobile"
-                  xmlns:local="clr-namespace:DAP.Mobile.ViewModels"
                   prism:ViewModelLocator.AutowireViewModel="True"
                   x:Class="DAP.Mobile.Views.MenuPage">
     <MasterDetailPage.Master>
         <ContentPage Padding="0,40,0,0"
-             Icon="hamburger.png"
-                     BackgroundColor="{StaticResource Primary}">
+                     Icon="hamburger.png"
+                     BackgroundColor="{StaticResource Primary}"
+                     Title=" ">
             <ListView ItemsSource="{Binding MenuItems}">
                 <ListView.ItemTemplate>
                     <DataTemplate>
@@ -17,7 +17,7 @@
                             <Grid >
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="30"/>
-                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <Image Source="{Binding IconSource}" />
                                 <Label Grid.Column="1" Text="{Binding Title}" VerticalOptions="Center" />
@@ -79,7 +79,7 @@
                 </ContentPage>
             </x:Arguments>
         </NavigationPage>
-        
+
     </MasterDetailPage.Detail>
-    
+
 </MasterDetailPage>
