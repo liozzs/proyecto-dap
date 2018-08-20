@@ -17,7 +17,8 @@
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)CustomControls\RoundedEntry.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Enums.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Models\Item.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\MenuItem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Notification.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\ConfigurationPageViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\LoadPillsPageViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\MenuDetailPageViewModel.cs" />

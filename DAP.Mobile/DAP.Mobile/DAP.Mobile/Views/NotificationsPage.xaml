@@ -5,7 +5,25 @@
              prism:ViewModelLocator.AutowireViewModel="True"
              x:Class="DAP.Mobile.Views.NotificationsPage"
              Title="Notificaciones">
-    <StackLayout>
-        <Label Text="Notif" />
-    </StackLayout>
+    <ListView ItemsSource="{Binding Notifications}" RefreshCommand="{Binding LoadNotificationsCommand}" IsPullToRefreshEnabled="True" >
+        <ListView.ItemTemplate>
+            <DataTemplate>
+                <ViewCell>
+                    <Grid Margin="0, 0, 0, 10">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Row="0" Grid.Column="0" Text="{Binding Title}" Font="Bold" />
+                        <Label Grid.Row="0" Grid.Column="1" Text="{Binding Date, StringFormat='\{0:dd/MM/yyyy HH:mm}'}" HorizontalOptions="End" Font="Bold" />
+                        <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding Message}" />
+                    </Grid>
+                </ViewCell>
+            </DataTemplate>
+        </ListView.ItemTemplate>
+    </ListView>
 </ContentPage>

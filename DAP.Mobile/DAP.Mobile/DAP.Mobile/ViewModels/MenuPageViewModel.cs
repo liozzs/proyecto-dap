@@ -1,4 +1,5 @@
-﻿using Prism.Commands;
+﻿using DAP.Mobile.Models;
+using Prism.Commands;
 using Prism.Navigation;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
@@ -7,7 +8,7 @@ namespace DAP.Mobile.ViewModels
 {
     public class MenuPageViewModel : ViewModelBase
     {
-        public ObservableCollection<MasterPageItem> MenuItems { get; set; }
+        public ObservableCollection<MenuItem> MenuItems { get; set; }
 
         public DelegateCommand<object> NavigateToCommand { get; set; }
 
@@ -19,33 +20,33 @@ namespace DAP.Mobile.ViewModels
 
         private void LoadMenuItems()
         {
-            MenuItems = new ObservableCollection<MasterPageItem>();
+            MenuItems = new ObservableCollection<MenuItem>();
 
-            MenuItems.Add(new MasterPageItem()
+            MenuItems.Add(new MenuItem()
             {
                 Title = "Notificaciones",
                 IconSource = "notifications.png",
                 Command = new DelegateCommand(async () => await NavigateTo(MenuNavigation.Notifications))
             });
-            MenuItems.Add(new MasterPageItem()
+            MenuItems.Add(new MenuItem()
             {
                 Title = "Planificación",
                 IconSource = "planification.png",
                 Command = new DelegateCommand(async () => await NavigateTo(MenuNavigation.Planification))
             });
-            MenuItems.Add(new MasterPageItem()
+            MenuItems.Add(new MenuItem()
             {
                 Title = "Configuración",
                 IconSource = "configuration.png",
                 Command = new DelegateCommand(async () => await NavigateTo(MenuNavigation.Configuration))
             });
-            MenuItems.Add(new MasterPageItem()
+            MenuItems.Add(new MenuItem()
             {
                 Title = "Cargar pastillas",
                 IconSource = "loadPills.png",
                 Command = new DelegateCommand(async () => await NavigateTo(MenuNavigation.Notifications))
             });
-            MenuItems.Add(new MasterPageItem()
+            MenuItems.Add(new MenuItem()
             {
                 Title = "Cerrar sesión",
                 IconSource = "signOut.png",
@@ -63,12 +64,5 @@ namespace DAP.Mobile.ViewModels
             MenuNavigation menuNavigation = (MenuNavigation)obj;
             return NavigationService.NavigateAsync($"/MenuPage/NavigationPage/MenuDetailPage/{ menuNavigation.ToString()}Page");
         }
-    }
-
-    public class MasterPageItem
-    {
-        public string Title { get; set; }
-        public string IconSource { get; set; }
-        public DelegateCommand Command { get; set; }
     }
 }
