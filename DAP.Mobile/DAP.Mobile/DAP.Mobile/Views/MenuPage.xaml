@@ -5,12 +5,10 @@
                   xmlns:enum="clr-namespace:DAP.Mobile"
                   xmlns:local="clr-namespace:DAP.Mobile.ViewModels"
                   prism:ViewModelLocator.AutowireViewModel="True"
-                  x:Class="DAP.Mobile.Views.MenuPage"
-                  Title="Menú">
+                  x:Class="DAP.Mobile.Views.MenuPage">
     <MasterDetailPage.Master>
         <ContentPage Padding="0,40,0,0"
              Icon="hamburger.png"
-             Title="Master"
                      BackgroundColor="{StaticResource Primary}">
             <ListView ItemsSource="{Binding MenuItems}">
                 <ListView.ItemTemplate>
@@ -39,7 +37,7 @@
                 <ToolbarItem Icon="logo.png" />
             </NavigationPage.ToolbarItems>
             <x:Arguments>
-                <ContentPage Title="Detail" >
+                <ContentPage>
                     <Grid HorizontalOptions="Center">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*" />
