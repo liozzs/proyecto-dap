@@ -1,6 +1,5 @@
 ﻿using Prism.Commands;
 using Prism.Navigation;
-using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 
@@ -56,13 +55,13 @@ namespace DAP.Mobile.ViewModels
 
         private Task SignOut()
         {
-            return NavigationService.NavigateAsync("/MainPage");
+            return NavigationService.NavigateAsync("/NavigationPage/LoginPage");
         }
 
         private Task NavigateTo(object obj)
         {
             MenuNavigation menuNavigation = (MenuNavigation)obj;
-            return NavigationService.NavigateAsync(new Uri($"{menuNavigation.ToString()}Page", UriKind.Relative));
+            return NavigationService.NavigateAsync($"/MenuPage/NavigationPage/MenuDetailPage/{ menuNavigation.ToString()}Page");
         }
     }
 

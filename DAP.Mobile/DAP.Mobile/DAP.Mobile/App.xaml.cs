@@ -22,16 +22,17 @@ namespace DAP.Mobile
         {
             InitializeComponent();
 
-            this.NavigationService.NavigateAsync("MainPage/LoginPage");
+            NavigationService.NavigateAsync("NavigationPage/LoginPage");
         }
 
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
-            containerRegistry.RegisterForNavigation<MainPage>();
+            containerRegistry.RegisterForNavigation<NavigationPage>();
             containerRegistry.RegisterForNavigation<LoginPage>();
             containerRegistry.RegisterForNavigation<SignUpPage>();
             containerRegistry.RegisterForNavigation<ResetPasswordPage>();
             containerRegistry.RegisterForNavigation<MenuPage>();
+            containerRegistry.RegisterForNavigation<MenuDetailPage>();
             containerRegistry.RegisterForNavigation<NotificationsPage>();
             containerRegistry.RegisterForNavigation<PlanificationPage>();
             containerRegistry.RegisterForNavigation<ConfigurationPage>();

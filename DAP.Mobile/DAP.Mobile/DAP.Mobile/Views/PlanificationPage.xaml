@@ -5,5 +5,7 @@
              prism:ViewModelLocator.AutowireViewModel="True"
              x:Class="DAP.Mobile.Views.PlanificationPage"
              Title="Planificación">
-  
+    <StackLayout>
+        <Label Text="planif" />
+    </StackLayout>
 </ContentPage>

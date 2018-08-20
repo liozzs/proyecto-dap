@@ -47,7 +47,7 @@ namespace DAP.Mobile.ViewModels
                     Message = "Debe ingresar su contraseña";
                 }
 
-                await NavigationService.NavigateAsync("/MenuPage");
+                await NavigationService.NavigateAsync("/MenuPage/NavigationPage/MenuDetailPage");
             }
             //catch 
             //{

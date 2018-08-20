@@ -4,7 +4,8 @@
                   xmlns:prism="clr-namespace:Prism.Mvvm;assembly=Prism.Forms"
                   xmlns:enum="clr-namespace:DAP.Mobile"
                   prism:ViewModelLocator.AutowireViewModel="True"
-                  x:Class="DAP.Mobile.Views.MenuPage">
+                  x:Class="DAP.Mobile.Views.MenuPage"
+                  NavigationPage.HasNavigationBar="False">
     <MasterDetailPage.Master>
         <ContentPage Padding="0,40,0,0"
                      Icon="hamburger.png"
@@ -31,55 +32,4 @@
             </ListView>
         </ContentPage>
     </MasterDetailPage.Master>
-    <MasterDetailPage.Detail>
-        <NavigationPage>
-            <NavigationPage.ToolbarItems>
-                <ToolbarItem Icon="logo.png" />
-            </NavigationPage.ToolbarItems>
-            <x:Arguments>
-                <ContentPage>
-                    <Grid HorizontalOptions="Center">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <StackLayout Grid.Column="0" Grid.Row="0" >
-                            <Image Source="notifications.png"  />
-                            <Label Text="Notificaciones" HorizontalOptions="Center" />
-                            <StackLayout.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding NavigateToCommand}" CommandParameter="{x:Static enum:MenuNavigation.Notifications}" />
-                            </StackLayout.GestureRecognizers>
-                        </StackLayout>
-                        <StackLayout Grid.Column="1" Grid.Row="0" >
-                            <Image Source="planification.png"  />
-                            <Label Text="Planificación" HorizontalOptions="Center" />
-                            <StackLayout.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding NavigateToCommand}" CommandParameter="{x:Static enum:MenuNavigation.Planification}" />
-                            </StackLayout.GestureRecognizers>
-                        </StackLayout>
-                        <StackLayout Grid.Column="0" Grid.Row="1" >
-                            <Image Source="configuration.png"  />
-                            <Label Text="Configuración" HorizontalOptions="Center" />
-                            <StackLayout.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding NavigateToCommand}" CommandParameter="{x:Static enum:MenuNavigation.Configuration}" />
-                            </StackLayout.GestureRecognizers>
-                        </StackLayout>
-                        <StackLayout Grid.Column="1" Grid.Row="1" >
-                            <Image Source="loadPills.png"  />
-                            <Label Text="Cargar pastillas" HorizontalOptions="Center" />
-                            <StackLayout.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding NavigateToCommand}" CommandParameter="{x:Static enum:MenuNavigation.LoadPills}" />
-                            </StackLayout.GestureRecognizers>
-                        </StackLayout>
-                    </Grid>
-                </ContentPage>
-            </x:Arguments>
-        </NavigationPage>
-
-    </MasterDetailPage.Detail>
-
 </MasterDetailPage>
