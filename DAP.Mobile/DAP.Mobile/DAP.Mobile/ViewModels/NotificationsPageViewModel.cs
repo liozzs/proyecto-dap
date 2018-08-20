@@ -28,6 +28,7 @@ namespace DAP.Mobile.ViewModels
 
         private Task LoadNotifications()
         {
+            IsLoading = true;
             return Task.Run(() => {                
                 for (int i = 0; i < 5; i++)
                 {
@@ -35,6 +36,8 @@ namespace DAP.Mobile.ViewModels
                         Title = $"Título {i}",
                         Date = DateTime.Now.AddMinutes(-i) });
                 }
+
+                IsLoading = false;
             });
         }
     }

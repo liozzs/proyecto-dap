@@ -5,7 +5,7 @@
              prism:ViewModelLocator.AutowireViewModel="True"
              x:Class="DAP.Mobile.Views.NotificationsPage"
              Title="Notificaciones">
-    <ListView ItemsSource="{Binding Notifications}" RefreshCommand="{Binding LoadNotificationsCommand}" IsPullToRefreshEnabled="True" >
+    <ListView ItemsSource="{Binding Notifications}" RefreshCommand="{Binding LoadNotificationsCommand}" IsPullToRefreshEnabled="True" IsRefreshing="{Binding IsLoading}" >
         <ListView.ItemTemplate>
             <DataTemplate>
                 <ViewCell>
