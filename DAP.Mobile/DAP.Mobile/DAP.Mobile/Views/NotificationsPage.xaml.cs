@@ -2,9 +2,9 @@
 
 namespace DAP.Mobile.Views
 {
-    public partial class LoginPage : ContentPage
+    public partial class NotificationsPage : ContentPage
     {
-        public LoginPage()
+        public NotificationsPage()
         {
             InitializeComponent();
         }

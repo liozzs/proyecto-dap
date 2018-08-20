@@ -4,7 +4,8 @@
              xmlns:prism="clr-namespace:Prism.Mvvm;assembly=Prism.Forms"
              xmlns:local="clr-namespace:DAP.Mobile.CustomControls"
              prism:ViewModelLocator.AutowireViewModel="True"
-             x:Class="DAP.Mobile.Views.LoginPage">
+             x:Class="DAP.Mobile.Views.LoginPage"
+             NavigationPage.HasNavigationBar="False">
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />

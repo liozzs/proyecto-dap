@@ -1,5 +1,4 @@
-﻿using Prism.Mvvm;
-using Prism.Navigation;
+﻿using Prism.Navigation;
 using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -7,18 +6,8 @@ using Xamarin.Forms;
 
 namespace DAP.Mobile.ViewModels
 {
-    public class LoginPageViewModel : BindableBase
+    public class LoginPageViewModel : ViewModelBase
     {
-        private readonly INavigationService navigationService;
-
-        private string message;
-
-        public string Message
-        {
-            get { return message; }
-            set { SetProperty(ref message, value); }
-        }
-
         private bool isLoading;
 
         public bool IsLoading
@@ -34,12 +23,11 @@ namespace DAP.Mobile.ViewModels
         public ICommand SignUpCommand { get; set; }
         public ICommand ResetPasswordCommand { get; set; }
 
-        public LoginPageViewModel(INavigationService navigationService)
+        public LoginPageViewModel(INavigationService navigationService) : base(navigationService)
         {
-            this.navigationService = navigationService;
             LoginCommand = new Command(async () => await Login(), () => !IsLoading);
-            SignUpCommand = new Command(async () => await navigationService.NavigateAsync("SignUpPage"), () => !IsLoading);
-            ResetPasswordCommand = new Command(async () => await navigationService.NavigateAsync("ResetPasswordPage"), () => !IsLoading);
+            SignUpCommand = new Command(async () => await NavigationService.NavigateAsync("SignUpPage"), () => !IsLoading);
+            ResetPasswordCommand = new Command(async () => await NavigationService.NavigateAsync("ResetPasswordPage"), () => !IsLoading);
         }
 
         private async Task Login()
@@ -58,6 +46,8 @@ namespace DAP.Mobile.ViewModels
                 {
                     Message = "Debe ingresar su contraseña";
                 }
+
+                await NavigationService.NavigateAsync("/MenuPage");
             }
             //catch 
             //{

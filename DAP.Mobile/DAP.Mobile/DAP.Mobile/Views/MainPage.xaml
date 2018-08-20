@@ -3,9 +3,9 @@
                 xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
                 xmlns:views="clr-namespace:DAP.Mobile.Views"
                 x:Class="DAP.Mobile.Views.MainPage">
-    <NavigationPage.Icon>
-        <FileImageSource File="logo.png"/>
-    </NavigationPage.Icon>
+    <NavigationPage.ToolbarItems>
+        <ToolbarItem Icon="logo.png" />
+    </NavigationPage.ToolbarItems>
     <x:Arguments>
         <views:LoginPage />
     </x:Arguments>

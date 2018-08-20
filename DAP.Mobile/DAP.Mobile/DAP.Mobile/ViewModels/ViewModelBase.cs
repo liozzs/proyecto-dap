@@ -14,6 +14,13 @@ namespace DAP.Mobile.ViewModels
             set { SetProperty(ref _title, value); }
         }
 
+        private string message;
+        public string Message
+        {
+            get { return message; }
+            set { SetProperty(ref message, value); }
+        }
+
         public ViewModelBase(INavigationService navigationService)
         {
             NavigationService = navigationService;
