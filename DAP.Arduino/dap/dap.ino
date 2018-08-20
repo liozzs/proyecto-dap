@@ -1,5 +1,6 @@
 #include "config.h"
 #include "planificador.h"
+#include "seg_display.h"
 
 //TEST
 #include "test.h"
@@ -13,6 +14,7 @@ unsigned long previousMillisWIFI = 0;
 void setup() {
   Serial.begin(115200);  //Monitor Serial
   Serial1.begin(115200); //Comunicacion con ESP8266
+  init_display();
   
   Log.Init(LOGLEVEL, 115200);
 
@@ -44,6 +46,9 @@ void loop() {
 
   //Procesa las ordenes de movimiento y parada de los platos.
   planif->processPlates();
+
+  //Refrescar display
+  refresh_display();
 }
 
 
