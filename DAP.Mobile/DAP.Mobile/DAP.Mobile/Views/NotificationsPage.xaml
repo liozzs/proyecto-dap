@@ -5,11 +5,15 @@
              prism:ViewModelLocator.AutowireViewModel="True"
              x:Class="DAP.Mobile.Views.NotificationsPage"
              Title="Notificaciones">
-    <ListView ItemsSource="{Binding Notifications}" RefreshCommand="{Binding LoadNotificationsCommand}" IsPullToRefreshEnabled="True" IsRefreshing="{Binding IsLoading}" >
+    <ListView ItemsSource="{Binding Notifications}" 
+              RefreshCommand="{Binding LoadNotificationsCommand}"
+              IsPullToRefreshEnabled="True" 
+              IsRefreshing="{Binding IsLoading}"  
+              HasUnevenRows="True" >
         <ListView.ItemTemplate>
             <DataTemplate>
                 <ViewCell>
-                    <Grid Margin="0, 0, 0, 10">
+                    <Grid Margin="0, 0, 0, 5">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
