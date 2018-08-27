@@ -2,10 +2,43 @@
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:prism="clr-namespace:Prism.Mvvm;assembly=Prism.Forms"
+             xmlns:customcontrols="clr-namespace:DAP.Mobile.CustomControls"
+             xmlns:data="clr-namespace:DAP.Mobile.Services"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
              prism:ViewModelLocator.AutowireViewModel="True"
              x:Class="DAP.Mobile.Views.PlanificationPage"
              Title="Planificación">
-    <StackLayout>
-        <Label Text="planif" />
+    <StackLayout Margin="10">
+        
+        <Label Text="Pastilla" />
+        <Picker ItemsSource="{Binding Source = {x:Static data:DataProvider.Pills}}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding SelectedPill}" />
+        
+        <Label Text="Planificacion" />
+        <Picker ItemsSource="{Binding Source = {x:Static data:DataProvider.Periodicities}}" ItemDisplayBinding="{Binding Description}" SelectedItem="{Binding SelectedPeriodicity}" />
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Label Grid.Row="0" Grid.Column="0" Text="Stock&#x0a;crítico" HorizontalOptions="Center" />
+            <customcontrols:RoundedEntry Grid.Row="1" Grid.Column="0" Text="{Binding CriticalStock}" />
+            <BoxView Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Color="White" WidthRequest="2" />
+            <Label Grid.Row="0" Grid.Column="2" Text="   Cantidad&#x0a;a dispensar" HorizontalOptions="Center" />
+            <customcontrols:RoundedEntry Grid.Row="1" Grid.Column="2" Text="{Binding QtyToDispense}" />
+        </Grid>
+        
+        <Label Text="Inicio" />
+        <DatePicker Date="{Binding StartDate}" Format="dd/MM/yyyy" MinimumDate="{Binding Source={x:Static sys:DateTime.Today}}" />
+
+        <StackLayout Margin="0, 10" Orientation="Horizontal" HorizontalOptions="Center" >
+            <Button Text="Cancelar" Command="{Binding CancelCommand}" WidthRequest="150" />
+            <Button Text="Siguiente" Command="{Binding NextCommand}" WidthRequest="150" />
+        </StackLayout>
     </StackLayout>
 </ContentPage>

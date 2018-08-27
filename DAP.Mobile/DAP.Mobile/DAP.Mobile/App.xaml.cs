@@ -35,6 +35,9 @@ namespace DAP.Mobile
             containerRegistry.RegisterForNavigation<MenuDetailPage>();
             containerRegistry.RegisterForNavigation<NotificationsPage>();
             containerRegistry.RegisterForNavigation<PlanificationPage>();
+            containerRegistry.RegisterForNavigation<DailyPlanificationPage>();
+            containerRegistry.RegisterForNavigation<WeeklyPlanificationPage>();
+            containerRegistry.RegisterForNavigation<CustomPlanificationPage>();
             containerRegistry.RegisterForNavigation<ConfigurationPage>();
             containerRegistry.RegisterForNavigation<LoadPillsPage>();
         }

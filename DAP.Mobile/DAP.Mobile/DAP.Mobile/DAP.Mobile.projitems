@@ -19,7 +19,13 @@
     <Compile Include="$(MSBuildThisFileDirectory)Enums.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\MenuItem.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Notification.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Pill.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Periodicity.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\ApiClient.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\DataProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\ConfigurationPageViewModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ViewModels\CustomPlanificationPageViewModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ViewModels\DailyPlanificationPageViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\LoadPillsPageViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\MenuDetailPageViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\MenuPageViewModel.cs" />
@@ -29,8 +35,17 @@
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\LoginPageViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\ResetPasswordPageViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\SignUpPageViewModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ViewModels\WeeklyPlanificationPageViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Views\ConfigurationPage.xaml.cs">
       <DependentUpon>ConfigurationPage.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Views\CustomPlanificationPage.xaml.cs">
+      <DependentUpon>CustomPlanificationPage.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Views\DailyPlanificationPage.xaml.cs">
+      <DependentUpon>DailyPlanificationPage.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Views\LoadPillsPage.xaml.cs">
@@ -69,6 +84,10 @@
       <DependentUpon>SignUpPage.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Views\WeeklyPlanificationPage.xaml.cs">
+      <DependentUpon>WeeklyPlanificationPage.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)Views\NavigationPage.xaml">
@@ -93,9 +112,6 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="$(MSBuildThisFileDirectory)Services\" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)Views\MenuPage.xaml">
@@ -129,6 +145,24 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)Views\MenuDetailPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)Views\DailyPlanificationPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)Views\WeeklyPlanificationPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)Views\CustomPlanificationPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </EmbeddedResource>
