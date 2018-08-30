@@ -22,6 +22,15 @@
             <Style TargetType="local:RoundedEntry">
                 <Setter Property="FontSize" Value="Small" />
             </Style>
+            <Style TargetType="local:RoundedPicker">
+                <Setter Property="FontSize" Value="Small" />
+            </Style>
+            <Style TargetType="local:RoundedTimePicker">
+                <Setter Property="FontSize" Value="Small" />
+            </Style>
+            <Style TargetType="local:RoundedDatePicker">
+                <Setter Property="FontSize" Value="Small" />
+            </Style>
             <Style TargetType="Label">
                 <Setter Property="FontSize" Value="Small" />
                 <Setter Property="TextColor" Value="White" />

@@ -4,5 +4,7 @@
              xmlns:prism="clr-namespace:Prism.Mvvm;assembly=Prism.Forms"
              prism:ViewModelLocator.AutowireViewModel="True"
              x:Class="DAP.Mobile.Views.PlanificationActionPage">
-  
+    <StackLayout Margin="10">
+        <Label Text="Accion" />
+    </StackLayout>
 </ContentPage>

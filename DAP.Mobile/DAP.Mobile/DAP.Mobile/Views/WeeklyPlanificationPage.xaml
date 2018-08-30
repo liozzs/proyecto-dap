@@ -2,9 +2,33 @@
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:prism="clr-namespace:Prism.Mvvm;assembly=Prism.Forms"
+             xmlns:customcontrols="clr-namespace:DAP.Mobile.CustomControls"
              prism:ViewModelLocator.AutowireViewModel="True"
              x:Class="DAP.Mobile.Views.WeeklyPlanificationPage">
-    <StackLayout Margin="10" >
-        <Label Text="Semanal" />
+    <StackLayout Margin="10">
+        <Label Text="Periodicidad semanal" />
+        <ListView ItemsSource="{Binding WeeklyIntervals}" SelectionMode="None" SelectedItem="{Binding WeekInterval}">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <ViewCell>
+                        <StackLayout Orientation="Horizontal">
+                            <BoxView IsVisible="{Binding IsSelected}"
+                             WidthRequest="50" HeightRequest="50"
+                             Color="Green" />
+                            <Label Text="{Binding Description}" />
+                        </StackLayout>
+                    </ViewCell>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+        <Picker ItemDisplayBinding="{Binding Descripcion}" SelectedItem="{Binding SelectedDailyPeriodicity}" />
+
+        <Label Text="Hora de inicio" />
+        <customcontrols:RoundedTimePicker Time="{Binding StartTime}" Format="HH:mm" />
+
+        <StackLayout Margin="0, 10" Orientation="Horizontal" HorizontalOptions="Center" >
+            <Button Text="Cancelar" Command="{Binding CancelCommand}" WidthRequest="150" />
+            <Button Text="Siguiente" Command="{Binding NextCommand}" WidthRequest="150" />
+        </StackLayout>
     </StackLayout>
 </ContentPage>
