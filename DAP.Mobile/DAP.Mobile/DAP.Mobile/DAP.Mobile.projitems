@@ -15,6 +15,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)CustomControls\CheckBox.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CustomControls\RoundedPicker.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CustomControls\RoundedEntry.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Enums.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\MenuItem.cs" />
