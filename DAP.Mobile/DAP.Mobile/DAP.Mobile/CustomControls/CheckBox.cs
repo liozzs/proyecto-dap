@@ -1,4 +1,5 @@
-﻿using Xamarin.Forms;
+﻿using Prism.Commands;
+using Xamarin.Forms;
 
 namespace DAP.Mobile.CustomControls
 {

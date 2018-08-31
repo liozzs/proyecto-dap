@@ -21,7 +21,7 @@
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
-        <Picker ItemDisplayBinding="{Binding Descripcion}" SelectedItem="{Binding SelectedDailyPeriodicity}" />
+        <customcontrols:RoundedPicker ItemDisplayBinding="{Binding Description}" SelectedItem="{Binding SelectedDailyPeriodicity}" />
 
         <Label Text="Hora de inicio" />
         <customcontrols:RoundedTimePicker Time="{Binding StartTime}" Format="HH:mm" />

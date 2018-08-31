@@ -1,5 +1,4 @@
 ﻿using DAP.Mobile.Models;
-using System;
 using System.Collections.Generic;
 
 namespace DAP.Mobile.Services
@@ -10,6 +9,7 @@ namespace DAP.Mobile.Services
         public static IList<DailyInterval> DailyIntervals { get; private set; }
         public static IList<Periodicity> Periodicities { get; private set; }
         public static IList<Pill> Pills { get; private set; }
+        public static IList<int> Containers { get; set; }
 
         static DataProvider()
         {
@@ -17,6 +17,12 @@ namespace DAP.Mobile.Services
             FillDailyPeriodicities();
             FillWeeklyPeriodicities();
             FillPills();
+            FillContainers();
+        }
+
+        private static void FillContainers()
+        {
+            Containers = new List<int> { 1, 2 };
         }
 
         private static void FillPills()
