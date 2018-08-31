@@ -1,4 +1,5 @@
-﻿using Prism.Navigation;
+﻿using Prism.Commands;
+using Prism.Navigation;
 using Prism.Services;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -25,8 +26,8 @@ namespace DAP.Mobile.ViewModels
         {
             this.dialogService = dialogService;
 
-            CancelCommand = new Command(async () => await navigationService.GoBackAsync());
-            AcceptCommand = new Command(async () => await Accept());
+            CancelCommand = new DelegateCommand(async () => await navigationService.GoBackAsync());
+            AcceptCommand = new DelegateCommand(async () => await Accept());
         }
 
         private async Task Accept()

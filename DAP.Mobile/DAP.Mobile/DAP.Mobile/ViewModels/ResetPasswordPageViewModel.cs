@@ -19,8 +19,8 @@ namespace DAP.Mobile.ViewModels
         {
             this.dialogService = dialogService;
 
-            CancelCommand = new Command(async () => await navigationService.GoBackAsync());
-            AcceptCommand = new Command(async () => await Accept());
+            CancelCommand = new DelegateCommand(async () => await navigationService.GoBackAsync());
+            AcceptCommand = new DelegateCommand(async () => await Accept());
         }
 
         private async Task Accept()

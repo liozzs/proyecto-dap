@@ -20,7 +20,7 @@ namespace DAP.Mobile.CustomControls
             this.Children.Add(lblOption);
             this.GestureRecognizers.Add(new TapGestureRecognizer
             {
-                Command = new Command(() => { IsChecked = !IsChecked; }),
+                Command = new DelegateCommand(() => { IsChecked = !IsChecked; }),
             });
         }
         public CheckBox(string optionName, int key) : this()

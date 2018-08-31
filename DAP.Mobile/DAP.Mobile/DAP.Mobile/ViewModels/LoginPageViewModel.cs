@@ -25,9 +25,9 @@ namespace DAP.Mobile.ViewModels
 
         public LoginPageViewModel(INavigationService navigationService) : base(navigationService)
         {
-            LoginCommand = new Command(async () => await Login(), () => !IsLoading);
-            SignUpCommand = new Command(async () => await NavigationService.NavigateAsync("SignUpPage"), () => !IsLoading);
-            ResetPasswordCommand = new Command(async () => await NavigationService.NavigateAsync("ResetPasswordPage"), () => !IsLoading);
+            LoginCommand = new DelegateCommand(async () => await Login(), () => !IsLoading);
+            SignUpCommand = new DelegateCommand(async () => await NavigationService.NavigateAsync("SignUpPage"), () => !IsLoading);
+            ResetPasswordCommand = new DelegateCommand(async () => await NavigationService.NavigateAsync("ResetPasswordPage"), () => !IsLoading);
         }
 
         private async Task Login()
