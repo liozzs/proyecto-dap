@@ -3,7 +3,6 @@ using Prism.Navigation;
 using Prism.Services;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using Xamarin.Forms;
 
 namespace DAP.Mobile.ViewModels
 {

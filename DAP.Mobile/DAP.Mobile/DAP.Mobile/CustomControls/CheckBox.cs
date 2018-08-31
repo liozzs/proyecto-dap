@@ -5,10 +5,10 @@ namespace DAP.Mobile.CustomControls
 {
     public class CheckBox : StackLayout
     {
-        readonly BoxView boxBackground = new BoxView { HeightRequest = 25, WidthRequest = 25, BackgroundColor = Color.LightGray, VerticalOptions = LayoutOptions.CenterAndExpand };
-        readonly BoxView boxSelected = new BoxView { IsVisible = false, HeightRequest = 18, WidthRequest = 18, BackgroundColor = Color.Accent, VerticalOptions = LayoutOptions.CenterAndExpand, HorizontalOptions = LayoutOptions.Center };
-        readonly Label lblSelected = new Label { Text = "✓", FontSize = 19, FontAttributes = FontAttributes.Bold, IsVisible = false, TextColor = Color.Accent, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.CenterAndExpand };
-        readonly Label lblOption = new Label { VerticalOptions = LayoutOptions.CenterAndExpand, FontSize = 14 };
+        private readonly BoxView boxBackground = new BoxView { HeightRequest = 25, WidthRequest = 25, BackgroundColor = Color.LightGray, VerticalOptions = LayoutOptions.CenterAndExpand };
+        private readonly BoxView boxSelected = new BoxView { IsVisible = false, HeightRequest = 18, WidthRequest = 18, BackgroundColor = Color.Accent, VerticalOptions = LayoutOptions.CenterAndExpand, HorizontalOptions = LayoutOptions.Center };
+        private readonly Label lblSelected = new Label { Text = "✓", FontSize = 19, FontAttributes = FontAttributes.Bold, IsVisible = false, TextColor = Color.Accent, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.CenterAndExpand };
+        private readonly Label lblOption = new Label { VerticalOptions = LayoutOptions.CenterAndExpand, FontSize = 14 };
         private CheckType _type = CheckType.Box;
 
         public CheckBox()
@@ -24,13 +24,16 @@ namespace DAP.Mobile.CustomControls
                 Command = new DelegateCommand(() => { IsChecked = !IsChecked; }),
             });
         }
+
         public CheckBox(string optionName, int key) : this()
         {
             Key = key;
             lblOption.Text = optionName;
         }
+
         public int Key { get; set; }
         public string Text { get => lblOption.Text; set => lblOption.Text = value; }
+
         public bool IsChecked
         {
             get => ((this.Children[0] as Grid).Children[1]).IsVisible; set
@@ -39,6 +42,7 @@ namespace DAP.Mobile.CustomControls
                 SetValue(IsCheckedProperty, value);
             }
         }
+
         public Color Color { get => boxSelected.BackgroundColor; set { boxSelected.BackgroundColor = value; lblSelected.TextColor = value; } }
         public Color TextColor { get => lblOption.TextColor; set => lblOption.TextColor = value; }
         public CheckType Type { get => _type; set { _type = value; UpdateType(value); } }
@@ -49,7 +53,7 @@ namespace DAP.Mobile.CustomControls
         public static readonly BindableProperty KeyProperty = BindableProperty.Create(nameof(Key), typeof(int), typeof(CheckBox), 0, propertyChanged: (bo, ov, nv) => (bo as CheckBox).Key = (int)nv);
         public static readonly BindableProperty TextProperty = BindableProperty.Create(nameof(Text), typeof(string), typeof(CheckBox), "", propertyChanged: (bo, ov, nv) => (bo as CheckBox).Text = (string)nv);
 
-        void UpdateType(CheckType _Type)
+        private void UpdateType(CheckType _Type)
         {
             switch (_Type)
             {
@@ -57,16 +61,19 @@ namespace DAP.Mobile.CustomControls
                     (this.Children[0] as Grid).Children.Remove(lblSelected);
                     (this.Children[0] as Grid).Children.Add(boxSelected);
                     break;
+
                 case CheckType.Check:
                     lblSelected.Text = "✓";
                     (this.Children[0] as Grid).Children.Remove(boxSelected);
                     (this.Children[0] as Grid).Children.Add(lblSelected);
                     break;
+
                 case CheckType.Cross:
                     lblSelected.Text = "✕";
                     (this.Children[0] as Grid).Children.Remove(boxSelected);
                     (this.Children[0] as Grid).Children.Add(lblSelected);
                     break;
+
                 case CheckType.Star:
                     lblSelected.Text = "★";
                     (this.Children[0] as Grid).Children.Remove(boxSelected);

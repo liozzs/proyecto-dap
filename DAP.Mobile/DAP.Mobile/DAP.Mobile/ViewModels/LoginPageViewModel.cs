@@ -3,7 +3,6 @@ using Prism.Navigation;
 using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using Xamarin.Forms;
 
 namespace DAP.Mobile.ViewModels
 {
@@ -50,7 +49,7 @@ namespace DAP.Mobile.ViewModels
 
                 await NavigationService.NavigateAsync("/MenuPage/NavigationPage/MenuDetailPage");
             }
-            //catch 
+            //catch
             //{
             //}
             finally

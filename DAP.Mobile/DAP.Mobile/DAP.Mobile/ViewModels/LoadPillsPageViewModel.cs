@@ -6,7 +6,7 @@ using System.Windows.Input;
 namespace DAP.Mobile.ViewModels
 {
     public class LoadPillsPageViewModel : ViewModelBase
-	{
+    {
         public string PillName { get; set; }
         public int? Quantity { get; set; }
         public int Container { get; set; }

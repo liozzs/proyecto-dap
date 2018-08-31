@@ -32,7 +32,7 @@ namespace DAP.Mobile.ViewModels
 
         private Task Next()
         {
-            if(SelectedPeriodicity == null)
+            if (SelectedPeriodicity == null)
             {
                 return dialogService.DisplayAlertAsync("Validación", "Seleccione una periodicidad", "Aceptar");
             }

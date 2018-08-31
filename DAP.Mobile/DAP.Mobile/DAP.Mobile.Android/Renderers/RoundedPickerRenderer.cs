@@ -12,6 +12,7 @@ using Xamarin.Forms.Platform.Android;
 [assembly: ExportRenderer(typeof(RoundedPicker), typeof(RoundedPickerRenderer))]
 [assembly: ExportRenderer(typeof(RoundedTimePicker), typeof(RoundedTimePickerRenderer))]
 [assembly: ExportRenderer(typeof(RoundedDatePicker), typeof(RoundedDatePickerRenderer))]
+
 namespace DAP.Mobile.Droid.Renderers
 {
     public class RoundedPickerRenderer : PickerRenderer
@@ -72,7 +73,7 @@ namespace DAP.Mobile.Droid.Renderers
         }
 
         private static BitmapDrawable GetDrawable(EditText control)
-    {
+        {
             int resID = control.Resources.GetIdentifier("arrow", "drawable", control.Context.PackageName);
             var drawable = ContextCompat.GetDrawable(control.Context, resID);
             var bitmap = ((BitmapDrawable)drawable).Bitmap;

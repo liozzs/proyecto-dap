@@ -21,6 +21,7 @@ namespace DAP.Mobile.Models
         public string Description { get; set; }
 
         private bool isSelected;
+
         public bool IsSelected
         {
             get { return isSelected; }

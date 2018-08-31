@@ -7,13 +7,13 @@ using Xamarin.Forms;
 using Xamarin.Forms.Platform.Android;
 
 [assembly: ExportRenderer(typeof(RoundedEntry), typeof(RoundedEntryRenderer))]
+
 namespace DAP.Mobile.Droid.Renderers
 {
     public class RoundedEntryRenderer : EntryRenderer
     {
         public RoundedEntryRenderer(Context context) : base(context)
         {
-
         }
 
         protected override void OnElementChanged(ElementChangedEventArgs<Entry> e)

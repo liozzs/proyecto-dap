@@ -29,4 +29,3 @@ namespace DAP.Mobile.Droid
         }
     }
 }
-

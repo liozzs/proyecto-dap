@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace DAP.Mobile.ViewModels
 {
     public class NotificationsPageViewModel : ViewModelBase
-	{
+    {
         public DelegateCommand LoadNotificationsCommand { get; set; }
         public DelegateCommand OpenNotificationCommand { get; set; }
         public ObservableCollection<Notification> Notifications { get; set; }
@@ -29,12 +29,16 @@ namespace DAP.Mobile.ViewModels
         private Task LoadNotifications()
         {
             IsLoading = true;
-            return Task.Run(() => {                
+            return Task.Run(() =>
+            {
                 for (int i = 0; i < 5; i++)
                 {
-                    Notifications.Add(new Notification() { Message = $"Mensaje {i} Mensaje {i} Mensaje {i} Mensaje {i} Mensaje {i} Mensaje {i} Mensaje {i} Mensaje {i} Mensaje {i} Mensaje {i} Mensaje {i} Mensaje {i} Mensaje {i} Mensaje {i} ",
+                    Notifications.Add(new Notification()
+                    {
+                        Message = $"Mensaje {i} Mensaje {i} Mensaje {i} Mensaje {i} Mensaje {i} Mensaje {i} Mensaje {i} Mensaje {i} Mensaje {i} Mensaje {i} Mensaje {i} Mensaje {i} Mensaje {i} Mensaje {i} ",
                         Title = $"Título {i}",
-                        Date = DateTime.Now.AddMinutes(-i) });
+                        Date = DateTime.Now.AddMinutes(-i)
+                    });
                 }
 
                 IsLoading = false;

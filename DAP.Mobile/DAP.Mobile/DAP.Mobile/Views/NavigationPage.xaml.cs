@@ -1,10 +1,10 @@
 ﻿namespace DAP.Mobile.Views
 {
     public partial class NavigationPage : Xamarin.Forms.NavigationPage
-	{
-		public NavigationPage ()
-		{
-			InitializeComponent ();
-		}
-	}
+    {
+        public NavigationPage()
+        {
+            InitializeComponent();
+        }
+    }
 }

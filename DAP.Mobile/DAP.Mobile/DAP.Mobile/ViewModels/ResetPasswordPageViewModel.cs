@@ -3,14 +3,13 @@ using Prism.Navigation;
 using Prism.Services;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using Xamarin.Forms;
 
 namespace DAP.Mobile.ViewModels
 {
     public class ResetPasswordPageViewModel : ViewModelBase
-	{
+    {
         private readonly IPageDialogService dialogService;
-        
+
         public string Email { get; set; }
 
         public ICommand CancelCommand { get; set; }
