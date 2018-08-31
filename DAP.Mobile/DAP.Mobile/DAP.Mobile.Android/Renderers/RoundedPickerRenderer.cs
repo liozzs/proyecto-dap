@@ -70,6 +70,7 @@ namespace DAP.Mobile.Droid.Renderers
 
             control.SetPadding(20, 0, 20, 0);
             control.Background = layerDrawable;
+            control.Gravity = Android.Views.GravityFlags.Center;
         }
 
         private static BitmapDrawable GetDrawable(EditText control)

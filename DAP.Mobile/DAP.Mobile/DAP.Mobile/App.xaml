@@ -20,6 +20,7 @@
                 <Setter Property="FontSize" Value="Small" />
             </Style>
             <Style TargetType="local:RoundedEntry">
+                <Setter Property="HorizontalTextAlignment" Value="Center" />
                 <Setter Property="FontSize" Value="Small" />
             </Style>
             <Style TargetType="local:RoundedPicker">

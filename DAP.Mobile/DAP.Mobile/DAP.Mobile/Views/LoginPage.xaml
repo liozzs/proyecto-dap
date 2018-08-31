@@ -22,7 +22,7 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <local:RoundedEntry Text="{Binding User}" Placeholder="USUARIO" HorizontalTextAlignment="Center" Grid.ColumnSpan="2" MaxLength="50" Keyboard="Email" />
+                <local:RoundedEntry Text="{Binding User}" Placeholder="USUARIO" Grid.ColumnSpan="2" MaxLength="50" Keyboard="Email" />
                 <Image Source="user.png" HeightRequest="20" WidthRequest="20" Margin="10,0,0,0" />
             </Grid>
             <Grid Grid.Row="2">
@@ -30,7 +30,7 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <local:RoundedEntry Text="{Binding Password}" Placeholder="CONTRASEÑA" HorizontalTextAlignment="Center" IsPassword="True" Grid.ColumnSpan="2" MaxLength="50" />
+                <local:RoundedEntry Text="{Binding Password}" Placeholder="CONTRASEÑA" IsPassword="True" Grid.ColumnSpan="2" MaxLength="50" />
                 <Image Source="pass.png" HeightRequest="20" WidthRequest="20" Margin="10,0,0,0" />
             </Grid>
             <Button Text="INGRESAR" Command="{Binding LoginCommand}" Grid.Row="3" />

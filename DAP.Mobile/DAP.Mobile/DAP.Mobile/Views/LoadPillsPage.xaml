@@ -9,9 +9,9 @@
              Title="Cargar pastillas">
     <StackLayout Margin="10">
         <Label Text="Pastilla" />
-        <customcontrols:RoundedEntry Text="{Binding PillName}" />
+        <customcontrols:RoundedEntry Text="{Binding PillName}" MaxLength="100" />
         <Label Text="Cantidad" />
-        <customcontrols:RoundedEntry Text="{Binding Quantity}" HorizontalTextAlignment="End" />
+        <customcontrols:RoundedEntry Text="{Binding Quantity}" Keyboard="Numeric" MaxLength="3" />
         <Label Text="Contenedor" />
         <customcontrols:RoundedPicker ItemsSource="{Binding Source = {x:Static data:DataProvider.Containers}}" SelectedItem="{Binding Container}" />
 

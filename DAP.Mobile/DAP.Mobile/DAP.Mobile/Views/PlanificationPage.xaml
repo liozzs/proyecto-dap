@@ -27,10 +27,10 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <Label Grid.Row="0" Grid.Column="0" Text="Stock&#x0a;crítico" HorizontalOptions="Center" />
-            <customcontrols:RoundedEntry Grid.Row="1" Grid.Column="0" Text="{Binding CriticalStock}" HorizontalTextAlignment="End" />
+            <customcontrols:RoundedEntry Grid.Row="1" Grid.Column="0" Text="{Binding CriticalStock}" Keyboard="Numeric" MaxLength="2" />
             <BoxView Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Color="White" WidthRequest="2" />
             <Label Grid.Row="0" Grid.Column="2" Text="   Cantidad&#x0a;a dispensar" HorizontalOptions="Center" />
-            <customcontrols:RoundedEntry Grid.Row="1" Grid.Column="2" Text="{Binding QtyToDispense}" HorizontalTextAlignment="End" />
+            <customcontrols:RoundedEntry Grid.Row="1" Grid.Column="2" Text="{Binding QtyToDispense}" Keyboard="Numeric" MaxLength="1" />
         </Grid>
 
         <Label Text="Inicio" />
