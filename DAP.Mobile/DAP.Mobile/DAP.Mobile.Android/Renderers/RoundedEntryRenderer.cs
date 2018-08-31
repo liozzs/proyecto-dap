@@ -24,7 +24,7 @@ namespace DAP.Mobile.Droid.Renderers
                 GradientDrawable gd = new GradientDrawable();
                 gd.SetColor(ColorStateList.ValueOf(Android.Graphics.Color.White));
                 gd.SetCornerRadius(50);
-                Control.SetBackgroundDrawable(gd);
+                Control.Background = gd;
             }
         }
     }

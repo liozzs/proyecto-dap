@@ -67,8 +67,8 @@ namespace DAP.Mobile.Droid.Renderers
             Drawable[] layers = { gd, GetDrawable(control) };
             LayerDrawable layerDrawable = new LayerDrawable(layers);
             layerDrawable.SetLayerInset(0, 0, 0, 0, 0);
-            layerDrawable.SetPadding(0, 0, 10, 0);
 
+            control.SetPadding(20, 0, 20, 0);
             control.Background = layerDrawable;
         }
 
