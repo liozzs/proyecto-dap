@@ -6,8 +6,9 @@ RTC_DS3231 rtc;
 
 Planificador::Planificador(){
   pciSetup(PIN_BUTTON);
-  for (int i=0; i < MAX_SUPPORTED_ALARMS; i++)
+  for (int i=0; i < MAX_SUPPORTED_ALARMS; i++){
      pciSetup(PIN_DISPENSE_SENSOR[i]);
+  }
   
   loadAlarms();
   setInitTime(0);
@@ -190,14 +191,15 @@ bool Planificador::execute(){
         config->stock--;
         config->waitingForButton = false;
         config->movePlate = true;
+        desactivarBuzzer();
         saveAlarms();
-        setButtonPressed(false);
         continue;
       }
     }
 
     //verificar si ya se hizo el dispendio
-    if (alarmDispensed(config) == true) {
+    if (alarmDispensed(config) == true && config->movePlate == true) {
+      Serial.println("ENTRON");
        config->times++;
        config->movePlate = false;
        setSensorDetected(-1);
@@ -221,7 +223,6 @@ bool Planificador::execute(){
       setButtonReady(true); //habilita el presionado del boton    
       config->waitingForButton = true;
       saveAlarms(); //guardar el cambio 
-
     }
     if (sec > BUTTON_THRESHOLD && config->waitingForButton == true) {
        config->waitingForButton = false;
@@ -234,7 +235,15 @@ bool Planificador::execute(){
        saveAlarms();
     }
 
+    if (config->waitingForButton == true)
+      activarBuzzer();
+
   }
+
+  //Acciones despues del for
+   if (isButtonPressed()){
+    setButtonPressed(false);
+   }
 }
 
 //Devuelve el tiempo en segundos para el proximo dispendio de la alarma 'config'
@@ -280,11 +289,14 @@ void Planificador::checkCriticalStock() {
 
 void Planificador::processPlates(){
   for (int i = 0; i < this->configDataList.Count(); i++)
-  {
+  { 
+    
     Alarm* config = &this->configDataList[i];
 
-    if (config->movePlate == true)
-      startPlate(plates[plateIDToIndex(config->plateID)]);
+    if (config->movePlate == true){
+      startPlate(plates[plateIDToIndex(config->plateID)], i);
+    }
+      
 
     else if (getSensorDetected() != -1)
       stopPlate(plates[getSensorDetected()]);
@@ -306,12 +318,25 @@ void Planificador::initServo(){
   for (int i=0; i< MAX_SUPPORTED_ALARMS; i++) 
      plates[i].attach(PIN_PLATE_MOTOR[i]);
 }
-void Planificador::startPlate(Servo plate) {
 
-    plate.write(180);
-    delay(20);
-    plate.writeMicroseconds(1500);
-    delay(90); 
+
+void Planificador::startPlate(Servo plate, int index) {
+    //Importante: esta configuracion funciona bien si la alimentacion es la del arduino.
+    unsigned long currentMillis = millis();
+    
+    if (currentMillis - previousMillisMotor[index] >= 100) {
+      plate.write(180);
+    }
+   
+    if (currentMillis - previousMillisMotor[index] >= 100 + 20) { 
+        plate.writeMicroseconds(1500);
+        previousMillisMotor[index] = currentMillis;
+    }
+      
+    //plate.write(180);
+    //delay(20);
+    //plate.writeMicroseconds(1500);
+    //delay(90); 
 }
 
 void Planificador::stopPlate(Servo plate) {
@@ -342,11 +367,11 @@ void Planificador::processCommandsWIFI()
   //Lee mensajes de WIFI 
   String str = readFromWIFI();
 
-  //if (str != "")
-  //  Log.Debug("Recibido de WIFI: %s\n", string2char(str));
+  if (str != "")
+   Log.Debug("Recibido de WIFI: %s\n", string2char(str));
   
   if (str != "" && !str.startsWith("debug:", 0)) {
-    StaticJsonBuffer<130> jsonBuffer;
+    StaticJsonBuffer<300> jsonBuffer;
     JsonObject& root = jsonBuffer.parseObject(str);
     if (!root.success()) {
       Log.Debug("Json parseObject() failed");
@@ -361,7 +386,48 @@ void Planificador::processCommandsWIFI()
       Log.Debug("WIFI: IP ! %s\n", root["ip"].as<char *>());
       //this->setInitTime(root["ip"].as<String>());
     } 
+
+    if (root.containsKey("plan")){
+      
+      DateTime startTime;
+      String startTimeString = root["startTime"];
+      int anio = startTimeString.substring(0,4).toInt();
+      int mes = startTimeString.substring(4,6).toInt();
+      int dia = startTimeString.substring(6,8).toInt();
+      int hora = startTimeString.substring(8,10).toInt();
+      int minuto = startTimeString.substring(10,12).toInt();
+      int segundo = startTimeString.substring(12,14).toInt();
+
+      startTime = DateTime(anio,mes,dia,hora,minuto,segundo);
+      
+      int interval = root["interval"].as<int>();
+      int quantity = root["quantity"].as<int>();
+      int stock = root["stock"].as<int>();
+      int criticalStock = root["criticalStock"].as<int>();
+      byte periodicity = root["periodicity"].as<byte>();
+      char *days = root["days"];
+      bool block = root["block"].as<bool>();
+      int plateID = root["plateID"].as<int>();
+      
+      //(DateTime startTime, int interval, int quantity, int stock, int criticalStock, byte periodicity, char* days, bool block, int plateID)
+      this->setAlarm(startTime, interval, quantity, stock, criticalStock, periodicity, days, block, plateID);
+
+    } 
  }
+}
+
+void Planificador::activarBuzzer()
+{
+  if (millis() - previousMillisBuzzer >= 800)
+  {
+    previousMillisBuzzer += 800;
+    tone(PIN_BUZZER, 800, 500); // play 800 Hz tone in background for 'onDuration'
+  }
+}
+
+void Planificador::desactivarBuzzer()
+{
+  noTone(PIN_BUZZER);
 }
 
 

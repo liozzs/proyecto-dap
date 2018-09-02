@@ -42,7 +42,7 @@ void refresh_display()
 
     // Change the number displayed every second.
     static uint32_t last_change;
-    if (now - last_change >= 1000*1000) {
+    if (now - last_change >= 1000) {
         
         int min = planif->getTime().hour();
         int min_1 = (min / 10U) % 10;

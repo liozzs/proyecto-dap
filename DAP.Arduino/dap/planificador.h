@@ -57,11 +57,15 @@ class Planificador{
     int plateIDToIndex(int plateID);
     long nextDispense(Alarm* config);
     bool alarmDispensed(Alarm* config);
+    void activarBuzzer();
+    void desactivarBuzzer();
     
     //MOTOR
     Servo plate1;
     Servo plate2;
     Servo plates[MAX_SUPPORTED_ALARMS] = {plate1, plate2};
+    unsigned long previousMillisMotor[MAX_SUPPORTED_ALARMS] = {0,0};  
+    unsigned long previousMillisBuzzer = 0;
    
    public: 
     Planificador();
@@ -82,7 +86,7 @@ class Planificador{
 
     //MOTOR
     void initServo();
-    void startPlate(Servo plate);
+    void startPlate(Servo plate, int index);
     void stopPlate(Servo plate);
 
 

@@ -24,11 +24,12 @@ ISR (PCINT0_vect) // handle pin change interrupt for D0 to D7 here
     buttonPressed = true;
     buttonReady = false;
   }
-  else {
+  else  {
     for (int i=0; i < MAX_SUPPORTED_ALARMS; i++) {
-      if (digitalRead(PIN_DISPENSE_SENSOR[i]) == 0){
+      if (digitalRead(PIN_DISPENSE_SENSOR[i]) == 1){
         Serial.println( PIN_DISPENSE_SENSOR[i]  );
        sensorDetected = i;
+       
       }
     }
   }  
