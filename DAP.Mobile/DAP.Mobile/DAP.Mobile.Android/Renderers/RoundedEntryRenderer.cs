@@ -25,6 +25,7 @@ namespace DAP.Mobile.Droid.Renderers
                 gd.SetColor(ColorStateList.ValueOf(Android.Graphics.Color.White));
                 gd.SetCornerRadius(50);
                 Control.SetBackgroundDrawable(gd);
+                //Control.SetHeight(80);
             }
         }
     }

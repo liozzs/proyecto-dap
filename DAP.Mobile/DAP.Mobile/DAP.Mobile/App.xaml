@@ -9,25 +9,17 @@
             <Color x:Key="Primary">#003D5D</Color>
             <Color x:Key="LightOrange">#F08B2F</Color>
             <Color x:Key="DarkOrange">#8E3D0B</Color>
-            <Color x:Key="MediumGrayTextColor">#4d4d4d</Color>
-            <Color x:Key="LightTextColor">#999999</Color>
             <Style TargetType="Page" ApplyToDerivedTypes="true">
                 <Setter Property="BackgroundImage" Value="background.jpg" />
-            </Style>
-            <Style TargetType="NavigationPage">
-                <Setter Property="BarBackgroundColor" Value="{StaticResource Primary}" />
-                <Setter Property="BarTextColor" Value="White" />
             </Style>
             <Style TargetType="Button">
                 <Setter Property="BackgroundColor" Value="{StaticResource LightOrange}" />
                 <Setter Property="TextColor" Value="{StaticResource DarkOrange}" />
-                <Setter Property="BorderRadius" Value="20" />
-                <Setter Property="HeightRequest" Value="35" />
+                <Setter Property="BorderRadius" Value="50" />
+                <Setter Property="HeightRequest" Value="40" />
                 <Setter Property="FontSize" Value="Small" />
-                <Setter Property="VerticalOptions" Value="Center" />
             </Style>
             <Style TargetType="local:RoundedEntry">
-                <Setter Property="HeightRequest" Value="35" />
                 <Setter Property="FontSize" Value="Small" />
             </Style>
             <Style TargetType="Label">

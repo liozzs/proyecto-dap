@@ -1,5 +1,4 @@
-﻿using Prism.Mvvm;
-using Prism.Navigation;
+﻿using Prism.Navigation;
 using Prism.Services;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -9,16 +8,7 @@ namespace DAP.Mobile.ViewModels
 {
     public class SignUpPageViewModel : ViewModelBase
     {
-        private readonly INavigationService navigationService;
         private readonly IPageDialogService dialogService;
-
-        private string message;
-
-        public string Message
-        {
-            get { return message; }
-            set { SetProperty(ref message, value); }
-        }
 
         public string Name { get; set; }
         public string Surname { get; set; }
@@ -33,7 +23,6 @@ namespace DAP.Mobile.ViewModels
 
         public SignUpPageViewModel(INavigationService navigationService, IPageDialogService dialogService) : base(navigationService)
         {
-            this.navigationService = navigationService;
             this.dialogService = dialogService;
 
             CancelCommand = new Command(async () => await navigationService.GoBackAsync());
@@ -42,7 +31,7 @@ namespace DAP.Mobile.ViewModels
 
         private async Task Accept()
         {
-            await navigationService.GoBackAsync();
+            await NavigationService.GoBackAsync();
             await dialogService.DisplayAlertAsync("Registro", "Todo piols", "Aceptar");
         }
     }
