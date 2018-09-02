@@ -10,16 +10,18 @@
 #include <Timezone.h> 
 #include "conectividad.h"
 #include <ArduinoJson.h>
-
+#include <NewTone.h>
+#include <NewPing.h>
 
 #define PERIODICIDAD_DIARIA 0
 #define PERIODICIDAD_SEMANAL 1
 #define PERIODICIDAD_PERSONALIZADA 2
 
 #define BUTTON_THRESHOLD 10 //segundos a esperar para que se presione el boton que inicia el dispendio
+#define VASO_THRESHOLD 20 //segundos a esperar para que se retire el vaso, pasado este tiempo se emite notificacion
 
 //ALARMA
-const int UMBRAL_ALARMA_SEG = 2; //umbral para determinar si la hora actual coincide con alguna alarma
+const int UMBRAL_ALARMA_SEG = 1; //umbral para determinar si la hora actual coincide con alguna alarma
 
 
 struct Alarm {
@@ -36,6 +38,7 @@ struct Alarm {
   bool block; // si block es true, se bloquea si no se reprograma
   bool blocked; // indica que esta alarma/plato dispensador esta bloqueado
   bool waitingForButton; // si tiene que dispensar y esta esperando el boton
+  bool waitingForVaso; // si tiene que retirar el vaso
   bool movePlate; // si tiene que mover el plato
   byte valid; //data valida
 
@@ -59,6 +62,7 @@ class Planificador{
     bool alarmDispensed(Alarm* config);
     void activarBuzzer();
     void desactivarBuzzer();
+    bool checkVasoInPlace();
     
     //MOTOR
     Servo plate1;
@@ -66,6 +70,7 @@ class Planificador{
     Servo plates[MAX_SUPPORTED_ALARMS] = {plate1, plate2};
     unsigned long previousMillisMotor[MAX_SUPPORTED_ALARMS] = {0,0};  
     unsigned long previousMillisBuzzer = 0;
+    unsigned long previousMillisVaso = 0;
    
    public: 
     Planificador();

@@ -62,7 +62,7 @@ void refresh_display()
     // Wait for 2.5 ms before switching digits.
     static uint32_t last_switch;
   
-    if (now - last_switch < 2500) return;
+    if (now - last_switch < 2000) return;
     last_switch = now;
 
     // Switch off the current digit.

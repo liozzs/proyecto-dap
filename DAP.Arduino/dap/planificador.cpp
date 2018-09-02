@@ -4,6 +4,8 @@
 
 RTC_DS3231 rtc;
 
+NewPing sonar(PIN_VASO, PIN_VASO, 200);
+
 Planificador::Planificador(){
   pciSetup(PIN_BUTTON);
   for (int i=0; i < MAX_SUPPORTED_ALARMS; i++){
@@ -15,13 +17,12 @@ Planificador::Planificador(){
 
   //MOTOR
   initServo();
-    
-  //
+ 
 };
 
 void Planificador::setAlarm(DateTime startTime, int interval, int quantity, int plateID)
 {    
-  this->setAlarm(startTime, interval, quantity, 1000, 2, 0, "1111111", false, plateID);
+  this->setAlarm(startTime, interval, quantity, 1000, 5, 0, "1111111", false, plateID);
 }
 
 /*
@@ -203,7 +204,8 @@ bool Planificador::execute(){
        config->times++;
        config->movePlate = false;
        setSensorDetected(-1);
-      
+       config->waitingForVaso = true;
+       previousMillisVaso = millis();
        saveAlarms();
     }
 
@@ -214,6 +216,15 @@ bool Planificador::execute(){
     if (config->days[day] != '1') {
        Log.Debug("Dispendio no configurado para este dia");
        continue;
+    }
+
+    //verificar el retiro del vaso
+    if (config->waitingForVaso == true){
+      Log.Debug("Chequando si el vaso se retiro\n");
+      if (checkVasoInPlace()){
+        Log.Debug("VASO retirado\n");
+        config->waitingForVaso = false;
+      }
     }
 
     long sec = nextDispense(config);
@@ -234,6 +245,13 @@ bool Planificador::execute(){
        setButtonReady(false); // se paso el tiempo de espera de presionado del boton
        saveAlarms();
     }
+
+     //Accion en caso de no retiro del vaso
+    if (millis() - previousMillisVaso > VASO_THRESHOLD * 1000 && config->waitingForVaso == true){
+      Log.Debug("VASO no retirado, enviando notificacion\n"); //que mas se hace? se sigue como si nada?
+      config->waitingForVaso=false;
+    }
+
 
     if (config->waitingForButton == true)
       activarBuzzer();
@@ -285,6 +303,18 @@ void Planificador::checkCriticalStock() {
     }
   }
 }
+
+bool Planificador::checkVasoInPlace() {
+  int cm;
+  
+  cm = sonar.ping_cm();
+
+  if (cm < 10)
+    return false;
+  return true;
+  
+}
+
 //SECCION MANEJO MOTOR
 
 void Planificador::processPlates(){
@@ -421,13 +451,13 @@ void Planificador::activarBuzzer()
   if (millis() - previousMillisBuzzer >= 800)
   {
     previousMillisBuzzer += 800;
-    tone(PIN_BUZZER, 800, 500); // play 800 Hz tone in background for 'onDuration'
+    NewTone(PIN_BUZZER, 800, 500); // play 800 Hz tone in background for 'onDuration'
   }
 }
 
 void Planificador::desactivarBuzzer()
 {
-  noTone(PIN_BUZZER);
+  noNewTone(PIN_BUZZER);
 }
 
 

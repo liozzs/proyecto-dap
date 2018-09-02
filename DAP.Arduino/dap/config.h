@@ -10,6 +10,7 @@ const int MAX_SUPPORTED_ALARMS = 2;
 
 const int PIN_BUTTON = 53;
 const int PIN_BUZZER = 2;
+const int PIN_VASO = 7;
 
 const byte PIN_PLATE_MOTOR[MAX_SUPPORTED_ALARMS] = {10,11}; 
 const byte PIN_DISPENSE_SENSOR[MAX_SUPPORTED_ALARMS] = {51, 52}; //interrupcion
