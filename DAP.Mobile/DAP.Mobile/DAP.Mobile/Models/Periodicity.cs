@@ -14,18 +14,4 @@ namespace DAP.Mobile.Models
         public int Id { get; set; }
         public string Description { get; set; }
     }
-
-    public class WeeklyInterval : BindableBase
-    {
-        public int Id { get; set; }
-        public string Description { get; set; }
-
-        private bool isSelected;
-
-        public bool IsSelected
-        {
-            get { return isSelected; }
-            set { SetProperty(ref isSelected, value); }
-        }
-    }
 }

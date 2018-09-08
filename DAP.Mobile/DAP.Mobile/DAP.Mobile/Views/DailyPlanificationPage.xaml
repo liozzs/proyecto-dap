@@ -2,21 +2,20 @@
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:prism="clr-namespace:Prism.Mvvm;assembly=Prism.Forms"
-             xmlns:data="clr-namespace:DAP.Mobile.Services"
              xmlns:customcontrols="clr-namespace:DAP.Mobile.CustomControls"
              prism:ViewModelLocator.AutowireViewModel="True"
              x:Class="DAP.Mobile.Views.DailyPlanificationPage">
     <StackLayout Margin="10">
 
         <Label Text="Periodicidad diaria" />
-        <customcontrols:RoundedPicker ItemsSource="{Binding Source = {x:Static data:DataProvider.DailyIntervals}}"
+        <customcontrols:RoundedPicker ItemsSource="{Binding DailyIntervals}"
                 ItemDisplayBinding="{Binding Description}"
-                SelectedItem="{Binding SelectedDailyPeriodicity}" />
+                SelectedItem="{Binding DailyPeriodicity}" />
 
         <Label Text="Hora de inicio" />
         <customcontrols:RoundedTimePicker Time="{Binding StartTime}" Format="HH:mm" />
 
-        <StackLayout Margin="0, 10" Orientation="Horizontal" HorizontalOptions="Center">
+        <StackLayout Margin="0, 10" Orientation="Horizontal" HorizontalOptions="Center" VerticalOptions="End">
             <Button Text="Cancelar" Command="{Binding CancelCommand}" WidthRequest="150" />
             <Button Text="Siguiente" Command="{Binding NextCommand}" WidthRequest="150" />
         </StackLayout>

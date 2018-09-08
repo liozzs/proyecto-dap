@@ -7,26 +7,46 @@
              x:Class="DAP.Mobile.Views.WeeklyPlanificationPage">
     <StackLayout Margin="10">
         <Label Text="Periodicidad semanal" />
-        <ListView ItemsSource="{Binding WeeklyIntervals}" SelectionMode="None" SelectedItem="{Binding WeekInterval}">
-            <ListView.ItemTemplate>
-                <DataTemplate>
-                    <ViewCell>
-                        <StackLayout Orientation="Horizontal">
-                            <BoxView IsVisible="{Binding IsSelected}"
-                             WidthRequest="50" HeightRequest="50"
-                             Color="Green" />
-                            <Label Text="{Binding Description}" />
-                        </StackLayout>
-                    </ViewCell>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
-        <customcontrols:RoundedPicker ItemDisplayBinding="{Binding Description}" SelectedItem="{Binding SelectedDailyPeriodicity}" />
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="20" />
+            </Grid.RowDefinitions>
+            <customcontrols:CheckBox Grid.Column="0" Grid.Row="0" Type="Check" HorizontalOptions="Center" IsChecked="{Binding Days[0]}" />
+            <Label Grid.Column="0" Grid.Row="1" Text="L" HorizontalOptions="Center" />
+
+            <customcontrols:CheckBox Grid.Column="1" Grid.Row="0" Type="Check" HorizontalOptions="Center" IsChecked="{Binding Days[1]}" />
+            <Label Grid.Column="1" Grid.Row="1" Text="M" HorizontalOptions="Center" />
+
+            <customcontrols:CheckBox Grid.Column="2" Grid.Row="0" Type="Check" HorizontalOptions="Center" IsChecked="{Binding Days[2]}" />
+            <Label Grid.Column="2" Grid.Row="1" Text="M" HorizontalOptions="Center" />
+
+            <customcontrols:CheckBox Grid.Column="3" Grid.Row="0" Type="Check" HorizontalOptions="Center" IsChecked="{Binding Days[3]}" />
+            <Label Grid.Column="3" Grid.Row="1" Text="J" HorizontalOptions="Center" />
+
+            <customcontrols:CheckBox Grid.Column="4" Grid.Row="0" Type="Check" HorizontalOptions="Center" IsChecked="{Binding Days[4]}" />
+            <Label Grid.Column="4" Grid.Row="1" Text="V" HorizontalOptions="Center" />
+
+            <customcontrols:CheckBox Grid.Column="5" Grid.Row="0" Type="Check" HorizontalOptions="Center" IsChecked="{Binding Days[5]}" />
+            <Label Grid.Column="5" Grid.Row="1" Text="S" HorizontalOptions="Center" />
+
+            <customcontrols:CheckBox Grid.Column="6" Grid.Row="0" Type="Check" HorizontalOptions="Center" IsChecked="{Binding Days[6]}" />
+            <Label Grid.Column="6" Grid.Row="1" Text="D" HorizontalOptions="Center" />
+        </Grid>
 
         <Label Text="Hora de inicio" />
         <customcontrols:RoundedTimePicker Time="{Binding StartTime}" Format="HH:mm" />
 
-        <StackLayout Margin="0, 10" Orientation="Horizontal" HorizontalOptions="Center">
+        <StackLayout Margin="0, 10" Orientation="Horizontal" HorizontalOptions="Center"  VerticalOptions="End">
             <Button Text="Cancelar" Command="{Binding CancelCommand}" WidthRequest="150" />
             <Button Text="Siguiente" Command="{Binding NextCommand}" WidthRequest="150" />
         </StackLayout>

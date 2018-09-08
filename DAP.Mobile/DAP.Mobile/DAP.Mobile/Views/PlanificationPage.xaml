@@ -3,7 +3,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:prism="clr-namespace:Prism.Mvvm;assembly=Prism.Forms"
              xmlns:customcontrols="clr-namespace:DAP.Mobile.CustomControls"
-             xmlns:data="clr-namespace:DAP.Mobile.Services"
              xmlns:sys="clr-namespace:System;assembly=mscorlib"
              prism:ViewModelLocator.AutowireViewModel="True"
              x:Class="DAP.Mobile.Views.PlanificationPage"
@@ -11,10 +10,10 @@
     <StackLayout Margin="10">
 
         <Label Text="Pastilla" />
-        <customcontrols:RoundedPicker ItemsSource="{Binding Source = {x:Static data:DataProvider.Pills}}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding SelectedPill}" />
+        <customcontrols:RoundedPicker ItemsSource="{Binding Pills}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding Pill}" />
 
         <Label Text="Planificacion" />
-        <customcontrols:RoundedPicker ItemsSource="{Binding Source = {x:Static data:DataProvider.Periodicities}}" ItemDisplayBinding="{Binding Description}" SelectedItem="{Binding SelectedPeriodicity}" />
+        <customcontrols:RoundedPicker ItemsSource="{Binding Periodicities}" ItemDisplayBinding="{Binding Description}" SelectedItem="{Binding Periodicity}" />
 
         <Grid>
             <Grid.ColumnDefinitions>

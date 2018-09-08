@@ -5,19 +5,29 @@ namespace DAP.Mobile.Services
 {
     public static class DataProvider
     {
-        public static IList<WeeklyInterval> WeeklyIntervals { get; private set; }
         public static IList<DailyInterval> DailyIntervals { get; private set; }
         public static IList<Periodicity> Periodicities { get; private set; }
         public static IList<Pill> Pills { get; private set; }
         public static IList<int> Containers { get; set; }
+        public static IList<PlanificationAction> PlanificationActions { get; internal set; }
 
         static DataProvider()
         {
             FillPeriodicities();
             FillDailyPeriodicities();
-            FillWeeklyPeriodicities();
             FillPills();
             FillContainers();
+            FillActions();
+        }
+
+        private static void FillActions()
+        {
+            PlanificationActions = new List<PlanificationAction>
+            {
+                new PlanificationAction() { Id = 1, Name = "Ninguna", Description= "La planificación seguirá dispensando la medicación en los horarios establecidos." },
+                new PlanificationAction() { Id = 2, Name = "Replanificar", Description= "En caso de no haber tomado la medicación en el momento indicado, se replanificarán los próximos expendios, corriendo el horario para cumplir con los intervalos establecidos." },
+                new PlanificationAction() { Id = 3, Name = "Bloquear", Description= "Al pasar una hora sin haber tomado la medicación, la planificación se bloqueará y no se dispensarán más medicamentos, dando por finalizado el tratamiento." }
+            };
         }
 
         private static void FillContainers()
@@ -52,20 +62,6 @@ namespace DAP.Mobile.Services
                 new DailyInterval { Id = 2, Description = "Cada 8 hs" },
                 new DailyInterval { Id = 3, Description = "Cada 12 hs" },
                 new DailyInterval { Id = 4, Description = "Cada 24 hs" }
-            };
-        }
-
-        private static void FillWeeklyPeriodicities()
-        {
-            WeeklyIntervals = new List<WeeklyInterval>()
-            {
-                new WeeklyInterval { Id = 1,  Description = "Lunes" },
-                new WeeklyInterval { Id = 2,  Description = "Martes" },
-                new WeeklyInterval { Id = 3,  Description = "Miércoles" },
-                new WeeklyInterval { Id = 4,  Description = "Jueves" },
-                new WeeklyInterval { Id = 5,  Description = "Viernes" },
-                new WeeklyInterval { Id = 6,  Description = "Sábado" },
-                new WeeklyInterval { Id = 7,  Description = "Domingo" }
             };
         }
     }

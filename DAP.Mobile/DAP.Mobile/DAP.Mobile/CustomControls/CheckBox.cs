@@ -7,16 +7,16 @@ namespace DAP.Mobile.CustomControls
     {
         private readonly BoxView boxBackground = new BoxView { HeightRequest = 25, WidthRequest = 25, BackgroundColor = Color.LightGray, VerticalOptions = LayoutOptions.CenterAndExpand };
         private readonly BoxView boxSelected = new BoxView { IsVisible = false, HeightRequest = 18, WidthRequest = 18, BackgroundColor = Color.Accent, VerticalOptions = LayoutOptions.CenterAndExpand, HorizontalOptions = LayoutOptions.Center };
-        private readonly Label lblSelected = new Label { Text = "✓", FontSize = 19, FontAttributes = FontAttributes.Bold, IsVisible = false, TextColor = Color.Accent, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.CenterAndExpand };
-        private readonly Label lblOption = new Label { VerticalOptions = LayoutOptions.CenterAndExpand, FontSize = 14 };
+        private readonly Label lblSelected = new Label { Text = "✓", FontAttributes = FontAttributes.Bold, IsVisible = false, TextColor = Color.Accent, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.CenterAndExpand };
+        private readonly Label lblOption = new Label { VerticalOptions = LayoutOptions.CenterAndExpand };
         private CheckType _type = CheckType.Box;
 
         public CheckBox()
         {
             this.Orientation = StackOrientation.Horizontal;
-            this.Margin = new Thickness(10, 0);
-            this.Padding = new Thickness(10);
-            this.Spacing = 10;
+            //this.Margin = new Thickness(10, 0);
+            //this.Padding = new Thickness(10);
+            //this.Spacing = 10;
             this.Children.Add(new Grid { Children = { boxBackground, boxSelected } });
             this.Children.Add(lblOption);
             this.GestureRecognizers.Add(new TapGestureRecognizer
@@ -36,7 +36,8 @@ namespace DAP.Mobile.CustomControls
 
         public bool IsChecked
         {
-            get => ((this.Children[0] as Grid).Children[1]).IsVisible; set
+            get => ((this.Children[0] as Grid).Children[1]).IsVisible;
+            set
             {
                 (this.Children[0] as Grid).Children[1].IsVisible = value;
                 SetValue(IsCheckedProperty, value);

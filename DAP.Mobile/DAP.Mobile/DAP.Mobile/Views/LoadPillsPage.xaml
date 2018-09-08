@@ -3,7 +3,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:prism="clr-namespace:Prism.Mvvm;assembly=Prism.Forms"
              xmlns:customcontrols="clr-namespace:DAP.Mobile.CustomControls"
-             xmlns:data="clr-namespace:DAP.Mobile.Services"
              prism:ViewModelLocator.AutowireViewModel="True"
              x:Class="DAP.Mobile.Views.LoadPillsPage"
              Title="Cargar pastillas">
@@ -13,7 +12,7 @@
         <Label Text="Cantidad" />
         <customcontrols:RoundedEntry Text="{Binding Quantity}" Keyboard="Numeric" MaxLength="3" />
         <Label Text="Contenedor" />
-        <customcontrols:RoundedPicker ItemsSource="{Binding Source = {x:Static data:DataProvider.Containers}}" SelectedItem="{Binding Container}" />
+        <customcontrols:RoundedPicker ItemsSource="{Binding Containers}" SelectedItem="{Binding Container}" />
 
         <StackLayout Margin="0, 10" Orientation="Horizontal" HorizontalOptions="Center">
             <Button Text="Cancelar" Command="{Binding CancelCommand}" WidthRequest="150" />
