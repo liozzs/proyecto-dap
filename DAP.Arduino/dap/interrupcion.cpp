@@ -26,10 +26,21 @@ ISR (PCINT0_vect) // handle pin change interrupt for D0 to D7 here
   }
   else  {
     for (int i=0; i < MAX_SUPPORTED_ALARMS; i++) {
-      if (digitalRead(PIN_DISPENSE_SENSOR[i]) == 1){
-        Serial.println( PIN_DISPENSE_SENSOR[i]  );
-       sensorDetected = i;
-       
+
+      //Logica diferente para cada sensor de caida, porque las conexiones estan invertidas. i==0 es el M1 y i==1 es el M2.
+      if (i == 0) {
+        if (digitalRead(PIN_DISPENSE_SENSOR[i]) == 0){
+          Serial.println( PIN_DISPENSE_SENSOR[i]  );
+         sensorDetected = i;
+         
+        }
+      }
+      else if (i == 1){
+        if (digitalRead(PIN_DISPENSE_SENSOR[i]) == 1){
+            Serial.println( PIN_DISPENSE_SENSOR[i]  );
+           sensorDetected = i;
+           
+          }
       }
     }
   }  
