@@ -9,7 +9,8 @@
               RefreshCommand="{Binding LoadNotificationsCommand}"
               IsPullToRefreshEnabled="True"
               IsRefreshing="{Binding IsLoading}"
-              HasUnevenRows="True">
+              HasUnevenRows="True"
+              Margin="10, 0">
         <ListView.ItemTemplate>
             <DataTemplate>
                 <ViewCell>

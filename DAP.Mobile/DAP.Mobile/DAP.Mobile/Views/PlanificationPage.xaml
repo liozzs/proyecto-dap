@@ -8,34 +8,35 @@
              x:Class="DAP.Mobile.Views.PlanificationPage"
              Title="Planificación">
     <StackLayout Margin="10">
+        <StackLayout VerticalOptions="StartAndExpand">
+            <Label Text="Pastilla" />
+            <customcontrols:RoundedPicker ItemsSource="{Binding Pills}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding Pill}" />
 
-        <Label Text="Pastilla" />
-        <customcontrols:RoundedPicker ItemsSource="{Binding Pills}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding Pill}" />
+            <Label Text="Planificacion" />
+            <customcontrols:RoundedPicker ItemsSource="{Binding Periodicities}" ItemDisplayBinding="{Binding Description}" SelectedItem="{Binding Periodicity}" />
 
-        <Label Text="Planificacion" />
-        <customcontrols:RoundedPicker ItemsSource="{Binding Periodicities}" ItemDisplayBinding="{Binding Description}" SelectedItem="{Binding Periodicity}" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Label Grid.Row="0" Grid.Column="0" Text="Stock&#x0a;crítico" HorizontalOptions="Center" />
+                <customcontrols:RoundedEntry Grid.Row="1" Grid.Column="0" Text="{Binding CriticalStock}" Keyboard="Numeric" MaxLength="2" />
+                <BoxView Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Color="White" WidthRequest="2" />
+                <Label Grid.Row="0" Grid.Column="2" Text="   Cantidad&#x0a;a dispensar" HorizontalOptions="Center" />
+                <customcontrols:RoundedEntry Grid.Row="1" Grid.Column="2" Text="{Binding QtyToDispense}" Keyboard="Numeric" MaxLength="1" />
+            </Grid>
 
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
-            <Label Grid.Row="0" Grid.Column="0" Text="Stock&#x0a;crítico" HorizontalOptions="Center" />
-            <customcontrols:RoundedEntry Grid.Row="1" Grid.Column="0" Text="{Binding CriticalStock}" Keyboard="Numeric" MaxLength="2" />
-            <BoxView Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Color="White" WidthRequest="2" />
-            <Label Grid.Row="0" Grid.Column="2" Text="   Cantidad&#x0a;a dispensar" HorizontalOptions="Center" />
-            <customcontrols:RoundedEntry Grid.Row="1" Grid.Column="2" Text="{Binding QtyToDispense}" Keyboard="Numeric" MaxLength="1" />
-        </Grid>
-
-        <Label Text="Inicio" />
-        <customcontrols:RoundedDatePicker Date="{Binding StartDate}" Format="dd/MM/yyyy" MinimumDate="{Binding Source={x:Static sys:DateTime.Today}}" />
-
-        <StackLayout Margin="0, 10" Orientation="Horizontal" HorizontalOptions="Center">
+            <Label Text="Inicio" />
+            <customcontrols:RoundedDatePicker Date="{Binding StartDate}" Format="dd/MM/yyyy" MinimumDate="{Binding Source={x:Static sys:DateTime.Today}}" />
+        </StackLayout>
+       
+        <StackLayout Orientation="Horizontal" HorizontalOptions="Center" VerticalOptions="End">
             <Button Text="Cancelar" Command="{Binding CancelCommand}" WidthRequest="150" />
             <Button Text="Siguiente" Command="{Binding NextCommand}" WidthRequest="150" />
         </StackLayout>

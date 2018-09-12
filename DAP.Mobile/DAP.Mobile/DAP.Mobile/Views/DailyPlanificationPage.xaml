@@ -6,16 +6,17 @@
              prism:ViewModelLocator.AutowireViewModel="True"
              x:Class="DAP.Mobile.Views.DailyPlanificationPage">
     <StackLayout Margin="10">
-
-        <Label Text="Periodicidad diaria" />
-        <customcontrols:RoundedPicker ItemsSource="{Binding DailyIntervals}"
+        <StackLayout VerticalOptions="StartAndExpand">
+            <Label Text="Periodicidad diaria" />
+            <customcontrols:RoundedPicker ItemsSource="{Binding DailyIntervals}"
                 ItemDisplayBinding="{Binding Description}"
                 SelectedItem="{Binding DailyPeriodicity}" />
 
-        <Label Text="Hora de inicio" />
-        <customcontrols:RoundedTimePicker Time="{Binding StartTime}" Format="HH:mm" />
+            <Label Text="Hora de inicio" />
+            <customcontrols:RoundedTimePicker Time="{Binding StartTime}" Format="HH:mm" />
+        </StackLayout>
 
-        <StackLayout Margin="0, 10" Orientation="Horizontal" HorizontalOptions="Center" VerticalOptions="End">
+        <StackLayout Orientation="Horizontal" HorizontalOptions="Center" VerticalOptions="End">
             <Button Text="Cancelar" Command="{Binding CancelCommand}" WidthRequest="150" />
             <Button Text="Siguiente" Command="{Binding NextCommand}" WidthRequest="150" />
         </StackLayout>
