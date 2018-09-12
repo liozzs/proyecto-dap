@@ -1,4 +1,5 @@
-﻿using DAP.Mobile.Views;
+﻿using DAP.Mobile.Services;
+using DAP.Mobile.Views;
 using Prism;
 using Prism.Ioc;
 using Prism.Unity;
@@ -33,6 +34,7 @@ namespace DAP.Mobile
 
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
+            containerRegistry.RegisterInstance<IApiClient>(new ApiClient());
             containerRegistry.RegisterForNavigation<NavigationPage>();
             containerRegistry.RegisterForNavigation<LoginPage>();
             containerRegistry.RegisterForNavigation<SignUpPage>();

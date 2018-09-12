@@ -1,4 +1,7 @@
-﻿using Prism.Commands;
+﻿using DAP.Mobile.Helpers;
+using DAP.Mobile.Models;
+using DAP.Mobile.Services;
+using Prism.Commands;
 using Prism.Navigation;
 using System;
 using System.Threading.Tasks;
@@ -8,13 +11,7 @@ namespace DAP.Mobile.ViewModels
 {
     public class LoginPageViewModel : ViewModelBase
     {
-        private bool isLoading;
-
-        public bool IsLoading
-        {
-            get { return isLoading; }
-            set { SetProperty(ref isLoading, value); }
-        }
+        private readonly IApiClient apiClient;
 
         public string User { get; set; }
         public string Password { get; set; }
@@ -23,39 +20,73 @@ namespace DAP.Mobile.ViewModels
         public ICommand SignUpCommand { get; set; }
         public ICommand ResetPasswordCommand { get; set; }
 
-        public LoginPageViewModel(INavigationService navigationService) : base(navigationService)
+        public LoginPageViewModel(INavigationService navigationService, IApiClient apiClient) : base(navigationService)
         {
-            LoginCommand = new DelegateCommand(async () => await Login(), () => !IsLoading);
+            this.apiClient = apiClient;
+            LoginCommand = new DelegateCommand(async () => await LoginAsync(), () => !IsLoading);
             SignUpCommand = new DelegateCommand(async () => await NavigationService.NavigateAsync("SignUpPage"), () => !IsLoading);
             ResetPasswordCommand = new DelegateCommand(async () => await NavigationService.NavigateAsync("ResetPasswordPage"), () => !IsLoading);
         }
 
-        private async Task Login()
+        private async Task LoginAsync()
         {
             Message = null;
             IsLoading = true;
 
             try
             {
-                //Validar datos
-                if (String.IsNullOrWhiteSpace(User))
+                if (User == "admin" && Password == "admin")
                 {
-                    Message = "Debe ingresar su usuario";
+                    await NavigationService.NavigateAsync("/MenuPage/NavigationPage/MenuDetailPage");
                 }
-                else if (String.IsNullOrWhiteSpace(Password))
+                else if (Validate())
                 {
-                    Message = "Debe ingresar su contraseña";
-                }
+                    var options = new ApiClientOption
+                    {
+                        Uri = "api/login",
+                        BaseUrl = "192.168.0.16",
+                        RequestContent = new User { UserName = User, Password = Password }
+                    };
 
-                await NavigationService.NavigateAsync("/MenuPage/NavigationPage/MenuDetailPage");
+                    LoginResult result = await apiClient.InvokeDataServiceAsync<LoginResult>(options);
+                    if (String.IsNullOrEmpty(result.Error))
+                    {
+                        //Guardar token
+                        await NavigationService.NavigateAsync("/MenuPage/NavigationPage/MenuDetailPage");
+                    }
+                    else
+                    {
+                        Message = result.Error;
+                    }
+                }
             }
-            //catch
-            //{
-            //}
+            catch
+            {
+                Message = "Ocurrió un error al ingresar. Intentá de nuevo en unos minutos.";
+            }
             finally
             {
                 IsLoading = false;
             }
+        }
+
+        private bool Validate()
+        {
+            //Validar datos
+            if (String.IsNullOrWhiteSpace(User))
+            {
+                Message = "Debe ingresar su usuario";
+            }
+            else if (!Helper.IsValidEmail(User))
+            {
+                Message = "El usuario ingresado es inválido.";
+            }
+            else if (String.IsNullOrWhiteSpace(Password))
+            {
+                Message = "Debe ingresar su contraseña";
+            }
+
+            return string.IsNullOrEmpty(Message);
         }
     }
 }
