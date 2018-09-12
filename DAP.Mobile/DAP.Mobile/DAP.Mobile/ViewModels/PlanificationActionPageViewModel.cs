@@ -18,7 +18,19 @@ namespace DAP.Mobile.ViewModels
         public ICommand NextCommand { get; set; }
 
         public IList<PlanificationAction> Actions { get; set; }
-        public PlanificationAction Action { get; set; }
+
+        private PlanificationAction action;
+        public PlanificationAction Action
+        {
+            get
+            {
+                return action;
+            }
+            set
+            {
+                SetProperty(ref action, value);
+            }
+        }
 
         public PlanificationActionPageViewModel(INavigationService navigationService, IPageDialogService dialogService) : base(navigationService)
         {
