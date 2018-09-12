@@ -19,13 +19,17 @@
     <Compile Include="$(MSBuildThisFileDirectory)CustomControls\RoundedPicker.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CustomControls\RoundedEntry.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Enums.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\Helper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\LoginResult.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\PlanificationAction.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\MenuItem.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Notification.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Pill.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Periodicity.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\ApiClient.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\ApiClientOption.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\DataProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\IApiClient.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\ConfigurationPageViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\CustomPlanificationPageViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\DailyPlanificationPageViewModel.cs" />
@@ -180,6 +184,9 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)Helpers\" />
   </ItemGroup>
   <!--#if (CreateBackendProject)
     <Compile Include="$(MSBuildThisFileDirectory)Services\AzureDataStore.cs" />
