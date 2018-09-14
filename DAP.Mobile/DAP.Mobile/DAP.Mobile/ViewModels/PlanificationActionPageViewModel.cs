@@ -45,11 +45,9 @@ namespace DAP.Mobile.ViewModels
 
         private async Task NextAsync()
         {
-            if (Action == null)
-            {
-                await dialogService.DisplayAlertAsync("Validación", "Seleccione una acción", "Aceptar");
-                return;
-            }
+            PlanificationBuilder.SetAction(Action);
+
+            Planification planification = PlanificationBuilder.Build();
 
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("Acá iría toda la explicación de la planificacion....");

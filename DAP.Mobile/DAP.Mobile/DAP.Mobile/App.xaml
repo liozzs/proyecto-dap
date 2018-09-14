@@ -39,6 +39,9 @@
             <Style TargetType="ActivityIndicator">
                 <Setter Property="Color" Value="{StaticResource LightOrange}" />
             </Style>
+            <Style x:Key="ErrorStyle" TargetType="Label">
+                <Setter Property="TextColor" Value="Red" />
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </prism:PrismApplication>

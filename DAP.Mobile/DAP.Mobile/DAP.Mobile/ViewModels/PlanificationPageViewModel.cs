@@ -12,8 +12,6 @@ namespace DAP.Mobile.ViewModels
 {
     public class PlanificationPageViewModel : ViewModelBase
     {
-        private readonly IPageDialogService dialogService;
-
         public ICommand CancelCommand { get; set; }
         public ICommand NextCommand { get; set; }
 
@@ -22,13 +20,12 @@ namespace DAP.Mobile.ViewModels
 
         public Pill Pill { get; set; }
         public Periodicity Periodicity { get; set; }
-        public int? CriticalStock { get; set; }
-        public int? QtyToDispense { get; set; }
+        public int CriticalStock { get; set; }
+        public int QtyToDispense { get; set; }
         public DateTime StartDate { get; set; }
 
-        public PlanificationPageViewModel(INavigationService navigationService, IPageDialogService dialogService) : base(navigationService)
+        public PlanificationPageViewModel(INavigationService navigationService) : base(navigationService)
         {
-            this.dialogService = dialogService;
             StartDate = DateTime.Today;
             Pills = DataProvider.Pills;
             Pill = Pills[0];
@@ -38,21 +35,33 @@ namespace DAP.Mobile.ViewModels
             QtyToDispense = 1;
 
             CancelCommand = new DelegateCommand(async () => await NavigationService.GoBackAsync());
-            NextCommand = new DelegateCommand(async () => await Next());
+            NextCommand = new DelegateCommand(async () => await NextAsync());
         }
 
-        private Task Next()
+        private async Task NextAsync()
         {
+            if(Validate())
+            {
+                PlanificationBuilder.Create((PlanificationType)Periodicity.Id, Pill, StartDate);
+
+                await NavigationService.NavigateAsync(Periodicity.NextPage);
+            }            
+        }
+
+        private bool Validate()
+        {
+            Message = null;
+            
             if (Pill == null)
             {
-                return dialogService.DisplayAlertAsync("Validación", "Seleccione una pastilla", "Aceptar");
+                Message = "Seleccione una pastilla";
             }
-            if (Periodicity == null)
+            else if (QtyToDispense == 0)
             {
-                return dialogService.DisplayAlertAsync("Validación", "Seleccione una periodicidad", "Aceptar");
+                Message = "Debe ingresar la cantidad a dispensar";
             }
 
-            return NavigationService.NavigateAsync(Periodicity.NextPage);
+            return string.IsNullOrEmpty(Message);
         }
     }
 }

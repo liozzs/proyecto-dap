@@ -7,13 +7,15 @@
              x:Class="DAP.Mobile.Views.DailyPlanificationPage">
     <StackLayout Margin="10">
         <StackLayout VerticalOptions="StartAndExpand">
-            <Label Text="Periodicidad diaria" />
+            <Label Text="Periodicidad diaria" />    
             <customcontrols:RoundedPicker ItemsSource="{Binding DailyIntervals}"
                 ItemDisplayBinding="{Binding Description}"
                 SelectedItem="{Binding DailyPeriodicity}" />
 
             <Label Text="Hora de inicio" />
             <customcontrols:RoundedTimePicker Time="{Binding StartTime}" Format="HH:mm" />
+            
+            <Label Text="{Binding Message}" Style="{StaticResource ErrorStyle}"/>
         </StackLayout>
 
         <StackLayout Orientation="Horizontal" HorizontalOptions="Center" VerticalOptions="End">

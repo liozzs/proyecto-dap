@@ -48,9 +48,9 @@ namespace DAP.Mobile.Services
         {
             Periodicities = new List<Periodicity>()
             {
-                new Periodicity { Id = 1, Description = "Diaria", NextPage = "DailyPlanificationPage" },
-                new Periodicity { Id = 2, Description = "Semanal", NextPage = "WeeklyPlanificationPage" },
-                new Periodicity { Id = 3, Description = "Personalizada", NextPage = "CustomPlanificationPage" }
+                new Periodicity { Id = (int)PlanificationType.Daily, Description = "Diaria", NextPage = "DailyPlanificationPage" },
+                new Periodicity { Id = (int)PlanificationType.Weekly, Description = "Semanal", NextPage = "WeeklyPlanificationPage" },
+                new Periodicity { Id = (int)PlanificationType.Custom, Description = "Personalizada", NextPage = "CustomPlanificationPage" }
             };
         }
 
@@ -58,10 +58,10 @@ namespace DAP.Mobile.Services
         {
             DailyIntervals = new List<DailyInterval>()
             {
-                new DailyInterval { Id = 1, Description = "Cada 6 hs" },
-                new DailyInterval { Id = 2, Description = "Cada 8 hs" },
-                new DailyInterval { Id = 3, Description = "Cada 12 hs" },
-                new DailyInterval { Id = 4, Description = "Cada 24 hs" }
+                new DailyInterval { Id = 6, Description = "Cada 6 hs" },
+                new DailyInterval { Id = 8, Description = "Cada 8 hs" },
+                new DailyInterval { Id = 12, Description = "Cada 12 hs" },
+                new DailyInterval { Id = 24, Description = "Cada 24 hs" }
             };
         }
     }

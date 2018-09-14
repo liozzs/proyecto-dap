@@ -1,6 +1,9 @@
-﻿using Prism.Commands;
+﻿using DAP.Mobile.Models;
+using DAP.Mobile.Services;
+using Prism.Commands;
 using Prism.Navigation;
 using Prism.Services;
+using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -8,6 +11,7 @@ namespace DAP.Mobile.ViewModels
 {
     public class SignUpPageViewModel : ViewModelBase
     {
+        private readonly IApiClient apiClient;
         private readonly IPageDialogService dialogService;
 
         public string Name { get; set; }
@@ -21,8 +25,9 @@ namespace DAP.Mobile.ViewModels
         public ICommand CancelCommand { get; set; }
         public ICommand AcceptCommand { get; set; }
 
-        public SignUpPageViewModel(INavigationService navigationService, IPageDialogService dialogService) : base(navigationService)
+        public SignUpPageViewModel(INavigationService navigationService, IPageDialogService dialogService, IApiClient apiClient) : base(navigationService)
         {
+            this.apiClient = apiClient;
             this.dialogService = dialogService;
 
             CancelCommand = new DelegateCommand(async () => await navigationService.GoBackAsync());
@@ -31,8 +36,77 @@ namespace DAP.Mobile.ViewModels
 
         private async Task Accept()
         {
-            await NavigationService.GoBackAsync();
-            await dialogService.DisplayAlertAsync("Registro", "Todo piols", "Aceptar");
+            try
+            {
+                if (Validate())
+                {
+                    ApiClientOption option = new ApiClientOption
+                    {
+                        RequestType = ApiClientRequestTypes.Post,
+                        Uri = "api/register",
+                        BaseUrl = GlobalVariables.BaseUrlApi,
+                        RequestContent = new { Name, Surname, Telephone, Email, Password }
+                    };
+
+                    await apiClient.InvokeDataServiceAsync(option);
+
+                    await dialogService.DisplayAlertAsync("Registro", "Se registró correctamente", "Aceptar");
+
+                    await NavigationService.GoBackAsync();
+                }
+            }
+            catch
+            {
+                await dialogService.DisplayAlertAsync("Registro", "Ocurrió un error al realizar la operación. Intente nuevamente en unos minutos.", "Aceptar");
+            }
+        }
+
+        private bool Validate()
+        {
+            Message = null;
+
+            if(string.IsNullOrWhiteSpace(Name))
+            {
+                Message = "Debe ingresar su nombre";
+            }
+            else if (string.IsNullOrWhiteSpace(Surname))
+            {
+                Message = "Debe ingresar su apellido";
+            }
+            //else if (string.IsNullOrWhiteSpace(Telephone))
+            //{
+            //    Message = "Debe ingresar su teléfono";
+            //}
+            else if (string.IsNullOrWhiteSpace(Email))
+            {
+                Message = "Debe ingresar su email";
+            }
+            else if (!Helpers.Helper.IsValidEmail(Email))
+            {
+                Message = "El email ingresado es inválido";
+            }
+            else if (string.IsNullOrWhiteSpace(ConfirmEmail))
+            {
+                Message = "Debe confirmar su email";
+            }
+            else if (Email != ConfirmEmail)
+            {
+                Message = "Los emails ingresados no coinciden";
+            }
+            else if (string.IsNullOrWhiteSpace(Password))
+            {
+                Message = "Debe ingresar su contraseña";
+            }
+            else if (string.IsNullOrWhiteSpace(ConfirmPassword))
+            {
+                Message = "Debe confirmar su contraseña";
+            }
+            else if (Password != ConfirmPassword)
+            {
+                Message = "Las contraseñas ingresadas no coinciden";
+            }
+
+            return string.IsNullOrEmpty(Message);
         }
     }
 }

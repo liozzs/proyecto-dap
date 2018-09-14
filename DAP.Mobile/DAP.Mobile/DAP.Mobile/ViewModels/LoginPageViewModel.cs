@@ -3,6 +3,7 @@ using DAP.Mobile.Models;
 using DAP.Mobile.Services;
 using Prism.Commands;
 using Prism.Navigation;
+using Prism.Services;
 using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -11,6 +12,7 @@ namespace DAP.Mobile.ViewModels
 {
     public class LoginPageViewModel : ViewModelBase
     {
+        private readonly IPageDialogService dialogService;
         private readonly IApiClient apiClient;
 
         public string User { get; set; }
@@ -20,8 +22,9 @@ namespace DAP.Mobile.ViewModels
         public ICommand SignUpCommand { get; set; }
         public ICommand ResetPasswordCommand { get; set; }
 
-        public LoginPageViewModel(INavigationService navigationService, IApiClient apiClient) : base(navigationService)
+        public LoginPageViewModel(INavigationService navigationService, IPageDialogService dialogService, IApiClient apiClient) : base(navigationService)
         {
+            this.dialogService = dialogService;
             this.apiClient = apiClient;
             LoginCommand = new DelegateCommand(async () => await LoginAsync(), () => !IsLoading);
             SignUpCommand = new DelegateCommand(async () => await NavigationService.NavigateAsync("SignUpPage"), () => !IsLoading);
@@ -37,22 +40,22 @@ namespace DAP.Mobile.ViewModels
             {
                 if (User == "admin" && Password == "admin")
                 {
-                    await NavigationService.NavigateAsync("/MenuPage/NavigationPage/MenuDetailPage");
+                    await GoToMenu("impersonar");
                 }
                 else if (Validate())
                 {
                     var options = new ApiClientOption
                     {
+                        RequestType = ApiClientRequestTypes.Post,
                         Uri = "api/login",
-                        BaseUrl = "192.168.0.16",
+                        BaseUrl = GlobalVariables.BaseUrlApi,
                         RequestContent = new User { UserName = User, Password = Password }
                     };
 
                     LoginResult result = await apiClient.InvokeDataServiceAsync<LoginResult>(options);
                     if (String.IsNullOrEmpty(result.Error))
                     {
-                        //Guardar token
-                        await NavigationService.NavigateAsync("/MenuPage/NavigationPage/MenuDetailPage");
+                        await GoToMenu(result.Token);
                     }
                     else
                     {
@@ -62,12 +65,22 @@ namespace DAP.Mobile.ViewModels
             }
             catch
             {
-                Message = "Ocurrió un error al ingresar. Intentá de nuevo en unos minutos.";
+                await dialogService.DisplayAlertAsync("Error", "Ocurrió un error al ingresar. Intente nuevamente en unos minutos.", "Aceptar");
             }
             finally
             {
                 IsLoading = false;
             }
+        }
+
+        private async Task GoToMenu(string token)
+        {
+            //Guardar token
+            Helper.SetApplicationValue("user", User);
+            Helper.SetApplicationValue("logged", true);
+            Helper.SetApplicationValue("token", token);
+
+            await NavigationService.NavigateAsync("/MenuPage/NavigationPage/MenuDetailPage");
         }
 
         private bool Validate()
@@ -79,7 +92,7 @@ namespace DAP.Mobile.ViewModels
             }
             else if (!Helper.IsValidEmail(User))
             {
-                Message = "El usuario ingresado es inválido.";
+                Message = "El usuario ingresado es inválido";
             }
             else if (String.IsNullOrWhiteSpace(Password))
             {

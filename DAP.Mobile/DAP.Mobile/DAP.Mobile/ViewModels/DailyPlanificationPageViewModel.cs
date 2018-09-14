@@ -2,7 +2,6 @@
 using DAP.Mobile.Services;
 using Prism.Commands;
 using Prism.Navigation;
-using Prism.Services;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -12,8 +11,6 @@ namespace DAP.Mobile.ViewModels
 {
     public class DailyPlanificationPageViewModel : ViewModelBase
     {
-        private readonly IPageDialogService dialogService;
-
         public ICommand CancelCommand { get; set; }
         public ICommand NextCommand { get; set; }
 
@@ -21,9 +18,8 @@ namespace DAP.Mobile.ViewModels
         public DateTime StartTime { get; set; }
         public IList<DailyInterval> DailyIntervals { get; set; }
 
-        public DailyPlanificationPageViewModel(INavigationService navigationService, IPageDialogService dialogService) : base(navigationService)
+        public DailyPlanificationPageViewModel(INavigationService navigationService) : base(navigationService)
         {
-            this.dialogService = dialogService;
             DailyIntervals = DataProvider.DailyIntervals;
             DailyPeriodicity = DailyIntervals[0];
 
@@ -33,11 +29,7 @@ namespace DAP.Mobile.ViewModels
 
         private Task Next()
         {
-            if (DailyPeriodicity == null)
-            {
-                return dialogService.DisplayAlertAsync("Validación", "Seleccione una periodicidad", "Aceptar");
-            }
-
+            PlanificationBuilder.SetInterval(StartTime, DailyPeriodicity.Id, null);
             return NavigationService.NavigateAsync("PlanificationActionPage");
         }
     }

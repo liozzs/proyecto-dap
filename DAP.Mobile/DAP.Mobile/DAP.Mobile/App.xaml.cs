@@ -1,8 +1,10 @@
-﻿using DAP.Mobile.Services;
+﻿using DAP.Mobile.Helpers;
+using DAP.Mobile.Services;
 using DAP.Mobile.Views;
 using Prism;
 using Prism.Ioc;
 using Prism.Unity;
+using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
 [assembly: XamlCompilation(XamlCompilationOptions.Compile)]
@@ -29,13 +31,21 @@ namespace DAP.Mobile
         {
             InitializeComponent();
 
-            NavigationService.NavigateAsync("NavigationPage/LoginPage");
+            if (Helper.GetApplicationValue<bool>("logged"))
+            {
+                NavigationService.NavigateAsync("/MenuPage/NavigationPage/MenuDetailPage");
+            }
+            else
+            {
+                NavigationService.NavigateAsync("NavigationPage/LoginPage");
+            }
+            
         }
 
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
             containerRegistry.RegisterInstance<IApiClient>(new ApiClient());
-            containerRegistry.RegisterForNavigation<NavigationPage>();
+            containerRegistry.RegisterForNavigation<Views.NavigationPage>();
             containerRegistry.RegisterForNavigation<LoginPage>();
             containerRegistry.RegisterForNavigation<SignUpPage>();
             containerRegistry.RegisterForNavigation<ResetPasswordPage>();

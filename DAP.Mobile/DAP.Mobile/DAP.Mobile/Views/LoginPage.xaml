@@ -32,8 +32,8 @@
                 <local:RoundedEntry Text="{Binding Password}" Placeholder="CONTRASEÑA" IsPassword="True" Grid.ColumnSpan="2" MaxLength="50" />
                 <Image Source="pass.png" HeightRequest="20" WidthRequest="20" Margin="10,0,0,0" />
             </Grid>
-            
-            <Label Text="{Binding Message}" TextColor="Red" />
+
+            <Label Text="{Binding Message}" Style="{StaticResource ErrorStyle}" />
             
             <Button Text="INGRESAR" Command="{Binding LoginCommand}" />
             <Grid Margin="0, 10">

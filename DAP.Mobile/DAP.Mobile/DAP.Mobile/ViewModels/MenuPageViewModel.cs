@@ -1,4 +1,5 @@
-﻿using DAP.Mobile.Models;
+﻿using DAP.Mobile.Helpers;
+using DAP.Mobile.Models;
 using Prism.Commands;
 using Prism.Navigation;
 using System.Collections.ObjectModel;
@@ -56,6 +57,8 @@ namespace DAP.Mobile.ViewModels
 
         private Task SignOut()
         {
+            Helper.SetApplicationValue("user", "");
+            Helper.SetApplicationValue("logged", false);
             return NavigationService.NavigateAsync("/NavigationPage/LoginPage");
         }
 
