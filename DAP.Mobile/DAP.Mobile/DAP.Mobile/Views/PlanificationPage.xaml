@@ -34,10 +34,10 @@
 
             <Label Text="Inicio" />
             <customcontrols:RoundedDatePicker Date="{Binding StartDate}" Format="dd/MM/yyyy" MinimumDate="{Binding Source={x:Static sys:DateTime.Today}}" />
-            
-            <Label Text="{Binding Message}" Style="{StaticResource ErrorStyle}"/>
+
+            <Label Text="{Binding Message}" Style="{StaticResource ErrorStyle}" />
         </StackLayout>
-       
+
         <StackLayout Orientation="Horizontal" HorizontalOptions="Center" VerticalOptions="End">
             <Button Text="Cancelar" Command="{Binding CancelCommand}" WidthRequest="150" />
             <Button Text="Siguiente" Command="{Binding NextCommand}" WidthRequest="150" />

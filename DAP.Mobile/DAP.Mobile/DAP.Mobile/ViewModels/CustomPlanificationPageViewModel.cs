@@ -11,7 +11,7 @@ namespace DAP.Mobile.ViewModels
 
         protected override bool Validate()
         {
-            if(Interval.GetValueOrDefault() > 24)
+            if (Interval.GetValueOrDefault() > 24)
             {
                 Message = "El intervalo debe ser menor a 24 hs";
             }

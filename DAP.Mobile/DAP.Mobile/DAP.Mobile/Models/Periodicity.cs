@@ -1,6 +1,4 @@
-﻿using Prism.Mvvm;
-
-namespace DAP.Mobile.Models
+﻿namespace DAP.Mobile.Models
 {
     public class Periodicity
     {

@@ -8,11 +8,11 @@
     <StackLayout Margin="10">
         <StackLayout VerticalOptions="StartAndExpand">
             <Label Text="En caso de superar el plazo de ingesta del medicamento, seleccione la acción adecuada para su tratamiento" />
-            <customcontrols:RoundedPicker ItemsSource="{Binding Actions}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding Action}"/>
+            <customcontrols:RoundedPicker ItemsSource="{Binding Actions}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding Action}" />
 
             <Label Text="{Binding Action.Description}" />
         </StackLayout>
-        
+
         <StackLayout Orientation="Horizontal" HorizontalOptions="Center" VerticalOptions="End">
             <Button Text="Cancelar" Command="{Binding CancelCommand}" WidthRequest="150" />
             <Button Text="Confirmar" Command="{Binding NextCommand}" WidthRequest="150" />

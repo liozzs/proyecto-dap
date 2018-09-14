@@ -12,7 +12,7 @@ namespace DAP.Mobile.Helpers
 
         public static T GetApplicationValue<T>(string key)
         {
-            if(Application.Current.Properties.ContainsKey(key))
+            if (Application.Current.Properties.ContainsKey(key))
             {
                 return (T)Application.Current.Properties[key];
             }

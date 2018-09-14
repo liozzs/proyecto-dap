@@ -185,7 +185,7 @@ namespace DAP.Mobile.Services
             }
             return string.Format(string.IsNullOrEmpty(option.BaseUrl) ? option.Uri : option.BaseUrl, objectParameters);
         }
-        
+
         private static async Task<Exception> ReadResponse(Task<HttpResponseMessage> response, Exception exception, HttpStatusCode statusCode)
         {
             var responseMessage = await response.Result.Content.ReadAsStringAsync();
@@ -223,7 +223,6 @@ namespace DAP.Mobile.Services
                 {
                     exception = new Exception(response.Result.ReasonPhrase);
                 }
-
             }
             else
             {
@@ -231,6 +230,5 @@ namespace DAP.Mobile.Services
             }
             return exception;
         }
-
     }
 }

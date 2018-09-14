@@ -46,9 +46,9 @@
 
             <Label Text="Hora de inicio" />
             <customcontrols:RoundedTimePicker Time="{Binding StartTime}" Format="HH:mm" />
-            
-            <Label Text="{Binding Message}" Style="{StaticResource ErrorStyle}"/>
-        </StackLayout>      
+
+            <Label Text="{Binding Message}" Style="{StaticResource ErrorStyle}" />
+        </StackLayout>
 
         <StackLayout Orientation="Horizontal" HorizontalOptions="Center"  VerticalOptions="End">
             <Button Text="Cancelar" Command="{Binding CancelCommand}" WidthRequest="150" />

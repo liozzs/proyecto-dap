@@ -62,7 +62,6 @@ namespace DAP.Mobile.ViewModels
             {
                 await dialogService.DisplayAlertAsync("Cargar pastillas", "Ocurrió un error al realizar la operación. Intente nuevamente en unos minutos.", "Aceptar");
             }
-
         }
 
         private bool Validate()

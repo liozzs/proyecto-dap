@@ -1,9 +1,7 @@
-﻿using DAP.Mobile.Models;
-using DAP.Mobile.Services;
+﻿using DAP.Mobile.Services;
 using Prism.Commands;
 using Prism.Navigation;
 using Prism.Services;
-using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -65,7 +63,7 @@ namespace DAP.Mobile.ViewModels
         {
             Message = null;
 
-            if(string.IsNullOrWhiteSpace(Name))
+            if (string.IsNullOrWhiteSpace(Name))
             {
                 Message = "Debe ingresar su nombre";
             }

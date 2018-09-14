@@ -4,7 +4,6 @@ using DAP.Mobile.Views;
 using Prism;
 using Prism.Ioc;
 using Prism.Unity;
-using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
 [assembly: XamlCompilation(XamlCompilationOptions.Compile)]
@@ -39,7 +38,6 @@ namespace DAP.Mobile
             {
                 NavigationService.NavigateAsync("NavigationPage/LoginPage");
             }
-            
         }
 
         protected override void RegisterTypes(IContainerRegistry containerRegistry)

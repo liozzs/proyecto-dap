@@ -20,6 +20,7 @@ namespace DAP.Mobile.ViewModels
         public IList<PlanificationAction> Actions { get; set; }
 
         private PlanificationAction action;
+
         public PlanificationAction Action
         {
             get

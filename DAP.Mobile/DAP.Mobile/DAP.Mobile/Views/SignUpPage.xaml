@@ -42,5 +42,5 @@
             <Button Text="Cancelar" Command="{Binding CancelCommand}" WidthRequest="150" />
             <Button Text="Aceptar" Command="{Binding AcceptCommand}" WidthRequest="150" />
         </StackLayout>
-    </StackLayout>    
+    </StackLayout>
 </ContentPage>

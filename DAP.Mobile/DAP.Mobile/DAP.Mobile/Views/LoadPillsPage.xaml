@@ -14,7 +14,7 @@
             <customcontrols:RoundedEntry Text="{Binding Quantity}" Keyboard="Numeric" MaxLength="3" />
             <Label Text="Contenedor" />
             <customcontrols:RoundedPicker ItemsSource="{Binding Containers}" SelectedItem="{Binding Container}" />
-            <Label Text="{Binding Message}" Style="{StaticResource ErrorStyle}"/>
+            <Label Text="{Binding Message}" Style="{StaticResource ErrorStyle}" />
         </StackLayout>
 
         <StackLayout Orientation="Horizontal" HorizontalOptions="Center">

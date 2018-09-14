@@ -34,7 +34,7 @@
             </Grid>
 
             <Label Text="{Binding Message}" Style="{StaticResource ErrorStyle}" />
-            
+
             <Button Text="INGRESAR" Command="{Binding LoginCommand}" />
             <Grid Margin="0, 10">
                 <Grid.ColumnDefinitions>

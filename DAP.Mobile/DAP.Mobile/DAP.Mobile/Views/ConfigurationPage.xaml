@@ -9,18 +9,18 @@
     <StackLayout Margin="10">
         <StackLayout VerticalOptions="StartAndExpand">
             <Label Text="Contraseña actual" />
-            <customcontrols:RoundedEntry Text="{Binding ActualPassword}" IsPassword="True"/>
+            <customcontrols:RoundedEntry Text="{Binding ActualPassword}" IsPassword="True" />
 
             <Label Text="Contraseña nueva" />
-            <customcontrols:RoundedEntry Text="{Binding NewPassword}" IsPassword="True"/>
+            <customcontrols:RoundedEntry Text="{Binding NewPassword}" IsPassword="True" />
 
             <Label Text="Confirmar contraseña" />
-            <customcontrols:RoundedEntry Text="{Binding ConfirmPassword}" IsPassword="True"/>
+            <customcontrols:RoundedEntry Text="{Binding ConfirmPassword}" IsPassword="True" />
 
             <Label Grid.Row="2" Text="{Binding Message}" TextColor="Red"  Margin="0, 10" />
         </StackLayout>
-        
-        <StackLayout Orientation="Horizontal" HorizontalOptions="Center" VerticalOptions="End" >
+
+        <StackLayout Orientation="Horizontal" HorizontalOptions="Center" VerticalOptions="End">
             <Button Text="Cancelar" Command="{Binding CancelCommand}" WidthRequest="150" />
             <Button Text="Aceptar" Command="{Binding NextCommand}" WidthRequest="150" />
         </StackLayout>
