@@ -24,6 +24,9 @@ namespace DAP.Mobile.Services
 
         public async Task<string> InvokeDataServiceStringAsync(ApiClientOption option)
         {
+            return await Task.Run<string>(() => { for (int i = 0; i < 10000; i++) ; return "{ 'token': '', 'error': ''}"; });
+
+            /*
             using (var client = new HttpClient())
             {
                 if (option.Headers != null)
@@ -34,7 +37,7 @@ namespace DAP.Mobile.Services
                     }
                 }
 
-                client.BaseAddress = new Uri(option.BaseUrl);
+                client.BaseAddress = GetRemoteBaseUri(option);
                 //Set timeout if is configured
                 if (option.Timeout.HasValue) client.Timeout = new TimeSpan(TimeSpan.TicksPerMillisecond * option.Timeout.Value);
                 else if (timeout.HasValue) client.Timeout = new TimeSpan(TimeSpan.TicksPerMillisecond * timeout.Value);
@@ -96,12 +99,11 @@ namespace DAP.Mobile.Services
                         }
                         else
                         {
-                            exception = await ReadResponse(response, exception, response.Result.StatusCode);
+                            exception = await ReadResponse(response);
                         }
                         exception.Data["Server"] = client.BaseAddress;
                         exception.Data["Url"] = uri;
                         exception.Data["StatusCode"] = response.Result.StatusCode;
-                        //log.Error("External Server Error.", exception);
                         if (option.IsOptional) return null;
                         throw exception;
                     }
@@ -113,7 +115,6 @@ namespace DAP.Mobile.Services
                     var newException = new Exception(ex.InnerException.Message);
                     newException.Data["Server"] = client.BaseAddress;
                     newException.Data["Url"] = uri;
-                    //log.Error("Error on external server response", newException);
                     if (option.IsOptional) return null;
                     throw newException;
                 }
@@ -122,11 +123,18 @@ namespace DAP.Mobile.Services
                     var newException = new Exception(ex.InnerException != null ? ex.InnerException.Message : ex.Message);
                     newException.Data["Server"] = client.BaseAddress;
                     newException.Data["Url"] = uri;
-                    //log.Error("Unkown error trying connect to external server", newException);
                     if (option.IsOptional) return null;
                     throw newException;
                 }
             }
+            */
+        }
+
+        private Uri GetRemoteBaseUri(ApiClientOption option)
+        {
+            if (!string.IsNullOrEmpty(option.BaseUrl)) return new Uri(option.BaseUrl);
+
+            return new Uri(option.Service == ApiClientServices.Api ? GlobalVariables.BaseUrlApi : GlobalVariables.BaseUrlArduino);
         }
 
         public async Task<TResponse> InvokeDataServiceAsync<TResponse>(ApiClientOption option) where TResponse : class
@@ -141,7 +149,6 @@ namespace DAP.Mobile.Services
             if (option.ContentType == ApiClientRequestContentTypes.Xml || option.ContentType == ApiClientRequestContentTypes.Form)
             {
                 var xmlSerializer = new XmlSerializer(typeof(TResponse));
-                var xml = new XDocument();
                 using (TextReader reader = new StringReader(result))
                 {
                     return (TResponse)xmlSerializer.Deserialize(reader);
@@ -186,9 +193,10 @@ namespace DAP.Mobile.Services
             return string.Format(string.IsNullOrEmpty(option.BaseUrl) ? option.Uri : option.BaseUrl, objectParameters);
         }
 
-        private static async Task<Exception> ReadResponse(Task<HttpResponseMessage> response, Exception exception, HttpStatusCode statusCode)
+        private static async Task<Exception> ReadResponse(Task<HttpResponseMessage> response)
         {
             var responseMessage = await response.Result.Content.ReadAsStringAsync();
+            Exception exception;
             if (!string.IsNullOrEmpty(responseMessage))
             {
                 if (response.Result.StatusCode == HttpStatusCode.InternalServerError)
