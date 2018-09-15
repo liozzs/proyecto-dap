@@ -34,15 +34,15 @@ namespace DAP.Mobile.ViewModels
 
         private async Task Accept()
         {
-            try
+            if (Validate())
             {
-                if (Validate())
+                try
                 {
                     ApiClientOption option = new ApiClientOption
                     {
                         RequestType = ApiClientRequestTypes.Post,
                         Uri = "api/register",
-                        BaseUrl = GlobalVariables.BaseUrlApi,
+                        Service = ApiClientServices.Api,
                         RequestContent = new { Name, Surname, Telephone, Email, Password }
                     };
 
@@ -52,10 +52,10 @@ namespace DAP.Mobile.ViewModels
 
                     await NavigationService.GoBackAsync();
                 }
-            }
-            catch
-            {
-                await dialogService.DisplayAlertAsync("Registro", "Ocurrió un error al realizar la operación. Intente nuevamente en unos minutos.", "Aceptar");
+                catch
+                {
+                    await dialogService.DisplayAlertAsync("Registro", "Ocurrió un error al realizar la operación. Intente nuevamente en unos minutos.", "Aceptar");
+                }
             }
         }
 
@@ -71,10 +71,6 @@ namespace DAP.Mobile.ViewModels
             {
                 Message = "Debe ingresar su apellido";
             }
-            //else if (string.IsNullOrWhiteSpace(Telephone))
-            //{
-            //    Message = "Debe ingresar su teléfono";
-            //}
             else if (string.IsNullOrWhiteSpace(Email))
             {
                 Message = "Debe ingresar su email";

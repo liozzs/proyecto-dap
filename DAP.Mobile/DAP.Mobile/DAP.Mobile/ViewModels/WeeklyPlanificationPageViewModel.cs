@@ -12,8 +12,8 @@ namespace DAP.Mobile.ViewModels
     public class WeeklyPlanificationPageViewModel : ViewModelBase
     {
         public IList<bool> Days { get; set; }
-        public DateTime StartTime { get; set; }
-        public int? Interval { get; set; }
+        public TimeSpan StartTime { get; set; }
+        public string Interval { get; set; }
 
         public ICommand CancelCommand { get; set; }
         public ICommand NextCommand { get; set; }
@@ -32,7 +32,8 @@ namespace DAP.Mobile.ViewModels
 
             if (Validate())
             {
-                PlanificationBuilder.SetInterval(StartTime, Interval, Days);
+                int? interval = string.IsNullOrEmpty(Interval) ? new int?() : new int?(Convert.ToInt32(Interval));
+                PlanificationBuilder.SetInterval(StartTime, interval, Days);
                 await NavigationService.NavigateAsync("PlanificationActionPage");
             }
         }

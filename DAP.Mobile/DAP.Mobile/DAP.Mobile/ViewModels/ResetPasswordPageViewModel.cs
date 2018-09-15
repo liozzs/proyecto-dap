@@ -28,15 +28,15 @@ namespace DAP.Mobile.ViewModels
 
         private async Task Accept()
         {
-            try
+            if (Validate())
             {
-                if (Validate())
+                try
                 {
                     ApiClientOption option = new ApiClientOption
                     {
                         RequestType = ApiClientRequestTypes.Post,
                         Uri = "api/register",
-                        BaseUrl = GlobalVariables.BaseUrlApi,
+                        Service = ApiClientServices.Api,
                         RequestContent = new { Email }
                     };
 
@@ -46,10 +46,10 @@ namespace DAP.Mobile.ViewModels
 
                     await NavigationService.GoBackAsync();
                 }
-            }
-            catch
-            {
-                await dialogService.DisplayAlertAsync("Recuperar contraseña", "Ocurrió un error al realizar la operación. Intente nuevamente en unos minutos.", "Aceptar");
+                catch
+                {
+                    await dialogService.DisplayAlertAsync("Recuperar contraseña", "Ocurrió un error al realizar la operación. Intente nuevamente en unos minutos.", "Aceptar");
+                }
             }
         }
 

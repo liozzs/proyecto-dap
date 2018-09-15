@@ -2,6 +2,7 @@
 using Prism.Commands;
 using Prism.Navigation;
 using Prism.Services;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -14,7 +15,7 @@ namespace DAP.Mobile.ViewModels
         private readonly IPageDialogService dialogService;
 
         public string PillName { get; set; }
-        public int? Quantity { get; set; }
+        public string Quantity { get; set; }
         public int Container { get; set; }
 
         public IList<int> Containers { get; set; }
@@ -28,6 +29,7 @@ namespace DAP.Mobile.ViewModels
             this.dialogService = dialogService;
             Containers = DataProvider.Containers;
             Container = Containers[0];
+            Quantity = "20";
 
             CancelCommand = new DelegateCommand(async () => await navigationService.GoBackAsync());
             AcceptCommand = new DelegateCommand(async () => await AcceptAsync());
@@ -35,19 +37,21 @@ namespace DAP.Mobile.ViewModels
 
         private async Task AcceptAsync()
         {
-            try
+
+            if (Validate())
             {
-                if (Validate())
+                bool response = await dialogService.DisplayAlertAsync("Cargar pastillas", $"Ingrese las pastillas en el contenedor {Container} del dispositivo y confirme", "Aceptar", "Cancelar");
+                if (response)
                 {
-                    bool response = await dialogService.DisplayAlertAsync("Cargar pastillas", $"Ingrese las pastillas en el contenedor {Container} del dispositivo y confirme", "Aceptar", "Cancelar");
-                    if (response)
+                    try
                     {
+                        var qty = Convert.ToInt32(Quantity);
                         ApiClientOption option = new ApiClientOption
                         {
                             RequestType = ApiClientRequestTypes.Post,
                             Uri = "loadPills",
-                            BaseUrl = GlobalVariables.BaseUrlArduino,
-                            RequestContent = new { PillName, Container, Quantity }
+                            Service = ApiClientServices.Arduino,
+                            RequestContent = new { PillName, Container, qty }
                         };
 
                         await apiClient.InvokeDataServiceAsync(option);
@@ -56,11 +60,11 @@ namespace DAP.Mobile.ViewModels
 
                         await NavigationService.GoBackAsync();
                     }
+                    catch
+                    {
+                        await dialogService.DisplayAlertAsync("Cargar pastillas", "Ocurrió un error al realizar la operación. Intente nuevamente en unos minutos.", "Aceptar");
+                    }
                 }
-            }
-            catch
-            {
-                await dialogService.DisplayAlertAsync("Cargar pastillas", "Ocurrió un error al realizar la operación. Intente nuevamente en unos minutos.", "Aceptar");
             }
         }
 
@@ -68,15 +72,15 @@ namespace DAP.Mobile.ViewModels
         {
             Message = null;
 
-            if (!string.IsNullOrWhiteSpace(PillName))
+            if (string.IsNullOrWhiteSpace(PillName))
             {
                 Message = "Debe ingresar el nombre de la pastilla";
             }
-            else if (!Quantity.HasValue)
+            else if (!Int32.TryParse(Quantity, out int qty))
             {
                 Message = "Debe ingresar la cantidad de pastillas";
             }
-            else if (Quantity.GetValueOrDefault() <= 0)
+            else if (qty <= 0)
             {
                 Message = "Debe ingresar una cantidad mayor a 0";
             }

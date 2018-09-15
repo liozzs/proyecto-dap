@@ -19,8 +19,8 @@ namespace DAP.Mobile.ViewModels
 
         public Pill Pill { get; set; }
         public Periodicity Periodicity { get; set; }
-        public int CriticalStock { get; set; }
-        public int QtyToDispense { get; set; }
+        public string CriticalStock { get; set; }
+        public string QtyToDispense { get; set; }
         public DateTime StartDate { get; set; }
 
         public PlanificationPageViewModel(INavigationService navigationService) : base(navigationService)
@@ -30,8 +30,8 @@ namespace DAP.Mobile.ViewModels
             Pill = Pills[0];
             Periodicities = DataProvider.Periodicities;
             Periodicity = Periodicities[0];
-            CriticalStock = 0;
-            QtyToDispense = 1;
+            CriticalStock = "0";
+            QtyToDispense = "1";
 
             CancelCommand = new DelegateCommand(async () => await NavigationService.GoBackAsync());
             NextCommand = new DelegateCommand(async () => await NextAsync());
@@ -41,7 +41,11 @@ namespace DAP.Mobile.ViewModels
         {
             if (Validate())
             {
-                PlanificationBuilder.Create((PlanificationType)Periodicity.Id, Pill, StartDate);
+                PlanificationBuilder.SetType((PlanificationType)Periodicity.Id);
+                PlanificationBuilder.SetPill(Pill);
+                PlanificationBuilder.SetStartDate(StartDate);
+                PlanificationBuilder.SetCriticalStock(string.IsNullOrEmpty(CriticalStock)? 0 : Convert.ToInt32(CriticalStock));
+                PlanificationBuilder.SetQtyToDispense(Convert.ToInt32(QtyToDispense));
 
                 await NavigationService.NavigateAsync(Periodicity.NextPage);
             }
@@ -50,14 +54,32 @@ namespace DAP.Mobile.ViewModels
         private bool Validate()
         {
             Message = null;
-
             if (Pill == null)
             {
                 Message = "Seleccione una pastilla";
             }
-            else if (QtyToDispense == 0)
+            else if(string.IsNullOrEmpty(QtyToDispense))
             {
                 Message = "Debe ingresar la cantidad a dispensar";
+            }
+            else if (!Int32.TryParse(QtyToDispense, out int qty))
+            {
+                Message = "La cantidad a dispensar ingresada es inválida";
+            }
+            else if(qty <= 0)
+            {
+                Message = "La cantidad a dispensar debe ser mayor a 0";
+            }
+            else if (!String.IsNullOrEmpty(CriticalStock))
+            {
+                if (!Int32.TryParse(CriticalStock, out int criticalStk))
+                {
+                    Message = "El stock crítico ingresado es inválido";
+                }
+                else if(criticalStk < 0)
+                {
+                    Message = "El stock crítico debe ser mayor o igual a 0";
+                }                
             }
 
             return string.IsNullOrEmpty(Message);

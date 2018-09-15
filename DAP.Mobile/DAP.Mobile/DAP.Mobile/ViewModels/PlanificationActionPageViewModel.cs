@@ -12,6 +12,7 @@ namespace DAP.Mobile.ViewModels
 {
     public class PlanificationActionPageViewModel : ViewModelBase
     {
+        private readonly IApiClient apiClient;
         private readonly IPageDialogService dialogService;
 
         public ICommand CancelCommand { get; set; }
@@ -33,8 +34,9 @@ namespace DAP.Mobile.ViewModels
             }
         }
 
-        public PlanificationActionPageViewModel(INavigationService navigationService, IPageDialogService dialogService) : base(navigationService)
+        public PlanificationActionPageViewModel(INavigationService navigationService, IPageDialogService dialogService, IApiClient apiClient) : base(navigationService)
         {
+            this.apiClient = apiClient;
             this.dialogService = dialogService;
 
             Actions = DataProvider.PlanificationActions;
@@ -51,12 +53,56 @@ namespace DAP.Mobile.ViewModels
             Planification planification = PlanificationBuilder.Build();
 
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("Acá iría toda la explicación de la planificacion....");
+            sb.AppendLine($"Pastilla: {planification.Pill.Name}");
+            sb.AppendLine($"Inicio: {planification.StartDate:dd/MM/yyyy} {planification.StartTime:HH:mm}");
+            if(planification.Interval>0)
+            {
+                sb.AppendLine($"Intervalo: Cada {planification.Interval} hs.");
+            }
+            if(planification.Days != null)
+            {
+                var days = new List<string> { "Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do" };
+                string d = "";
+                for (int i = 0; i < planification.Days.Count; i++)
+                {
+                    if (planification.Days[i])
+                    {
+                        d += days[i] + " ";
+                    }
+                }
+                sb.AppendLine($"Días: {d}");
+            }
+            else
+            {
+                sb.AppendLine($"Días: Todos");
+            }
+            sb.AppendLine($"Cantidad a dispensar: {planification.QtyToDispense}");
+            sb.AppendLine($"Stock crítico: {planification.CriticalStock}");
+            sb.AppendLine($"Acción: {planification.Action.Description}");
             var response = await dialogService.DisplayAlertAsync("Confirmar", sb.ToString(), "Sí", "No");
             if (response)
             {
-                await dialogService.DisplayAlertAsync("Felicidades", "Creaste una planificacion!", "Aceptar");
-                await NavigationService.GoBackToRootAsync();
+                try
+                {
+                    ApiClientOption option = new ApiClientOption
+                    {
+                        RequestType = ApiClientRequestTypes.Post,
+                        Uri = "plain",
+                        Service = ApiClientServices.Arduino,
+                        RequestContent = planification
+                    };
+
+                    await apiClient.InvokeDataServiceAsync(option);
+
+                    await dialogService.DisplayAlertAsync("Planificación", "Se creó la planificación con éxito", "Aceptar");
+
+                    await NavigationService.GoBackToRootAsync();
+                }
+                catch
+                {
+                    await dialogService.DisplayAlertAsync("Planificación", "Ocurrió un error al realizar la operación. Intente nuevamente en unos minutos.", "Aceptar");
+                }
+
             }
         }
     }

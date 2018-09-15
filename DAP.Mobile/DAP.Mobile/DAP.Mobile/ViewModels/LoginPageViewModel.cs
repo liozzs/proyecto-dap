@@ -48,7 +48,7 @@ namespace DAP.Mobile.ViewModels
                     {
                         RequestType = ApiClientRequestTypes.Post,
                         Uri = "api/login",
-                        BaseUrl = GlobalVariables.BaseUrlApi,
+                        Service = ApiClientServices.Api,
                         RequestContent = new User { UserName = User, Password = Password }
                     };
 
@@ -63,7 +63,7 @@ namespace DAP.Mobile.ViewModels
                     }
                 }
             }
-            catch
+            catch (Exception e)
             {
                 await dialogService.DisplayAlertAsync("Error", "Ocurrió un error al ingresar. Intente nuevamente en unos minutos.", "Aceptar");
             }

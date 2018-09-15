@@ -15,7 +15,7 @@ namespace DAP.Mobile.ViewModels
         public ICommand NextCommand { get; set; }
 
         public DailyInterval DailyPeriodicity { get; set; }
-        public DateTime StartTime { get; set; }
+        public TimeSpan StartTime { get; set; }
         public IList<DailyInterval> DailyIntervals { get; set; }
 
         public DailyPlanificationPageViewModel(INavigationService navigationService) : base(navigationService)

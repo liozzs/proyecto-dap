@@ -19,5 +19,7 @@ namespace DAP.Mobile.Models
         public int? Interval { get; internal set; }
         public IList<bool> Days { get; internal set; }
         public PlanificationAction Action { get; internal set; }
+        public int CriticalStock { get; internal set; }
+        public int QtyToDispense { get; internal set; }
     }
 }

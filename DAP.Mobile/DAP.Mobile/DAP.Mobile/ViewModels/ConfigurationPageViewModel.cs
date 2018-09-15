@@ -30,16 +30,16 @@ namespace DAP.Mobile.ViewModels
 
         private async Task NextAsync()
         {
-            try
+            if (Validate())
             {
-                if (Validate())
+                try
                 {
                     var user = Helper.GetApplicationValue<string>("user");
                     ApiClientOption option = new ApiClientOption
                     {
                         RequestType = ApiClientRequestTypes.Post,
                         Uri = "api/changePassword",
-                        BaseUrl = GlobalVariables.BaseUrlApi,
+                        Service = ApiClientServices.Api,
                         RequestContent = new { user, NewPassword }
                     };
 
@@ -49,10 +49,10 @@ namespace DAP.Mobile.ViewModels
 
                     await NavigationService.GoBackAsync();
                 }
-            }
-            catch
-            {
-                await dialogService.DisplayAlertAsync("Cambiar contraseña", "Ocurrió un error al realizar la operación. Intente nuevamente en unos minutos.", "Aceptar");
+                catch
+                {
+                    await dialogService.DisplayAlertAsync("Cambiar contraseña", "Ocurrió un error al realizar la operación. Intente nuevamente en unos minutos.", "Aceptar");
+                }
             }
         }
 
@@ -62,7 +62,19 @@ namespace DAP.Mobile.ViewModels
 
             if (string.IsNullOrWhiteSpace(ActualPassword))
             {
-                Message = "Ingresá tu password actual";
+                Message = "Debe ingresar su contraseña actual";
+            }
+            else if (string.IsNullOrWhiteSpace(NewPassword))
+            {
+                Message = "Debe ingresar su contraseña nueva";
+            }
+            else if (string.IsNullOrWhiteSpace(ConfirmPassword))
+            {
+                Message = "Confirme la nueva contraseña";
+            }
+            else if (NewPassword != ConfirmPassword)
+            {
+                Message = "Las contraseñas no coinciden";
             }
 
             return string.IsNullOrEmpty(Message);

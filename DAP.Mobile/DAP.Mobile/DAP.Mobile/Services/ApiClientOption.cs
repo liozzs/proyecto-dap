@@ -31,6 +31,7 @@ namespace DAP.Mobile.Services
 
         public Dictionary<string, string> Headers { get; set; }
         public bool IsOptional { get; internal set; }
+        public ApiClientServices Service { get; internal set; }
     }
 
     public enum ApiClientRequestTypes
@@ -46,5 +47,11 @@ namespace DAP.Mobile.Services
         Json,
         Form,
         Xml
+    }
+
+    public enum ApiClientServices
+    {
+        Api,
+        Arduino
     }
 }
