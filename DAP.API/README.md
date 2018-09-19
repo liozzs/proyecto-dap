@@ -1,7 +1,7 @@
-#proyecto-dap
+# proyecto-dap
 
-##API
-
+## API
+___
 - Login: **POST** api/login
   - Request:
     - Body: {Email: \_, Password: \_}
@@ -41,7 +41,7 @@
   - Response:
     - **Ok**()
     - **NotFound**()
-
+___
 - Get All Users Information: **GET** api/usuarios/all
   - Response:
     - **Ok**([{id: \_, nombre: \_, password: \_, salt: \_, email: \_, dispensers:[{id: \_, direccionMAC: \_, nombre: \_, usuarios: null}, _otherDispensers_... ]}, _otherUsers_... ])
