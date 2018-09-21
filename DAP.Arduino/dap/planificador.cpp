@@ -4,8 +4,6 @@
 
 RTC_DS3231 rtc;
 
-NewPing sonar(PIN_VASO, PIN_VASO, 200);
-
 Planificador::Planificador(){
   pciSetup(PIN_BUTTON);
   for (int i=0; i < MAX_SUPPORTED_ALARMS; i++){
@@ -17,6 +15,10 @@ Planificador::Planificador(){
 
   //MOTOR
   initServo();
+
+  //VASO
+  pinMode(PIN_VASO_LASER, OUTPUT);
+  digitalWrite(PIN_VASO_LASER, HIGH);
  
 };
 
@@ -200,13 +202,19 @@ bool Planificador::execute(){
 
     //verificar si ya se hizo el dispendio
     if (alarmDispensed(config) == true && config->movePlate == true) {
-      Serial.println("ENTRON");
-       config->times++;
-       config->movePlate = false;
+       quantity[i]++;
        setSensorDetected(-1);
-       config->waitingForVaso = true;
-       previousMillisVaso = millis();
-       saveAlarms();
+      
+       if (config->quantity == quantity[i]) {
+         config->times++;
+         config->movePlate = false;
+         config->waitingForVaso = true;
+         previousMillisVaso = millis();
+         quantity[i] = 0;
+         saveAlarms();
+       } else {
+        Log.Debug("Dispendio multiple de pastillas, esperando..");
+       }
     }
 
     //verificar si corresponde el dia. Nosotros tomamos 1er dia de la semana el lunes.
@@ -219,12 +227,16 @@ bool Planificador::execute(){
     }
 
     //verificar el retiro del vaso
-    if (config->waitingForVaso == true){
+    if (config->waitingForVaso == true && !waitingForOtherPlate()){
       Log.Debug("Chequando si el vaso se retiro\n");
+      activarBuzzerRetiro();
       if (checkVasoInPlace()){
         Log.Debug("VASO retirado\n");
         config->waitingForVaso = false;
       }
+    }
+    else if (config->waitingForVaso == true && waitingForOtherPlate()) {
+      Log.Debug("Esperando el dispendio de otro plato antes de retirar vaso\n");
     }
 
     long sec = nextDispense(config);
@@ -262,6 +274,7 @@ bool Planificador::execute(){
    if (isButtonPressed()){
     setButtonPressed(false);
    }
+
 }
 
 //Devuelve el tiempo en segundos para el proximo dispendio de la alarma 'config'
@@ -305,14 +318,33 @@ void Planificador::checkCriticalStock() {
 }
 
 bool Planificador::checkVasoInPlace() {
-  int cm;
-  
-  cm = sonar.ping_cm();
+  int value = 0;
 
-  if (cm < 10)
-    return false;
-  return true;
+  pinMode(PIN_VASO_LASER, OUTPUT);
+  digitalWrite(PIN_VASO_LASER, HIGH);
+
+  value = analogRead(PIN_VASO_PHOTO);
   
+  Serial.println(value);
+  
+  if (value < 100)
+    return true;
+  return false;
+  
+}
+
+//chequea si otro plato se está moviendo 
+bool Planificador::waitingForOtherPlate() {
+  int count = 0;
+  for (int i = 0; i < this->configDataList.Count(); i++)
+  { 
+    Alarm* config = &this->configDataList[i];
+
+    if (config->movePlate == true)
+      count++;
+  }
+
+  return count > 0;
 }
 
 //SECCION MANEJO MOTOR
@@ -328,8 +360,8 @@ void Planificador::processPlates(){
     }
       
 
-    else if (getSensorDetected() != -1)
-      stopPlate(plates[getSensorDetected()]);
+    else if (getSensorDetected() == -1)
+      stopPlate(plates[plateIDToIndex(config->plateID)]);
   }
 
   
@@ -358,8 +390,8 @@ void Planificador::startPlate(Servo plate, int index) {
       plate.write(180);
     }
    
-    if (currentMillis - previousMillisMotor[index] >= 100 + 20) { 
-        plate.writeMicroseconds(1500);
+    if (currentMillis - previousMillisMotor[index] >= 100 + 15) { 
+        plate.writeMicroseconds(1400);
         previousMillisMotor[index] = currentMillis;
     }
       
@@ -452,6 +484,15 @@ void Planificador::activarBuzzer()
   {
     previousMillisBuzzer += 800;
     NewTone(PIN_BUZZER, 800, 500); // play 800 Hz tone in background for 'onDuration'
+  }
+}
+
+void Planificador::activarBuzzerRetiro()
+{
+  if (millis() - previousMillisBuzzer >= 800)
+  {
+    previousMillisBuzzer += 800;
+    NewTone(PIN_BUZZER, 200, 500); // play 800 Hz tone in background for 'onDuration'
   }
 }
 

@@ -11,7 +11,6 @@
 #include "conectividad.h"
 #include <ArduinoJson.h>
 #include <NewTone.h>
-#include <NewPing.h>
 
 #define PERIODICIDAD_DIARIA 0
 #define PERIODICIDAD_SEMANAL 1
@@ -61,8 +60,11 @@ class Planificador{
     long nextDispense(Alarm* config);
     bool alarmDispensed(Alarm* config);
     void activarBuzzer();
+    void activarBuzzerRetiro();
     void desactivarBuzzer();
     bool checkVasoInPlace();
+    bool waitingForOtherPlate();
+    int quantity[MAX_SUPPORTED_ALARMS] = {0, 0};
     
     //MOTOR
     Servo plate1;
