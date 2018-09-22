@@ -4,10 +4,9 @@
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 
-const String modo_operacion = "NORMAL";
-
 const unsigned int localPort = 2390;      // local port to listen for UDP packets
 const int NTP_PACKET_SIZE = 48; // NTP time stamp is in the first 48 bytes of the message
+const String modo = "NORMAL";
 
 class NTPClient{
   
@@ -15,7 +14,7 @@ class NTPClient{
     byte packetBuffer[ NTP_PACKET_SIZE]; //buffer to hold incoming and outgoing packets
     WiFiUDP udp;
     IPAddress timeServerIP; 
-    const char* ntpServerName = "south-america.pool.ntp.org";
+    const char* ntpServerName = "pool.ntp.org";
     unsigned long sendNTPpacket(IPAddress& address);
           
    public: 
@@ -32,13 +31,20 @@ static void sendToArduino(String str){
   }
   str = str.substring(0,128);
   Serial.println(str);
-};
+}
 
-
-static void debug(String str) {
-  if (modo_operacion == "TEST") {
+static void debug2(String str) {
+  if (modo == "TEST") {
      Serial.println(str);
   }
 };
+
+//UTILS
+static char* string2char(String str){
+    if(str.length()!=0){
+        char *p = const_cast<char*>(str.c_str());
+        return p;
+    }
+}
 
 #endif

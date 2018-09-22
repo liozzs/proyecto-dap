@@ -2,7 +2,6 @@
 #include "ntp_client.h"
 
 
-
 NTPClient::NTPClient(){
   udp.begin(localPort);
 };
@@ -18,12 +17,12 @@ unsigned long NTPClient::getTime(){
   
   int cb = udp.parsePacket();
   if (!cb) {
-    debug("debug:no packet yet\n");
+    debug2("debug2:no packet yet\n");
     return 0;
   }
   else {
-    debug("debug:packet received, length=");
-    debug(String(cb));
+    debug2("debug2:packet received, length=");
+    debug2(String(cb));
     // We've received a packet, read the data from it
     udp.read(packetBuffer, NTP_PACKET_SIZE); // read the packet into the buffer
 
@@ -35,17 +34,17 @@ unsigned long NTPClient::getTime(){
     // combine the four bytes (two words) into a long integer
     // this is NTP time (seconds since Jan 1 1900):
     unsigned long secsSince1900 = highWord << 16 | lowWord;
-    debug("debug:Seconds since Jan 1 1900 = " );
-    debug(String(secsSince1900));
+    debug2("debug2:Seconds since Jan 1 1900 = " );
+    debug2(String(secsSince1900));
 
     // now convert NTP time into everyday time:
-    debug("debug:Unix time = ");
+    debug2("debug2:Unix time = ");
     // Unix time starts on Jan 1 1970. In seconds, that's 2208988800:
     const unsigned long seventyYears = 2208988800UL;
     // subtract seventy years:
     unsigned long epoch = secsSince1900 - seventyYears;
     // print Unix time:
-    debug("debug:" + String(epoch));
+    debug2("debug2:" + String(epoch));
     return epoch;
   }
 }
@@ -54,26 +53,26 @@ unsigned long NTPClient::getTime(){
 void NTPClient::printTime(unsigned long epoch){
  
     // print the hour, minute and second:
-    debug("The UTC time is ");       // UTC is the time at Greenwich Meridian (GMT)
-    debug(String((epoch  % 86400L) / 3600)); // print the hour (86400 equals secs per day)
-    debug(":");
+    debug2("The UTC time is ");       // UTC is the time at Greenwich Meridian (GMT)
+    debug2(String((epoch  % 86400L) / 3600)); // print the hour (86400 equals secs per day)
+    debug2(":");
     if ( ((epoch % 3600) / 60) < 10 ) {
       // In the first 10 minutes of each hour, we'll want a leading '0'
-      debug("0");
+      debug2("0");
     }
-    debug(String((epoch  % 3600) / 60)); // print the minute (3600 equals secs per minute)
-    debug(":");
+    debug2(String((epoch  % 3600) / 60)); // print the minute (3600 equals secs per minute)
+    debug2(":");
     if ( (epoch % 60) < 10 ) {
       // In the first 10 seconds of each minute, we'll want a leading '0'
-      debug("0");
+      debug2("0");
     }
-    debug(String(epoch % 60)); // print the second
+    debug2(String(epoch % 60)); // print the second
 }
 
 // send an NTP request to the time server at the given address
 unsigned long NTPClient::sendNTPpacket(IPAddress& address)
 {
-  debug("debug:sending NTP packet...");
+  debug2("debug2:sending NTP packet...");
   // set all bytes in the buffer to 0
   memset(packetBuffer, 0, NTP_PACKET_SIZE);
   // Initialize values needed to form NTP request
