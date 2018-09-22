@@ -3,6 +3,7 @@
 #include "interrupcion.h"
 
 RTC_DS3231 rtc;
+DynamicJsonBuffer  jsonBuffer;
 
 Planificador::Planificador(){
   pciSetup(PIN_BUTTON);
@@ -19,19 +20,30 @@ Planificador::Planificador(){
   //VASO
   pinMode(PIN_VASO_LASER, OUTPUT);
   digitalWrite(PIN_VASO_LASER, HIGH);
+
+  //WIFI
+  delay(5000);
+  sendToWIFI("ARDUINO_OK");
+  
+  JsonObject& root = jsonBuffer.createObject();
+  root["set_server"] = "";
+  root["host"] = serverHost;
+  root["port"] = serverPort;  
+  root["get_MAC"] = "";
+  root.printTo(Serial1);
  
 };
 
 void Planificador::setAlarm(DateTime startTime, int interval, int quantity, int plateID)
 {    
-  this->setAlarm(startTime, interval, quantity, 1000, 5, 0, "1111111", false, plateID);
+  this->setAlarm(startTime, interval, quantity, 1000, 5, 0, "1111111", false, plateID, "PILLX");
 }
 
 /*
  * Agrega una alarma (configuracion de dispendio) asociada a un plateID. Si ya existe el plateID, reemplaza la configuracion, de lo contrario agrega una
  * nueva configuracion.
  */
-void Planificador::setAlarm(DateTime startTime, int interval, int quantity, int stock, int criticalStock, byte periodicity, char* days, bool block, int plateID)
+void Planificador::setAlarm(DateTime startTime, int interval, int quantity, int stock, int criticalStock, byte periodicity, char* days, bool block, int plateID, char* pillName)
 {    
   Alarm config;
 
@@ -46,12 +58,14 @@ void Planificador::setAlarm(DateTime startTime, int interval, int quantity, int 
   config.block = block;
   config.blocked = false;
   config.waitingForButton = false;
+  config.waitingForVaso = false;
   config.dispensedTimes = 0;
   config.times = 0;
   config.movePlate = false;
+  strcpy( config.pillName, pillName);
   config.valid = 100;
 
-  Log.Debug("seteando %d,%d,%d,%d,%d, %s,%d\n", interval, quantity, stock, criticalStock, periodicity, days, plateID);
+  Log.Debug("seteando %d,%d,%d,%d,%d, %s,%d, %s\n", interval, quantity, stock, criticalStock, periodicity, days, plateID, pillName);
   //verifico si ya existe ese plateID para reemplazar la alarma o agregar nueva
   int index = getIndexForPlateID(plateID);
   if (index != -1) {
@@ -172,7 +186,7 @@ bool Planificador::execute(){
   {
     Alarm* config = &this->configDataList[i];
  
-    Log.Debug("Verificando dispendio platoID: %d, veces activado: %d, veces dispensado: %d, cantidad: %d\n", config->plateID, config->times, config->dispensedTimes,config->quantity);
+    Log.Debug("Verificando dispendio platoID: %d, veces activado: %d, veces dispensado: %d, cantidad: %d\n, pasti: %s\n", config->plateID, config->times, config->dispensedTimes,config->quantity, config->pillName);
 
     if (config->blocked == true) {
       Log.Debug("Este plato se encuentra BLOQUEADO\n");
@@ -182,6 +196,15 @@ bool Planificador::execute(){
     //verificar stock disponible
      if (config->stock == 0) {
       Log.Debug("Este plato no tiene STOCK\n");
+      continue;
+    }
+
+    if (config->stock < config->quantity){
+      Log.Debug("stock (%d) no suficiente para proximo dispendio (%d), enviando notificacion\n", config->stock, config->quantity);
+      sendNotification(NOTIF_EXPENDIO_NO_REALIZADO_NO_PASTILLAS, config->plateID, config->pillName, "TIME", config->stock); //TODO: time?
+      if (config->block == true) {
+        config->blocked = true; // se bloquea
+      }
       continue;
     }
 
@@ -230,7 +253,7 @@ bool Planificador::execute(){
     if (config->waitingForVaso == true && !waitingForOtherPlate()){
       Log.Debug("Chequando si el vaso se retiro\n");
       activarBuzzerRetiro();
-      if (checkVasoInPlace()){
+      if (isVasoInPlace()){
         Log.Debug("VASO retirado\n");
         config->waitingForVaso = false;
       }
@@ -242,10 +265,16 @@ bool Planificador::execute(){
     long sec = nextDispense(config);
 
     if (sec <= UMBRAL_ALARMA_SEG && config->waitingForButton == false && config->movePlate == false) {
-      Log.Debug("Dispendio SI: segundos de diferencia: %l\n", sec);
-      setButtonReady(true); //habilita el presionado del boton    
-      config->waitingForButton = true;
-      saveAlarms(); //guardar el cambio 
+      if (isVasoInPlace()) {
+        Log.Debug("Dispendio SI: segundos de diferencia: %l\n", sec);
+        setButtonReady(true); //habilita el presionado del boton    
+        config->waitingForButton = true;
+        saveAlarms(); //guardar el cambio 
+      } 
+      else {
+        Log.Debug("VASO no DEVUELTO, enviando notificacion\n"); //TODO que mas se hace? se sigue como si nada?
+        sendNotification(NOTIF_VASO_NO_DEVUELTO, config->plateID, config->pillName, "TIME", config->stock); //TODO: time?
+      }
     }
     if (sec > BUTTON_THRESHOLD && config->waitingForButton == true) {
        config->waitingForButton = false;
@@ -256,11 +285,26 @@ bool Planificador::execute(){
        }
        setButtonReady(false); // se paso el tiempo de espera de presionado del boton
        saveAlarms();
+       Log.Debug("Boton no presionado, enviando notificacion\n"); 
+       sendNotification(NOTIF_BOTON_NO_PRESIONADO, config->plateID, config->pillName, "TIME", config->stock); //TODO: time?
+    }
+
+    if (sec > NO_DISPENSE_THRESHOLD && config->movePlate == true) {
+       config->movePlate = false;
+       if (config->block == true) {
+        config->blocked = true; // se bloquea
+       } else {
+        config->times++; // se reprograma 
+       }
+       saveAlarms();
+       Log.Debug("Tiempo de dispendio excedido, enviando notificacion\n"); 
+       sendNotification(NOTIF_EXPENDIO_NO_REALIZADO_LIMITE_TIEMPO, config->plateID, config->pillName, "TIME", config->stock); //TODO: time?
     }
 
      //Accion en caso de no retiro del vaso
     if (millis() - previousMillisVaso > VASO_THRESHOLD * 1000 && config->waitingForVaso == true){
-      Log.Debug("VASO no retirado, enviando notificacion\n"); //que mas se hace? se sigue como si nada?
+      Log.Debug("VASO no retirado, enviando notificacion\n"); //TODO que mas se hace? se sigue como si nada?
+      sendNotification(NOTIF_VASO_NO_RETIRADO, config->plateID, config->pillName, "TIME", config->stock); //TODO: time?
       config->waitingForVaso=false;
     }
 
@@ -310,14 +354,14 @@ void Planificador::checkCriticalStock() {
   {
     Alarm* config = &this->configDataList[i];
 
-    if (config->dispensedTimes == config->criticalStock){
+    if (config->stock == config->criticalStock){
       Log.Debug("Alarma %d supero tiene stock critico de %d\n", config->plateID, config->criticalStock);
-      //enviar mensaje a server
+      sendNotification(NOTIF_STOCK_CRITICO, config->plateID, config->pillName, "TIME", config->stock); //TODO: time?
     }
   }
 }
 
-bool Planificador::checkVasoInPlace() {
+bool Planificador::isVasoInPlace() {
   int value = 0;
 
   pinMode(PIN_VASO_LASER, OUTPUT);
@@ -328,8 +372,8 @@ bool Planificador::checkVasoInPlace() {
   Serial.println(value);
   
   if (value < 100)
-    return true;
-  return false;
+    return false;
+  return true;
   
 }
 
@@ -390,8 +434,8 @@ void Planificador::startPlate(Servo plate, int index) {
       plate.write(180);
     }
    
-    if (currentMillis - previousMillisMotor[index] >= 100 + 15) { 
-        plate.writeMicroseconds(1400);
+    if (currentMillis - previousMillisMotor[index] >= 100 + 20) { 
+        plate.writeMicroseconds(1300);
         previousMillisMotor[index] = currentMillis;
     }
       
@@ -414,15 +458,7 @@ time_t Planificador::getLocalTime(time_t utc){
   return artTimezone.toLocal(utc);
 }
 
-//UTILS
-char* string2char(String str){
-    if(str.length()!=0){
-        char *p = const_cast<char*>(str.c_str());
-        return p;
-    }
-}
-
-//Procesar mensajes y acciones recibidas del server
+//Procesar mensajes y acciones recibidas del wifi
 void Planificador::processCommandsWIFI()
 {
   
@@ -470,12 +506,31 @@ void Planificador::processCommandsWIFI()
       char *days = root["days"];
       bool block = root["block"].as<bool>();
       int plateID = root["plateID"].as<int>();
+      char* pillName = root["pillName"].as<char *>();
       
       //(DateTime startTime, int interval, int quantity, int stock, int criticalStock, byte periodicity, char* days, bool block, int plateID)
-      this->setAlarm(startTime, interval, quantity, stock, criticalStock, periodicity, days, block, plateID);
+      this->setAlarm(startTime, interval, quantity, stock, criticalStock, periodicity, days, block, plateID, pillName);
 
     } 
+    
+    if (root.containsKey("MAC")){
+      macAddress = root["MAC"].as<String>();
+      Log.Debug("WIFI: MAC ! %s\n", string2char(macAddress));
+    } 
  }
+}
+
+int Planificador::sendNotification(int code, int containerID, String pillName, String time, int stock){
+    JsonObject& root = jsonBuffer.createObject();
+    root["mac"] = macAddress;
+    root["code"] = code;
+    root["containerID"] = containerID;
+    root["pillName"] = pillName;
+    root["time"] = time;
+    root["stock"] = stock;
+
+    root.printTo(Serial1);
+
 }
 
 void Planificador::activarBuzzer()
