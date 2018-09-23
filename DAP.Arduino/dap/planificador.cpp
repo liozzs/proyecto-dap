@@ -22,14 +22,13 @@ Planificador::Planificador(){
   digitalWrite(PIN_VASO_LASER, HIGH);
 
   //WIFI
-  delay(5000);
-  sendToWIFI("ARDUINO_OK");
-  
+    
   JsonObject& root = jsonBuffer.createObject();
   root["set_server"] = "";
   root["host"] = serverHost;
   root["port"] = serverPort;  
-  root["get_MAC"] = "";
+  root["get_MAC"] = ""; //para pedir la MAC
+  root["get_Time"] = ""; //para pedir time / IP
   root.printTo(Serial1);
  
 };
@@ -372,8 +371,8 @@ bool Planificador::isVasoInPlace() {
   Serial.println(value);
   
   if (value < 100)
-    return false;
-  return true;
+    return true;
+  return false;
   
 }
 
@@ -516,6 +515,19 @@ void Planificador::processCommandsWIFI()
     if (root.containsKey("MAC")){
       macAddress = root["MAC"].as<String>();
       Log.Debug("WIFI: MAC ! %s\n", string2char(macAddress));
+    } 
+
+    if (root.containsKey("UmbralNoDispendio")){
+      NO_DISPENSE_THRESHOLD = root["UmbralNoDispendio"].as<int>();
+      Log.Debug("WIFI: NO_DISPENSE_THRESHOLD ! %d\n", NO_DISPENSE_THRESHOLD);
+    } 
+    if (root.containsKey("UmbralRetiroVaso")){
+      VASO_THRESHOLD = root["UmbralRetiroVaso"].as<int>();
+      Log.Debug("WIFI: VASO_THRESHOLD ! %d\n", VASO_THRESHOLD);
+    } 
+    if (root.containsKey("UmbralButton")){
+      BUTTON_THRESHOLD = root["UmbralButton"].as<int>();
+      Log.Debug("WIFI: BUTTON_THRESHOLD ! %d\n", BUTTON_THRESHOLD);
     } 
  }
 }

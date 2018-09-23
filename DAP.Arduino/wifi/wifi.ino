@@ -79,47 +79,18 @@ else {
 
   Serial.println("You're connected to the network");
 }
-
-  while (!msg_in.startsWith("ARDUINO_OK")) {
-     msg_in = "";
-     if (Serial.available() > 0) {
-       msg_in = Serial.readStringUntil('\0');
-     }
-  }
-  msg_in = "";
-  debug("Arduino is ready");
   
- 
-  ntp = new NTPClient();
-
-  //enviar a arduino primer mensaje con el horario correcto e IP publica
-  time_t ntpTime = 0;
-
-  while(ntpTime == 0) {
-    ntpTime = ntp->getTime();
-  }
-
-  // Obtener IP publica para enviar al arduino
-  String publicIP;
-  HTTPClient http;
-  http.begin("http://ipv4bot.whatismyipaddress.com/");
-  int httpCode = http.GET();
-  if(httpCode > 0) {
-    if(httpCode == HTTP_CODE_OK)
-      publicIP = http.getString();
-  }
-  http.end();
-  
-  JsonObject& root = jsonBuffer.createObject();
-  root["time"] = ntpTime;
-  root["ip"] = WiFi.localIP().toString();
-  root.printTo(Serial);
-
-
   // start the web server on port 80
   server.on("/", handlePlan);               // Call the 'handleRoot' function when a client requests URI "/"
   server.on("/Plan", handlePlan);              
   server.on("/MAC", handleMAC);              
+  server.on("/ResetWIFI", handleResetWIFI);    
+
+  //umbrales
+  server.on("/Umbrales", handleUmbrales);  //puede ser: UmbralNoDispendio, UmbralRetiroVaso, UmbralBoton. En segundos
+
+  server.on("/Time", handleTime);
+  
   server.onNotFound(handleNotFound);        // When a client requests an unknown URI (i.e. something other than "/"), call function "handleNotFound"
   server.begin();
 
@@ -138,8 +109,8 @@ void loop() {
      }
    }
    if (msg_in.length() >= 1) {
-        debug("WIFI: msg de arduino length: " + String(msg_in.length()));
-        debug("Mensaje: " + String(msg_in));
+        //debug("WIFI: msg de arduino length: " + String(msg_in.length()));
+        debug("WIFI Mensaje: " + String(msg_in));
 
         StaticJsonBuffer<300> jsonBuffer;
         JsonObject& root = jsonBuffer.parseObject(msg_in);
@@ -147,7 +118,7 @@ void loop() {
         if (!root.success()) {
           debug("Json parseObject() failed");
         }
-
+      
         if (root.containsKey("modo")){
           modo_operacion = root["modo"].as<char *>();
           debug("WIFI: cambio modo a: " + modo_operacion);
@@ -175,6 +146,33 @@ void loop() {
           root["MAC"] = mac;
           root.printTo(Serial);
           msg_in = "";
+        }
+
+        if (root.containsKey("get_Time")){          
+          ntp = new NTPClient();
+        
+          //enviar a arduino primer mensaje con el horario correcto e IP publica
+          time_t ntpTime = 0;
+        
+          while(ntpTime == 0) {
+            ntpTime = ntp->getTime();
+          }
+        
+          // Obtener IP publica para enviar al arduino
+          String publicIP;
+          HTTPClient http;
+          http.begin("http://ipv4bot.whatismyipaddress.com/");
+          int httpCode = http.GET();
+          if(httpCode > 0) {
+            if(httpCode == HTTP_CODE_OK)
+              publicIP = http.getString();
+          }
+          http.end();
+          
+          JsonObject& root = jsonBuffer.createObject();
+          root["time"] = ntpTime;
+          root["ip"] = WiFi.localIP().toString();
+          root.printTo(Serial);
         }
 
         if (root.containsKey("notification")){
@@ -222,19 +220,36 @@ void handlePlan() {
   root["plan"] = true;
   root.printTo(Serial);
 
-  server.send(200, "text/plain", "PLAN OK");   // Send HTTP status 200 (Ok) and send some text to the browser/client
+  server.send(200, "text/plain", "OK");   // Send HTTP status 200 (Ok) and send some text to the browser/client
 }
 
 void handleMAC() {
   server.send(200, "text/plain", WiFi.macAddress());
 }
 
+void handleResetWIFI() {
+  server.send(200, "text/plain", "OK");
+  ESP.reset();
+  delay(5000);
+}
+
+void handleUmbrales() {
+  StaticJsonBuffer<100> newBuffer;
+  JsonObject& root = newBuffer.parseObject(server.arg("plain"));
+  root.printTo(Serial);
+  server.send(200, "text/plain", "OK");
+}
+
 void handleNotFound(){
   server.send(404, "text/plain", "404: Not found"); // Send HTTP status 404 (Not Found) when there's no handler for the URI in the request
 }
 
-
-//CLIENT
+void handleTime(){
+  StaticJsonBuffer<350> newBuffer;
+  JsonObject& root = newBuffer.parseObject(server.arg("plain"));
+  root.printTo(Serial);
+  server.send(200, "text/plain", "OK");
+}
 
 void debug(String str) {
   if (modo_operacion == "TEST") {
