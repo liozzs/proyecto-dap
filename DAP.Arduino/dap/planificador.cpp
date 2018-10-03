@@ -21,8 +21,19 @@ Planificador::Planificador(){
   pinMode(PIN_VASO_LASER, OUTPUT);
   digitalWrite(PIN_VASO_LASER, HIGH);
 
+  //LED RGB
+  pinMode(PIN_LEDRED, OUTPUT);
+  pinMode(PIN_LEDGREEN, OUTPUT);
+  pinMode(PIN_LEDBLUE, OUTPUT);
+
   //WIFI
-    
+
+  while (WIFI_OK == false) {
+    Log.Debug("Waiting for WIFI\n");
+    processCommandsWIFI();
+    delay(10);
+  }
+  
   JsonObject& root = jsonBuffer.createObject();
   root["set_server"] = "";
   root["host"] = serverHost;
@@ -33,9 +44,9 @@ Planificador::Planificador(){
  
 };
 
-void Planificador::setAlarm(DateTime startTime, int interval, int quantity, int plateID)
+void Planificador::setAlarm(DateTime startTime, int interval, int quantity, int plateID, bool block)
 {    
-  this->setAlarm(startTime, interval, quantity, 1000, 5, 0, "1111111", false, plateID, "PILLX");
+  this->setAlarm(startTime, interval, quantity, 100, 3, 0, "1111111", block, plateID, "PILLX");
 }
 
 /*
@@ -135,7 +146,7 @@ Alarm Planificador::getAlarm(int index){
  */
 void Planificador::setInitTime(time_t initTime) {
   if (! rtc.begin()) {
-      Serial.println("Couldn't find RTC");
+     Log.Debug("Couldn't find RTC");
   while (1);
   }
   
@@ -185,9 +196,9 @@ bool Planificador::execute(){
   {
     Alarm* config = &this->configDataList[i];
  
-    Log.Debug("Verificando dispendio platoID: %d, veces activado: %d, veces dispensado: %d, cantidad: %d\n, pasti: %s\n", config->plateID, config->times, config->dispensedTimes,config->quantity, config->pillName);
+    Log.Debug("Verificando dispendio platoID: %d, veces activado: %d, veces dispensado: %d, cantidad: %d, pasti: %s\n", config->plateID, config->times, config->dispensedTimes,config->quantity, config->pillName);
 
-    if (config->blocked == true) {
+    if (config->blocked == true && config->movePlate == false) {
       Log.Debug("Este plato se encuentra BLOQUEADO\n");
       continue;
     }
@@ -200,18 +211,24 @@ bool Planificador::execute(){
 
     if (config->stock < config->quantity){
       Log.Debug("stock (%d) no suficiente para proximo dispendio (%d), enviando notificacion\n", config->stock, config->quantity);
-      sendNotification(NOTIF_EXPENDIO_NO_REALIZADO_NO_PASTILLAS, config->plateID, config->pillName, "TIME", config->stock); //TODO: time?
+      sendNotification(NOTIF_EXPENDIO_NO_REALIZADO_NO_PASTILLAS, config->plateID, config->pillName, getTimeString(nextDispenseDateTime(config)), config->stock); 
       if (config->block == true) {
         config->blocked = true; // se bloquea
       }
       continue;
     }
-
+    
+    long sec = nextDispense(config);
+    
     //verificar si existe dispendio pendiente - presionar boton
     if (config->waitingForButton == true){
       Log.Debug("Alarma %d esperando por boton\n", config->plateID);
       if (isButtonPressed()){
         Log.Debug("BOTON PRESIONADO\n");
+        if (sec > BUTTON_THRESHOLD) {
+          Log.Debug("Fuera de umbral\n");
+          blockOrReschedule(config);
+        }
         config->dispensedTimes++;
         config->stock--;
         config->waitingForButton = false;
@@ -252,16 +269,16 @@ bool Planificador::execute(){
     if (config->waitingForVaso == true && !waitingForOtherPlate()){
       Log.Debug("Chequando si el vaso se retiro\n");
       activarBuzzerRetiro();
-      if (isVasoInPlace()){
+      activarLED("green", 50);
+      if (!isVasoInPlace()){
         Log.Debug("VASO retirado\n");
         config->waitingForVaso = false;
+        desactivarLED("green");
       }
     }
     else if (config->waitingForVaso == true && waitingForOtherPlate()) {
       Log.Debug("Esperando el dispendio de otro plato antes de retirar vaso\n");
     }
-
-    long sec = nextDispense(config);
 
     if (sec <= UMBRAL_ALARMA_SEG && config->waitingForButton == false && config->movePlate == false) {
       if (isVasoInPlace()) {
@@ -271,45 +288,56 @@ bool Planificador::execute(){
         saveAlarms(); //guardar el cambio 
       } 
       else {
+        blockOrReschedule(config);
+        saveAlarms(); //guardar el cambio 
         Log.Debug("VASO no DEVUELTO, enviando notificacion\n"); //TODO que mas se hace? se sigue como si nada?
-        sendNotification(NOTIF_VASO_NO_DEVUELTO, config->plateID, config->pillName, "TIME", config->stock); //TODO: time?
+        sendNotification(NOTIF_VASO_NO_DEVUELTO, config->plateID, config->pillName, getTimeString(nextDispenseDateTime(config)), config->stock); 
       }
     }
-    if (sec > BUTTON_THRESHOLD && config->waitingForButton == true) {
+    //Se considera BUTTON_THRESHOLD * 2 como el umbral para el envio de notificacion si no presiona boton
+    if (sec > (BUTTON_THRESHOLD * 2) && config->waitingForButton == true) {
        config->waitingForButton = false;
-       if (config->block == true) {
-        config->blocked = true; // se bloquea
-       } else {
-        config->times++; // se reprograma 
-       }
+       config->block = true;
        setButtonReady(false); // se paso el tiempo de espera de presionado del boton
        saveAlarms();
        Log.Debug("Boton no presionado, enviando notificacion\n"); 
-       sendNotification(NOTIF_BOTON_NO_PRESIONADO, config->plateID, config->pillName, "TIME", config->stock); //TODO: time?
+       sendNotification(NOTIF_BOTON_NO_PRESIONADO, config->plateID, config->pillName, getTimeString(nextDispenseDateTime(config)), config->stock);
     }
 
     if (sec > NO_DISPENSE_THRESHOLD && config->movePlate == true) {
        config->movePlate = false;
-       if (config->block == true) {
-        config->blocked = true; // se bloquea
-       } else {
-        config->times++; // se reprograma 
-       }
+       blockOrReschedule(config);
        saveAlarms();
        Log.Debug("Tiempo de dispendio excedido, enviando notificacion\n"); 
-       sendNotification(NOTIF_EXPENDIO_NO_REALIZADO_LIMITE_TIEMPO, config->plateID, config->pillName, "TIME", config->stock); //TODO: time?
+       sendNotification(NOTIF_EXPENDIO_NO_REALIZADO_LIMITE_TIEMPO, config->plateID, config->pillName, getTimeString(nextDispenseDateTime(config)), config->stock);
     }
 
-     //Accion en caso de no retiro del vaso
+     //Accion en caso de no retiro del vaso. No haria mas q enviar la notificacion, el dispendio ya esta hecho (no tiene sentido bloquear o reprogramar
     if (millis() - previousMillisVaso > VASO_THRESHOLD * 1000 && config->waitingForVaso == true){
-      Log.Debug("VASO no retirado, enviando notificacion\n"); //TODO que mas se hace? se sigue como si nada?
-      sendNotification(NOTIF_VASO_NO_RETIRADO, config->plateID, config->pillName, "TIME", config->stock); //TODO: time?
+      Log.Debug("VASO no retirado, enviando notificacion\n"); 
+      sendNotification(NOTIF_VASO_NO_RETIRADO, config->plateID, config->pillName, getTimeString(nextDispenseDateTime(config)), config->stock); 
       config->waitingForVaso=false;
     }
 
 
-    if (config->waitingForButton == true)
+    if (config->waitingForButton == true) {
       activarBuzzer();
+      activarLED("blue", 50);
+    } else {
+      desactivarLED("blue");
+    }
+
+    if(config->movePlate == true) {
+      activarLED("red", 50);
+    } else {
+      desactivarLED("red");
+    }
+
+    if (!isVasoInPlace())
+      activarLED("orange", 50);
+    else 
+      desactivarLED("orange");
+    
 
   }
 
@@ -320,10 +348,21 @@ bool Planificador::execute(){
 
 }
 
-//Devuelve el tiempo en segundos para el proximo dispendio de la alarma 'config'
-long Planificador::nextDispense(Alarm* config) {
-  DateTime nextDispense;
+void Planificador::blockOrReschedule(Alarm* config) {
+  if (config->block == true) {
+      config->blocked = true; // se bloquea
+      Log.Debug("Bloqueando plato, enviando notificacion\n"); 
+      sendNotification(NOTIF_BLOQUEO, config->plateID, config->pillName, getTimeString(nextDispenseDateTime(config)), config->stock); 
+   } else {
+      config->startTime = getTime();
+      config->times = 1; // se reprograma 
+   }
+}
 
+//Devuelve DateTime para el proximo dispendio de la alarma 'config'
+DateTime Planificador::nextDispenseDateTime(Alarm* config){
+  DateTime nextDispense;
+  
   // Si es periodicidad diaria o semanal tiene un intervalo de toma
   if (config->periodicity == PERIODICIDAD_DIARIA || config->periodicity == PERIODICIDAD_PERSONALIZADA ) {
     nextDispense = config->startTime + TimeSpan(config->times * config->interval); 
@@ -333,9 +372,19 @@ long Planificador::nextDispense(Alarm* config) {
   } else {
     Log.Debug("Configuracion de alarma incorrecta");
   }
+  
+  return nextDispense;
+}
+
+//Devuelve el tiempo en segundos para el proximo dispendio de la alarma 'config'
+long Planificador::nextDispense(Alarm* config) {
+  DateTime nextDispense;
+
+  nextDispense = nextDispenseDateTime(config);
   TimeSpan diff = nextDispense - this->getTime();
 
-  Log.Debug("Proximo dispendio: dia:%d, hora:%d, min:%d, seg:%d\n", diff.days(), diff.hours(), diff.minutes(), diff.seconds());
+  Log.Debug("Proximo dispendio: %s\n", string2char(getTimeString(nextDispense)));
+  Log.Debug("Resta para Proximo dispendio: dia:%d, hora:%d, min:%d, seg:%d\n", diff.days(), diff.hours(), diff.minutes(), diff.seconds());
   long sec = diff.days()*86400L + diff.hours()*3600L + diff.minutes()*60L + diff.seconds();
   
   return abs(sec);
@@ -355,7 +404,7 @@ void Planificador::checkCriticalStock() {
 
     if (config->stock == config->criticalStock){
       Log.Debug("Alarma %d supero tiene stock critico de %d\n", config->plateID, config->criticalStock);
-      sendNotification(NOTIF_STOCK_CRITICO, config->plateID, config->pillName, "TIME", config->stock); //TODO: time?
+      sendNotification(NOTIF_STOCK_CRITICO, config->plateID, config->pillName, getTimeString(nextDispenseDateTime(config)), config->stock);
     }
   }
 }
@@ -368,11 +417,11 @@ bool Planificador::isVasoInPlace() {
 
   value = analogRead(PIN_VASO_PHOTO);
   
-  Serial.println(value);
+  Log.Debug(value);
   
   if (value < 100)
-    return true;
-  return false;
+    return false;
+  return true;
   
 }
 
@@ -475,6 +524,8 @@ void Planificador::processCommandsWIFI()
     }
 
     if (root.containsKey("time")){
+      desactivarLED("red");
+      activarLED("green", 2);
       Log.Debug("WIFI: time_t! %l\n", root["time"].as<time_t>());
       this->setInitTime(root["time"].as<time_t>());
     } 
@@ -528,18 +579,27 @@ void Planificador::processCommandsWIFI()
     if (root.containsKey("UmbralButton")){
       BUTTON_THRESHOLD = root["UmbralButton"].as<int>();
       Log.Debug("WIFI: BUTTON_THRESHOLD ! %d\n", BUTTON_THRESHOLD);
-    } 
+    }
+
+    if (root.containsKey("WIFI_ERROR")){
+      activarLED("red", 2);
+      Log.Debug("WIFI: Error connecting !\n");
+    }
+    if (root.containsKey("WIFI_OK")){
+      WIFI_OK = true;
+    }
  }
 }
 
 int Planificador::sendNotification(int code, int containerID, String pillName, String time, int stock){
     JsonObject& root = jsonBuffer.createObject();
-    root["mac"] = macAddress;
-    root["code"] = code;
-    root["containerID"] = containerID;
-    root["pillName"] = pillName;
-    root["time"] = time;
-    root["stock"] = stock;
+    root["notification"] = "";
+    root["DireccionMAC"] = "60:01:94:4A:8C:A4";
+    root["Codigo"] = code;
+    root["Receptaculo"] = containerID;
+    root["Pastilla"] = pillName;
+    root["Horario"] = time;
+    root["CantidadRestante"] = stock;
 
     root.printTo(Serial1);
 
@@ -566,6 +626,110 @@ void Planificador::activarBuzzerRetiro()
 void Planificador::desactivarBuzzer()
 {
   noNewTone(PIN_BUZZER);
+}
+
+void Planificador::activarLED(String color, int times)
+{
+
+  if (color == "red") 
+    showRedLED = true;
+
+  if (color == "green") 
+    showGreenLED = true;
+
+  if (color == "blue") 
+    showBlueLED = true;
+
+  if (color == "orange"){ 
+    showOrangeLED = true;
+  }
+
+  ledTimes = times * 2;
+  
+}
+
+void Planificador::processLED(){
+  
+  if (millis() - previousMillisLED >= 1000)
+  {
+    ledTimes--;
+    if (ledTimes == 0) {
+        resetLED();
+        desactivarLED("red");
+        desactivarLED("green");
+        desactivarLED("blue");
+        desactivarLED("orange");
+    }
+    
+      previousMillisLED = millis();
+
+      if (ledValue == 0)
+        ledValue = 128;
+      else
+        ledValue = 0;
+        
+      if (showRedLED) {
+        analogWrite(PIN_LEDRED, ledValue); 
+        analogWrite(PIN_LEDGREEN, 0); 
+        analogWrite(PIN_LEDBLUE, 0); 
+        return;
+      }
+      else{
+        analogWrite(PIN_LEDRED, 0); 
+      }
+        
+      if (showGreenLED) {
+        analogWrite(PIN_LEDGREEN, ledValue); 
+        analogWrite(PIN_LEDBLUE, 0); 
+        analogWrite(PIN_LEDRED, 0); 
+        return;
+      }
+      else {
+        analogWrite(PIN_LEDGREEN, 0); 
+      }
+        
+      if (showBlueLED) {
+        analogWrite(PIN_LEDBLUE, ledValue); 
+        analogWrite(PIN_LEDRED, 0); 
+        analogWrite(PIN_LEDGREEN, 0); 
+        return;
+      }
+      else {
+        analogWrite(PIN_LEDBLUE, 0); 
+      }
+
+      if (showOrangeLED) {
+         analogWrite(PIN_LEDRED, ledValue); 
+         analogWrite(PIN_LEDGREEN,  (ledValue == 128) ? ledValue - 127 : ledValue); 
+         analogWrite(PIN_LEDBLUE, 0); 
+         return;
+      } else {
+        analogWrite(PIN_LEDRED, 0); 
+        analogWrite(PIN_LEDGREEN, 0); 
+      }
+      
+    
+  }
+  
+}
+
+void Planificador::resetLED(){
+  ledTimes = 0;
+}
+
+void Planificador::desactivarLED(String color){
+   if (color == "red") 
+    showRedLED = false;
+
+  if (color == "green") 
+    showGreenLED = false;
+
+  if (color == "blue") 
+    showBlueLED = false;
+
+  if (color == "orange") 
+    showOrangeLED = false;
+
 }
 
 

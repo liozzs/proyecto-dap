@@ -42,6 +42,8 @@ const char *testClearEEPROMToken         = "clearEEPROM";
 const char *testSetDispenseTrueToken          = "setDispenseTrue"; 
 
 
+
+
 /*************************************************************************************************************
     getTestCommand()
       Return the string of the next command. Commands are delimited by return"
@@ -125,9 +127,10 @@ void testSetAlarm() {
   int period = readNumber();
   int times = readNumber();
   int plateID = readNumber();
+  String block = readWord();
 
   DateTime t = DateTime(anio,mes,dia,hora,minuto,segundo);
-  planif->setAlarm(t, period, times, plateID);
+  planif->setAlarm(t, period, times, plateID, block == "true");
 
 }
 

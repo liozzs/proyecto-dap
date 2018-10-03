@@ -10,16 +10,16 @@ Planificador *planif;
 //Manejo de la frecuencia de chequeo del tiempo de dispendio. Esto permite no interferir con la frecuencia de los motores.
 unsigned long previousMillis = 0;  
 unsigned long previousMillisWIFI = 0;  
-
+ 
 void setup() {
   Serial.begin(115200);  //Monitor Serial
   Serial1.begin(115200); //Comunicacion con ESP8266
   init_display();
   
-  Log.Init(LOGLEVEL, 115200);
+  Log.Init(LOG_LEVEL_DEBUG, 115200); // LOG_LEVEL_NOOUTPUT //LOG_LEVEL_ERRORS / LOG_LEVEL_DEBUG
 
   planif = new Planificador();
-
+ 
 }
 
 void loop() {
@@ -38,7 +38,7 @@ void loop() {
 
   //Ejecutar solo cada "MAIN_LOOP_DELAY" millis para no perjudicar el loop principal
   if (currentMillis - previousMillis >= MAIN_LOOP_DELAY) {
-    Serial.println(planif->getTimeString(planif->getTime()));
+    Serial.println(planif->getTimeString(planif->getTime())); 
     previousMillis = currentMillis;
     planif->execute();
     planif->checkCriticalStock();
@@ -46,6 +46,9 @@ void loop() {
 
   //Procesa las ordenes de movimiento y parada de los platos.
   planif->processPlates();
+
+  //LED
+  planif->processLED();
 
   //Refrescar display
   refresh_display();

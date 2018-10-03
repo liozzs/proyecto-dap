@@ -23,6 +23,7 @@
 #define NOTIF_BOTON_NO_PRESIONADO                   4
 #define NOTIF_VASO_NO_RETIRADO                      5
 #define NOTIF_VASO_NO_DEVUELTO                      6
+#define NOTIF_BLOQUEO                               7
 
 
 //ALARMA
@@ -64,29 +65,45 @@ class Planificador{
     void logEvento(String evento, String msg="");
     int plateIDToIndex(int plateID);
     long nextDispense(Alarm* config);
+    DateTime nextDispenseDateTime(Alarm* config);
+    void blockOrReschedule(Alarm* config);
     bool alarmDispensed(Alarm* config);
     void activarBuzzer();
     void activarBuzzerRetiro();
     void desactivarBuzzer();
+    unsigned long previousMillisBuzzer = 0;
+    unsigned long previousMillisVaso = 0;
     bool isVasoInPlace();
     bool waitingForOtherPlate();
     int quantity[MAX_SUPPORTED_ALARMS] = {0, 0};
     String macAddress;
+    bool WIFI_OK = false;
+
+    //LEDs
+    int ledValue = 0;
+    bool showRedLED = false;
+    bool showGreenLED = false;
+    bool showBlueLED = false;
+    bool showOrangeLED = false;
+    int ledTimes = 0;
+    void activarLED(String color, int times);
+    void desactivarLED(String color);
+    void resetLED();
+    unsigned long previousMillisLED = 0;
     
     //MOTOR
     Servo plate1;
     Servo plate2;
     Servo plates[MAX_SUPPORTED_ALARMS] = {plate1, plate2};
     unsigned long previousMillisMotor[MAX_SUPPORTED_ALARMS] = {0,0};  
-    unsigned long previousMillisBuzzer = 0;
-    unsigned long previousMillisVaso = 0;
+    
    
    public: 
     Planificador();
     
     //umbrales (modificables)
     int NO_DISPENSE_THRESHOLD = 60; //segundos a esperar para que efectue el dispendio luego de apretar el boton
-    int BUTTON_THRESHOLD = 10; //segundos a esperar para que se presione el boton que inicia el dispendio
+    int BUTTON_THRESHOLD = 1; //segundos a esperar para que se presione el boton que inicia el dispendio
     int VASO_THRESHOLD = 20; //segundos a esperar para que se retire el vaso, pasado este tiempo se emite notificacion
   
     int storedAlarms = 0;
@@ -94,7 +111,7 @@ class Planificador{
     bool execute();   
     DateTime getTime();
     String getTimeString(DateTime t);
-    void setAlarm(DateTime startTime, int interval, int quantity, int plateID);
+    void setAlarm(DateTime startTime, int interval, int quantity, int plateID, bool block);
     void setAlarm(DateTime startTime, int interval, int quantity, int stock, int criticalStock, byte periodicity, char* days, bool block, int plateID, char* pillName);
     Alarm getAlarm(int index);
     String getAlarmString(Alarm config);
@@ -109,6 +126,9 @@ class Planificador{
     void initServo();
     void startPlate(Servo plate, int index);
     void stopPlate(Servo plate);
+
+    //LED
+    void processLED();
 
 
 };

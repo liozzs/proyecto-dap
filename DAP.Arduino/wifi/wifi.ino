@@ -15,7 +15,7 @@ DynamicJsonBuffer  jsonBuffer;
 //para medir el tiempo y ejecutar GET y POST 
 long previousMillis = 0;
 String prev_get = "";
-
+unsigned long previousMillisWIFI = 0; 
 
 //NTP
 NTPClient *ntp;
@@ -25,15 +25,17 @@ ESP8266WebServer  server(80);
 int reqCount = 0;                // number of requests received
 
 //CLIENT
-char * host;
-uint16_t port;
+char * host = "18.219.97.48";
+uint16_t port = 50065;
 
 //CAMBIAR A TRUE 
 bool USE_SMART_CONFIG = false;
+int MAX_RETRIES = 3;
 
 void setup() {
   Serial.begin(115200);
-
+  delay(5000);
+  
 if (USE_SMART_CONFIG) {
   //Smart config
   if (!WiFi.setAutoConnect(true)) {
@@ -44,9 +46,17 @@ if (USE_SMART_CONFIG) {
     delay(1000);
     /* Wait for SmartConfig packet from mobile */
     Serial.println("Waiting for SmartConfig.");
+    int retries = 0;
     while (!WiFi.smartConfigDone()) {
+      if (retries == MAX_RETRIES){
+        JsonObject& root = jsonBuffer.createObject();
+        root["WIFI_ERROR"] = "could not connect";
+        root.printTo(Serial);
+        retries = 0;
+      }
       delay(500);
       Serial.print(".");
+      retries++;
     }
     Serial.println("");
     Serial.println("SmartConfig done.");
@@ -63,21 +73,27 @@ if (USE_SMART_CONFIG) {
   }
 } 
 else {
-  char ssid[] = "DESKTOP";           
+  char ssid[] = "liozzs6s";           
   char pass[] = "lionel12";        
   int status = WL_IDLE_STATUS;  
  
   WiFi.begin(ssid, pass);
+  int retries = 0;
   while (WiFi.status() != WL_CONNECTED) {
+    if (retries == MAX_RETRIES){
+      JsonObject& root = jsonBuffer.createObject();
+      root["WIFI_ERROR"] = "could not connect";
+      root.printTo(Serial);
+      retries = 0;
+    }
     delay(500);
-    Serial.print(".");
+    
+    retries++;
   }
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
 
-  Serial.println("You're connected to the network");
+  JsonObject& root = jsonBuffer.createObject();
+  root["WIFI_OK"] = String(WiFi.localIP());
+  root.printTo(Serial);
 }
   
   // start the web server on port 80
@@ -97,6 +113,26 @@ else {
 }
 
 void loop() {
+  unsigned long currentMillis = millis();
+  
+  int retries = 0;
+  while (WiFi.status() != WL_CONNECTED) {
+    if (retries == MAX_RETRIES){
+      JsonObject& root = jsonBuffer.createObject();
+      root["WIFI_ERROR"] = "could not connect";
+      root.printTo(Serial);
+      retries = 0;
+    }
+    delay(500);
+    retries++;
+  }
+
+  if (currentMillis - previousMillisWIFI >= 10000) {
+    JsonObject& root = jsonBuffer.createObject();
+    root["WIFI_OK"] = "";
+    root.printTo(Serial);
+    previousMillisWIFI = currentMillis;
+  }
 
   //SERVER (app movil)
   server.handleClient();  
@@ -134,12 +170,6 @@ void loop() {
           delay(5000);
         } 
 
-        if (root.containsKey("set_server")){
-          host = string2char(root["host"].as<String>());
-          port = root["port"].as<int>();
-          debug("WIFI: cambio modo a: " + modo_operacion);
-        } 
-
         if (root.containsKey("get_MAC")){
           String mac =  String(WiFi.macAddress());
           JsonObject& root = jsonBuffer.createObject();
@@ -153,21 +183,15 @@ void loop() {
         
           //enviar a arduino primer mensaje con el horario correcto e IP publica
           time_t ntpTime = 0;
-        
-          while(ntpTime == 0) {
-            ntpTime = ntp->getTime();
+
+          
+          while (ntpTime == 0){
+             ntpTime = ntp->getTime();
+             if (retries == MAX_RETRIES){
+              break;
+            }
+            retries++;
           }
-        
-          // Obtener IP publica para enviar al arduino
-          String publicIP;
-          HTTPClient http;
-          http.begin("http://ipv4bot.whatismyipaddress.com/");
-          int httpCode = http.GET();
-          if(httpCode > 0) {
-            if(httpCode == HTTP_CODE_OK)
-              publicIP = http.getString();
-          }
-          http.end();
           
           JsonObject& root = jsonBuffer.createObject();
           root["time"] = ntpTime;
@@ -176,33 +200,41 @@ void loop() {
         }
 
         if (root.containsKey("notification")){
-          String mac = root["mac"].as<char *>(); 
-          int code =  root["code"].as<int>(); 
-          int containerID =  root["containerID"].as<int>(); 
-          String pillName = root["pillName"].as<char *>(); 
-          String time = root["time"].as<char *>(); 
-          int stock =  root["stock"].as<int>(); 
+          String mac = root["DireccionMAC"].as<char *>(); 
+          int code =  root["Codigo"].as<int>(); 
+          int containerID =  root["Receptaculo"].as<int>(); 
+          String pillName = root["Pastilla"].as<char *>(); 
+          String time = root["Horario"].as<char *>(); 
+          int stock =  root["CantidadRestante"].as<int>(); 
 
           debug("WIFI: procesando notificacion: " + mac + "," + String(code) + "," + String(containerID) + "," + pillName + "," + time + "," + String(stock));
-          //ACA ENVIAR NOTIFICACION AL SERVER
 
           // Use WiFiClient class to create TCP connections
           WiFiClient client;
-      
+
+          debug("sending to server: " + String(host) + ":" + String(port));
           if (!client.connect(host, port)) {
               Serial.println("connection failed");
+              msg_in = "";
               return;
           }
-      
-          // This will send the request to the server
-          //client.print("Send this data to server");
-          root.printTo(client);
-      
-          //read back one line from server
-          String line = client.readStringUntil('\r');
-          client.println(line);
-      
-          Serial.println("closing connection");
+
+          //Sending POST request with json content
+          String content;
+          root.printTo(content);
+          
+
+          String post = String("POST ") + "/api/dispensers/message" + " HTTP/1.1\r\n" +
+             "Host: 18.219.97.48\r\n" +
+             "User-Agent: Arduino/1.0\r\n" +
+             "Accept: application/json\r\n" +
+             "Content-Type: application/x-www-form-urlencoded\r\n" +
+             "Accept-Encoding: gzip, deflate, br\r\n" +
+             "Connection: close\r\n" +
+             "Content-Length: " + content.length() + "\n" + content;
+          
+          client.print(post);
+          debug(post);
           client.stop();
           
           msg_in = "";
@@ -256,4 +288,5 @@ void debug(String str) {
      Serial.println(str);
   }
 };
+
 
