@@ -228,10 +228,10 @@ void loop() {
              "Host: 18.219.97.48\r\n" +
              "User-Agent: Arduino/1.0\r\n" +
              "Accept: application/json\r\n" +
-             "Content-Type: application/x-www-form-urlencoded\r\n" +
+             "Content-Type: application/json\r\n" +
              "Accept-Encoding: gzip, deflate, br\r\n" +
              "Connection: close\r\n" +
-             "Content-Length: " + content.length() + "\n" + content;
+             "Content-Length: " + content.length() + "\r\n\r\n" + content;
           
           client.print(post);
           debug(post);
