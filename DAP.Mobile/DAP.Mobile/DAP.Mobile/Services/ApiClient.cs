@@ -24,9 +24,6 @@ namespace DAP.Mobile.Services
 
         public async Task<string> InvokeDataServiceStringAsync(ApiClientOption option)
         {
-            return await Task.Run<string>(() => { for (int i = 0; i < 10000; i++) ; return "{ 'token': '', 'error': ''}"; });
-
-            /*
             using (var client = new HttpClient())
             {
                 if (option.Headers != null)
@@ -127,7 +124,6 @@ namespace DAP.Mobile.Services
                     throw newException;
                 }
             }
-            */
         }
 
         private Uri GetRemoteBaseUri(ApiClientOption option)
