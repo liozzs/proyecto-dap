@@ -41,9 +41,9 @@ namespace DAP.Mobile.ViewModels
                     ApiClientOption option = new ApiClientOption
                     {
                         RequestType = ApiClientRequestTypes.Post,
-                        Uri = "api/register",
+                        Uri = "api/login/create",
                         Service = ApiClientServices.Api,
-                        RequestContent = new { Name, Surname, Telephone, Email, Password }
+                        RequestContent = new { Nombre = $"{Name} {Surname}", Password, Telefono = Telephone, Email}
                     };
 
                     await apiClient.InvokeDataServiceAsync(option);

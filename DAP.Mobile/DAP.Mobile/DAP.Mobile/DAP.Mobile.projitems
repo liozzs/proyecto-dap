@@ -21,6 +21,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Enums.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GlobalVariables.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\Helper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Entity.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\LoginResult.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Planification.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\PlanificationAction.cs" />
@@ -30,9 +31,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)Models\Periodicity.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\ApiClient.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\ApiClientOption.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Services\DataProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\IApiClient.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\ISqliteService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\PlanificationBuilder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\SqliteService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\ConfigurationPageViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\CustomPlanificationPageViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\DailyPlanificationPageViewModel.cs" />
@@ -40,7 +42,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\MenuDetailPageViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\MenuPageViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\NotificationsPageViewModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ViewModels\PillListPageViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\PlanificationActionPageViewModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ViewModels\PlanificationListPageViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\PlanificationPageViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\ViewModelBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\LoginPageViewModel.cs" />
@@ -83,8 +87,16 @@
       <DependentUpon>NotificationsPage.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Views\PillListPage.xaml.cs">
+      <DependentUpon>PillListPage.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Views\PlanificationActionPage.xaml.cs">
       <DependentUpon>PlanificationActionPage.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Views\PlanificationListPage.xaml.cs">
+      <DependentUpon>PlanificationListPage.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Views\PlanificationPage.xaml.cs">
@@ -190,6 +202,18 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)Helpers\" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)Views\PillListPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)Views\PlanificationListPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </EmbeddedResource>
   </ItemGroup>
   <!--#if (CreateBackendProject)
     <Compile Include="$(MSBuildThisFileDirectory)Services\AzureDataStore.cs" />

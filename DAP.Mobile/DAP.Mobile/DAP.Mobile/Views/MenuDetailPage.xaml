@@ -25,7 +25,7 @@
             <Image Source="planification.png" />
             <Label Text="Planificación" HorizontalOptions="Center" />
             <StackLayout.GestureRecognizers>
-                <TapGestureRecognizer Command="{Binding NavigateToCommand}" CommandParameter="{x:Static enum:MenuNavigation.Planification}" />
+                <TapGestureRecognizer Command="{Binding NavigateToCommand}" CommandParameter="{x:Static enum:MenuNavigation.PlanificationList}" />
             </StackLayout.GestureRecognizers>
         </StackLayout>
         <StackLayout Grid.Column="0" Grid.Row="1">
@@ -39,7 +39,7 @@
             <Image Source="loadPills.png" />
             <Label Text="Cargar pastillas" HorizontalOptions="Center" />
             <StackLayout.GestureRecognizers>
-                <TapGestureRecognizer Command="{Binding NavigateToCommand}" CommandParameter="{x:Static enum:MenuNavigation.LoadPills}" />
+                <TapGestureRecognizer Command="{Binding NavigateToCommand}" CommandParameter="{x:Static enum:MenuNavigation.PillList}" />
             </StackLayout.GestureRecognizers>
         </StackLayout>
     </Grid>

@@ -39,7 +39,12 @@ namespace DAP.Mobile.ViewModels
             this.apiClient = apiClient;
             this.dialogService = dialogService;
 
-            Actions = DataProvider.PlanificationActions;
+            Actions = new List<PlanificationAction>
+            {
+                new PlanificationAction() { Id = 1, Name = "Ninguna", Description= "La planificación seguirá dispensando la medicación en los horarios establecidos." },
+                new PlanificationAction() { Id = 2, Name = "Replanificar", Description= "En caso de no haber tomado la medicación en el momento indicado, se replanificarán los próximos expendios, corriendo el horario para cumplir con los intervalos establecidos." },
+                new PlanificationAction() { Id = 3, Name = "Bloquear", Description= "Al pasar una hora sin haber tomado la medicación, la planificación se bloqueará y no se dispensarán más medicamentos, dando por finalizado el tratamiento." }
+            };
             Action = Actions[0];
 
             CancelCommand = new DelegateCommand(async () => await NavigationService.GoBackAsync());

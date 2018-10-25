@@ -38,34 +38,25 @@ namespace DAP.Mobile.ViewModels
 
             try
             {
-                if (User == "admin" && Password == "admin")
-                {
-                    await GoToMenu("impersonar");
-                }
-                else if (Validate())
+                if (Validate())
                 {
                     var options = new ApiClientOption
                     {
                         RequestType = ApiClientRequestTypes.Post,
                         Uri = "api/login",
                         Service = ApiClientServices.Api,
-                        RequestContent = new User { UserName = User, Password = Password }
+                        RequestContent = new { Email = User, Password }
                     };
 
                     LoginResult result = await apiClient.InvokeDataServiceAsync<LoginResult>(options);
-                    if (String.IsNullOrEmpty(result.Error))
-                    {
-                        await GoToMenu(result.Token);
-                    }
-                    else
-                    {
-                        Message = result.Error;
-                    }
+                    await GoToMenu(result.Token);
                 }
             }
             catch (Exception e)
             {
-                await dialogService.DisplayAlertAsync("Error", "Ocurrió un error al ingresar. Intente nuevamente en unos minutos.", "Aceptar");
+                string message = "Unauthorized".Equals(e.Message) ? "Las credenciales ingresadas son incorrectas." : "Ocurrió un error al ingresar. Intente nuevamente en unos minutos.";
+
+                await dialogService.DisplayAlertAsync("Error", message, "Aceptar");
             }
             finally
             {

@@ -10,7 +10,7 @@ namespace DAP.Mobile.Models
         Custom = 3
     }
 
-    public class Planification
+    public class Planification : Entity
     {
         public PlanificationType Type { get; internal set; }
         public DateTime StartDate { get; internal set; }

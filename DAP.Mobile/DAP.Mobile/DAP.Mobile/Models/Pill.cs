@@ -1,8 +1,9 @@
 ﻿namespace DAP.Mobile.Models
 {
-    public class Pill
+    public class Pill : Entity
     {
-        public int Id { get; set; }
         public string Name { get; set; }
+        public int Container { get; set; }
+        public int Quantity { get; set; }
     }
 }

@@ -7,7 +7,6 @@ using Prism.Unity;
 using Xamarin.Forms.Xaml;
 
 [assembly: XamlCompilation(XamlCompilationOptions.Compile)]
-
 namespace DAP.Mobile
 {
     public partial class App : PrismApplication
@@ -17,6 +16,20 @@ namespace DAP.Mobile
          * This imposes a limitation in which the App class must have a default constructor.
          * App(IPlatformInitializer initializer = null) cannot be handled by the Activator.
          */
+
+        static SqliteService database;
+        
+        public static SqliteService Database
+        {
+            get
+            {
+                if (database == null)
+                {
+                    database = new SqliteService();
+                }
+                return database;
+            }
+        }
 
         public App() : this(null)
         {
@@ -43,6 +56,7 @@ namespace DAP.Mobile
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
             containerRegistry.RegisterInstance<IApiClient>(new ApiClient());
+            containerRegistry.RegisterSingleton<ISqliteService, SqliteService>();
             containerRegistry.RegisterForNavigation<Views.NavigationPage>();
             containerRegistry.RegisterForNavigation<LoginPage>();
             containerRegistry.RegisterForNavigation<SignUpPage>();
@@ -56,7 +70,9 @@ namespace DAP.Mobile
             containerRegistry.RegisterForNavigation<CustomPlanificationPage>();
             containerRegistry.RegisterForNavigation<PlanificationActionPage>();
             containerRegistry.RegisterForNavigation<ConfigurationPage>();
+            containerRegistry.RegisterForNavigation<PillListPage>();
             containerRegistry.RegisterForNavigation<LoadPillsPage>();
+            containerRegistry.RegisterForNavigation<PlanificationListPage>();
         }
     }
 }

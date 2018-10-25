@@ -1,4 +1,5 @@
-﻿using DAP.Mobile.Services;
+﻿using DAP.Mobile.Models;
+using DAP.Mobile.Services;
 using Prism.Commands;
 using Prism.Navigation;
 using Prism.Services;
@@ -11,6 +12,7 @@ namespace DAP.Mobile.ViewModels
 {
     public class LoadPillsPageViewModel : ViewModelBase
     {
+        private readonly ISqliteService sqliteService;
         private readonly IApiClient apiClient;
         private readonly IPageDialogService dialogService;
 
@@ -23,11 +25,12 @@ namespace DAP.Mobile.ViewModels
         public ICommand CancelCommand { get; set; }
         public ICommand AcceptCommand { get; set; }
 
-        public LoadPillsPageViewModel(INavigationService navigationService, IPageDialogService dialogService, IApiClient apiClient) : base(navigationService)
+        public LoadPillsPageViewModel(INavigationService navigationService, IPageDialogService dialogService, IApiClient apiClient, ISqliteService sqliteService) : base(navigationService)
         {
+            this.sqliteService = sqliteService;
             this.apiClient = apiClient;
             this.dialogService = dialogService;
-            Containers = DataProvider.Containers;
+            Containers = new List<int> { 1, 2 };
             Container = Containers[0];
             Quantity = "20";
 
@@ -35,9 +38,20 @@ namespace DAP.Mobile.ViewModels
             AcceptCommand = new DelegateCommand(async () => await AcceptAsync());
         }
 
+        public override void OnNavigatedFrom(NavigationParameters parameters)
+        {
+            base.OnNavigatedFrom(parameters);
+            var pill = parameters.GetValue<Pill>("Pill");
+            if (pill != null)
+            {
+                Container = pill.Container;
+                PillName = pill.Name;
+                Quantity = pill.Quantity.ToString();
+            }
+        }
+
         private async Task AcceptAsync()
         {
-
             if (Validate())
             {
                 bool response = await dialogService.DisplayAlertAsync("Cargar pastillas", $"Ingrese las pastillas en el contenedor {Container} del dispositivo y confirme", "Aceptar", "Cancelar");
@@ -46,12 +60,17 @@ namespace DAP.Mobile.ViewModels
                     try
                     {
                         var qty = Convert.ToInt32(Quantity);
+
+                        Pill pill = new Pill { Name = PillName, Container = Container, Quantity = qty };
+
+                        await sqliteService.Save(pill);
+
                         ApiClientOption option = new ApiClientOption
                         {
                             RequestType = ApiClientRequestTypes.Post,
                             Uri = "loadPills",
                             Service = ApiClientServices.Arduino,
-                            RequestContent = new { PillName, Container, qty }
+                            RequestContent = pill
                         };
 
                         await apiClient.InvokeDataServiceAsync(option);

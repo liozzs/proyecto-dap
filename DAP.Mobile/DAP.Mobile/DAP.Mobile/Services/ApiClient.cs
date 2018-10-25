@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using DAP.Mobile.Helpers;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -26,6 +27,12 @@ namespace DAP.Mobile.Services
         {
             using (var client = new HttpClient())
             {
+                string token = Helper.GetApplicationValue<string>("token");
+                if (!String.IsNullOrEmpty(token))
+                {
+                    client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+                }
+
                 if (option.Headers != null)
                 {
                     foreach (var item in option.Headers)
