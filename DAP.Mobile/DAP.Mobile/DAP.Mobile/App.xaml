@@ -20,6 +20,16 @@
                 <Setter Property="FontSize" Value="Small" />
             </Style>
             <Style TargetType="local:RoundedEntry">
+                <Setter Property="HorizontalTextAlignment" Value="Center" />
+                <Setter Property="FontSize" Value="Small" />
+            </Style>
+            <Style TargetType="local:RoundedPicker">
+                <Setter Property="FontSize" Value="Small" />
+            </Style>
+            <Style TargetType="local:RoundedTimePicker">
+                <Setter Property="FontSize" Value="Small" />
+            </Style>
+            <Style TargetType="local:RoundedDatePicker">
                 <Setter Property="FontSize" Value="Small" />
             </Style>
             <Style TargetType="Label">
@@ -28,6 +38,9 @@
             </Style>
             <Style TargetType="ActivityIndicator">
                 <Setter Property="Color" Value="{StaticResource LightOrange}" />
+            </Style>
+            <Style x:Key="ErrorStyle" TargetType="Label">
+                <Setter Property="TextColor" Value="Red" />
             </Style>
         </ResourceDictionary>
     </Application.Resources>

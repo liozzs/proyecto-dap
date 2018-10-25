@@ -14,32 +14,32 @@
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        <StackLayout Grid.Column="0" Grid.Row="0" >
-            <Image Source="notifications.png"  />
+        <StackLayout Grid.Column="0" Grid.Row="0">
+            <Image Source="notifications.png" />
             <Label Text="Notificaciones" HorizontalOptions="Center" />
             <StackLayout.GestureRecognizers>
                 <TapGestureRecognizer Command="{Binding NavigateToCommand}" CommandParameter="{x:Static enum:MenuNavigation.Notifications}" />
             </StackLayout.GestureRecognizers>
         </StackLayout>
-        <StackLayout Grid.Column="1" Grid.Row="0" >
-            <Image Source="planification.png"  />
+        <StackLayout Grid.Column="1" Grid.Row="0">
+            <Image Source="planification.png" />
             <Label Text="Planificación" HorizontalOptions="Center" />
             <StackLayout.GestureRecognizers>
-                <TapGestureRecognizer Command="{Binding NavigateToCommand}" CommandParameter="{x:Static enum:MenuNavigation.Planification}" />
+                <TapGestureRecognizer Command="{Binding NavigateToCommand}" CommandParameter="{x:Static enum:MenuNavigation.PlanificationList}" />
             </StackLayout.GestureRecognizers>
         </StackLayout>
-        <StackLayout Grid.Column="0" Grid.Row="1" >
-            <Image Source="configuration.png"  />
+        <StackLayout Grid.Column="0" Grid.Row="1">
+            <Image Source="configuration.png" />
             <Label Text="Configuración" HorizontalOptions="Center" />
             <StackLayout.GestureRecognizers>
                 <TapGestureRecognizer Command="{Binding NavigateToCommand}" CommandParameter="{x:Static enum:MenuNavigation.Configuration}" />
             </StackLayout.GestureRecognizers>
         </StackLayout>
-        <StackLayout Grid.Column="1" Grid.Row="1" >
-            <Image Source="loadPills.png"  />
+        <StackLayout Grid.Column="1" Grid.Row="1">
+            <Image Source="loadPills.png" />
             <Label Text="Cargar pastillas" HorizontalOptions="Center" />
             <StackLayout.GestureRecognizers>
-                <TapGestureRecognizer Command="{Binding NavigateToCommand}" CommandParameter="{x:Static enum:MenuNavigation.LoadPills}" />
+                <TapGestureRecognizer Command="{Binding NavigateToCommand}" CommandParameter="{x:Static enum:MenuNavigation.PillList}" />
             </StackLayout.GestureRecognizers>
         </StackLayout>
     </Grid>

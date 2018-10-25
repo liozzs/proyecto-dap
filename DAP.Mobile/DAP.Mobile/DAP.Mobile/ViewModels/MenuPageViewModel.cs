@@ -1,4 +1,5 @@
-﻿using DAP.Mobile.Models;
+﻿using DAP.Mobile.Helpers;
+using DAP.Mobile.Models;
 using Prism.Commands;
 using Prism.Navigation;
 using System.Collections.ObjectModel;
@@ -32,7 +33,7 @@ namespace DAP.Mobile.ViewModels
             {
                 Title = "Planificación",
                 IconSource = "planification.png",
-                Command = new DelegateCommand(async () => await NavigateTo(MenuNavigation.Planification))
+                Command = new DelegateCommand(async () => await NavigateTo(MenuNavigation.PlanificationList))
             });
             MenuItems.Add(new MenuItem()
             {
@@ -44,7 +45,7 @@ namespace DAP.Mobile.ViewModels
             {
                 Title = "Cargar pastillas",
                 IconSource = "loadPills.png",
-                Command = new DelegateCommand(async () => await NavigateTo(MenuNavigation.Notifications))
+                Command = new DelegateCommand(async () => await NavigateTo(MenuNavigation.PillList))
             });
             MenuItems.Add(new MenuItem()
             {
@@ -56,6 +57,9 @@ namespace DAP.Mobile.ViewModels
 
         private Task SignOut()
         {
+            Helper.SetApplicationValue("user", "");
+            Helper.SetApplicationValue("logged", false);
+            Helper.SetApplicationValue("token", "");
             return NavigationService.NavigateAsync("/NavigationPage/LoginPage");
         }
 

@@ -3,8 +3,8 @@
     public enum MenuNavigation
     {
         Notifications,
-        Planification,
+        PlanificationList,
         Configuration,
-        LoadPills
+        PillList
     }
 }
