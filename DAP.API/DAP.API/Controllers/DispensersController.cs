@@ -27,13 +27,15 @@ namespace DAP.API.Controllers
             return _dispenserRepository.GetAll();
         }
 
-        [HttpPost("message", Name = "SendMessage")]
+        [HttpPost("mensajes", Name = "SendMessage")]
         [AllowAnonymous]
-        public IActionResult SendMessage(DispenserMensaje mensaje) {
+        public IActionResult SendMessage([FromBody] DispenserMensaje mensaje/*, [FromBody] string DireccionMAC*/) {
             _logger.LogInformation("SendMessage");
+            
             Dispenser dispenser = _dispenserRepository.Get(mensaje.DireccionMAC);
             if (dispenser == null)
                 return NotFound();
+            string subject = "Notificacion - Dispenser: " + dispenser.Nombre;
             string message = "Estimado usuario:" + NewLine();
             var parameters = new Dictionary<string, string>
             {
@@ -41,26 +43,41 @@ namespace DAP.API.Controllers
                 { "Pastilla", mensaje.Pastilla }
             };
             switch (mensaje.Codigo) {
-                case CodigoError.E001:
+                case CodigoError.FALTA_DE_PASTILLAS:
+                    mensaje.Mensaje = "Expendio no realizado. Cantidad de pastillas en el receptáculo menor a la cantidad de pastillas a dispensar.";
                     message += "Le informamos no se ha podido realizar el expendio del siguiente medicamento:" + NewLine();
                     parameters.Add("Horario", mensaje.Horario);
                     parameters.Add("Causa", "Cantidad de pastillas en el receptáculo menor a la cantidad de pastillas a dispensar.");
                     break;
-                case CodigoError.E002:
+                case CodigoError.LIMITE_DE_TIEMPO:
+                    mensaje.Mensaje = "Expendio no realizado. Se superó el umbral de tiempo en que el mecanismo debe realizar el expendio.";
                     message += "Le informamos no se ha podido realizar el expendio del siguiente medicamento:" + NewLine();
                     parameters.Add("Horario", mensaje.Horario);
                     parameters.Add("Causa", "Se superó el umbral de tiempo en que el mecanismo debe realizar el expendio.");
                     break;
-                case CodigoError.E003:
+                case CodigoError.STOCK_CRITICO:
+                    mensaje.Mensaje = "Expendio realizado. Se ha alcanzado el stock crítico.";
                     message += "Le informamos se ha alcanzado el stock crítico del siguiente medicamento:" + NewLine();
                     parameters.Add("Cantidad Restante", mensaje.CantidadRestante.ToString());
                     break;
-                case CodigoError.E004:
+                case CodigoError.BOTON_NO_PRESIONADO:
+                    mensaje.Mensaje = "Expendio no realizado. El botón para iniciar el expendio de medicamentos no ha sido presionado.";
                     message += "Le informamos que el botón para iniciar el expendio de medicamentos no ha sido presionado. Expendio correspondiente:" + NewLine();
                     parameters.Add("Horario", mensaje.Horario);
                     break;
-                case CodigoError.E005:
+                case CodigoError.VASO_NO_RETIRADO:
+                    mensaje.Mensaje = "Expendio realizado. El recipiente no ha sido retirado de su posición.";
+                    message += "Le informamos que el recipiente no ha sido retirado de su posición. Último expendio realizado:" + NewLine();
+                    parameters.Add("Horario", mensaje.Horario);
+                    break;
+                case CodigoError.VASO_NO_DEVUELTO:
+                    mensaje.Mensaje = "Expendio realizado. El recipiente no ha sido devuelto a su posición.";
                     message += "Le informamos que el recipiente no ha sido devuelto a su posición. Último expendio realizado:" + NewLine();
+                    parameters.Add("Horario", mensaje.Horario);
+                    break;
+                case CodigoError.BLOQUEO_RECIPIENTE:
+                    mensaje.Mensaje = "Le informamos se ha realizado el bloqueo del receptáculo.";
+                    message += "Le informamos se ha realizado el bloqueo del siguiente receptáculo. Expendio correspondiente:" + NewLine();
                     parameters.Add("Horario", mensaje.Horario);
                     break;
             }
@@ -74,7 +91,84 @@ namespace DAP.API.Controllers
 
             dispenser.Usuarios.ForEach(u =>
             {
-                _emailSender.SendEmail(u.Email, "ERROR", message);
+                _emailSender.SendEmail(u.Email, subject, message);
+            });
+
+            // Guardar el DispenserMensaje
+            _dispenserRepository.Insert(mensaje, dispenser);
+
+            return Ok();
+        }
+
+        [HttpPost ("planificacion", Name = "SendPlanificacion")]
+        [AllowAnonymous]
+        public IActionResult SendPlanificacion([FromBody] PlanificacionMensaje planificacion)
+        {
+            _logger.LogInformation("SendPlanificacion");
+
+            Dispenser dispenser = _dispenserRepository.Get(planificacion.DireccionMAC);
+            if (dispenser == null)
+                return NotFound();
+
+            string subject = "Notificacion - Dispenser: " + dispenser.Nombre;
+            string message = "Estimado usuario:" + NewLine();
+
+            message += "Le informamos se ha cargado la siguiente planificación:" + NewLine();
+
+            message += "<strong>Receptáculo</strong>: ";
+            message += planificacion.Receptaculo.ToString() + "<br>";
+            message += "<strong>Horario Inicio</strong>: ";
+            message += planificacion.HorarioInicio + "<br>";
+            message += "<strong>Intervalo</strong>: ";
+            message += planificacion.Intervalo + "<br>";
+            message += "<strong>Cantidad</strong>: ";
+            message += planificacion.Cantidad.ToString() + "<br>";
+            message += "<strong>Stock Crítico</strong>: ";
+            message += planificacion.StockCritico.ToString() + "<br>";
+            message += "<strong>Periodicidad</strong>: ";
+            message += planificacion.Periodicidad + "<br>";
+            message += "<strong>Días</strong>: ";
+            message += planificacion.Dias + "<br>";
+            message += "<strong>Bloquer</strong>: ";
+            message += planificacion.Bloqueo + NewLine();
+
+            message += "<em>Atte. Equipo D.A.P.</em>";
+
+            dispenser.Usuarios.ForEach(u =>
+            {
+                _emailSender.SendEmail(u.Email, subject, message);
+            });
+
+            return Ok();
+        }
+
+        [HttpPost("carga", Name = "SendCargaStock")]
+        [AllowAnonymous]
+        public IActionResult SendCargaStock([FromBody] CargaStockMensaje cargaStock)
+        {
+            _logger.LogInformation("SendCargaStock");
+
+            Dispenser dispenser = _dispenserRepository.Get(cargaStock.DireccionMAC);
+            if (dispenser == null)
+                return NotFound();
+
+            string subject = "Notificacion - Dispenser: " + dispenser.Nombre;
+            string message = "Estimado usuario:" + NewLine();
+
+            message += "Le informamos se ha realizado la siguiente carga de stock:" + NewLine();
+
+            message += "<strong>Receptáculo</strong>: ";
+            message += cargaStock.Receptaculo.ToString() + "<br>";
+            message += "<strong>Pastilla</strong>: ";
+            message += cargaStock.Pastilla + "<br>";
+            message += "<strong>Stock</strong>: ";
+            message += cargaStock.Stock.ToString() + NewLine();
+
+            message += "<em>Atte. Equipo D.A.P.</em>";
+
+            dispenser.Usuarios.ForEach(u =>
+            {
+                _emailSender.SendEmail(u.Email, subject, message);
             });
 
             return Ok();

@@ -16,6 +16,8 @@ namespace DAP.API.Controllers
     public class UsuariosController : Controller
     {
         private UsuarioRepository _usuarioRepository = new UsuarioRepository();
+        private DispenserRepository _dispenserRepository = new DispenserRepository();
+   
         private readonly ILogger<UsuariosController> _logger;
 
         public UsuariosController(ILogger<UsuariosController> logger)
@@ -57,14 +59,62 @@ namespace DAP.API.Controllers
 
         [HttpPost("dispensers", Name = "CreateDispenser")]
         [Authorize]
-        public IActionResult Post(Dispenser dispenser)
+        public IActionResult Post([FromBody] Dispenser dispenser)
         {
             _logger.LogInformation("CreateDispenser");
             Usuario usuario = GetCurrentUser(HttpContext.User);
+            Dispenser d = _dispenserRepository.Get(dispenser.DireccionMAC);
+
+          
+            if (d != null)
+            {
+                dispenser.ID = d.ID;
+            }
 
             if (!_usuarioRepository.Insert(dispenser, usuario))
                 return BadRequest();
             return Ok();
+        }
+
+        [HttpGet("dispensers/{MAC}", Name = "GetUsuarioDispenser")]
+        [Authorize]
+        public IActionResult GetUsuarioDispenser(string MAC)
+        {
+            _logger.LogInformation("GetUsuarioDispenser");
+            Usuario usuario = GetCurrentUser(HttpContext.User);
+            if (usuario == null)
+            {
+                return NotFound();
+            }
+            MAC = MAC.Replace("%3A", ":");
+            Dispenser dispenser = usuario.Dispensers.FirstOrDefault(d => d.DireccionMAC.Equals(MAC));
+            //Dispenser dispenser = _dispenserRepository.Get(MAC);
+            if (dispenser == null)
+            {
+                return NotFound();
+            }
+            return Ok(dispenser);
+        }
+
+        [HttpGet("dispensers/{MAC}/mensajes", Name = "GetUsuarioDispenserMensajes")]
+        [Authorize]
+        public IActionResult GetUsuarioDispenserMensajes(string MAC)
+        {
+            _logger.LogInformation("GetUsuarioDispenserMensajes");
+            Usuario usuario = GetCurrentUser(HttpContext.User);
+            if (usuario == null)
+            {
+                return NotFound();
+            }
+
+            MAC = MAC.Replace("%3A", ":");
+            Dispenser dispenser = usuario.Dispensers.FirstOrDefault(d => d.DireccionMAC.Equals(MAC));
+            //Dispenser dispenser = _dispenserRepository.Get(MAC);
+            if (dispenser == null)
+            {
+                return NotFound();
+            }
+            return Ok(dispenser.Mensajes);
         }
 
         private Usuario GetCurrentUser(ClaimsPrincipal principal)

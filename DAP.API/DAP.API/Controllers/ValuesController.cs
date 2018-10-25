@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+
+using DAP.API.Models;
 
 namespace DAP.API.Controllers
 {
@@ -21,9 +24,22 @@ namespace DAP.API.Controllers
         }
 
         // POST api/values
-        [HttpPost]
-        public void Post([FromBody]string value)
+        [HttpPost("separate")]
+        public void Post(int a, int b, int c)
         {
+            Debug.WriteLine(a + " " + b + " " + c);
+        }
+
+        [HttpPost("together")]
+        public void Post(Value Value)
+        {
+            Debug.WriteLine(Value.A + " " + Value.B);
+        }
+
+        [HttpPost("mix")]
+        public void Post(Value value, int c)
+        {
+            Debug.WriteLine(value.A + " " + value.B + " " + c);
         }
 
         // PUT api/values/5

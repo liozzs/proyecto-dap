@@ -9,7 +9,10 @@ namespace DAP.API.DAL
 {
     public class UsuarioRepository: AbstractRepository<Usuario>
     {
-        private string selectSql = "SELECT U.*, D.* FROM Usuario AS U LEFT JOIN UsuarioDispenser UD ON (U.ID = UD.UsuarioId) LEFT JOIN Dispenser D ON (UD.DispenserID = D.ID)";
+        //private readonly string selectSql = "SELECT U.*, D.* FROM Usuario AS U LEFT JOIN UsuarioDispenser UD ON (U.ID = UD.UsuarioId) LEFT JOIN Dispenser D ON (UD.DispenserID = D.ID)";
+        private readonly string selectSql = "SELECT U.*, D.*, DM.* FROM Usuario AS U " +
+            "LEFT JOIN UsuarioDispenser UD ON (U.ID = UD.UsuarioId) LEFT JOIN Dispenser D ON (UD.DispenserID = D.ID) " +
+            "LEFT JOIN DispenserMensaje DM ON (D.ID = DM.DispenserID)";
 
         public UsuarioRepository()
         {
@@ -19,15 +22,27 @@ namespace DAP.API.DAL
         public override Usuario Get(int ID)
         {
             Usuario usuario = null;
-            _conn.Query<Usuario, Dispenser, Usuario>(selectSql + " WHERE U.ID = @Id", (u, d) => {
+            _conn.Query<Usuario, Dispenser, DispenserMensaje, Usuario>(selectSql + " WHERE U.ID = @Id", (u, d, dm) => {
                 if (usuario == null)
                 {
                     usuario = u;
                     usuario.Dispensers = new List<Dispenser>();
                 }
-                usuario.Dispensers.Add(d);
+                if (d != null)
+                {
+                    if (!usuario.Dispensers.Contains(d))
+                    {
+                        d.Mensajes = new List<DispenserMensaje>();
+                        usuario.Dispensers.Add(d);
+                    }
+                    Dispenser dispenser = usuario.Dispensers.Find(disp => disp.ID == d.ID);
+                    if (dm != null)
+                    {
+                        dispenser.Mensajes.Add(dm);
+                    }
+                }
                 return usuario;
-            }, new { Id = ID }, splitOn: "UsuarioID, ID").AsQueryable();
+            }, new { Id = ID }, splitOn: "UsuarioID, ID, ID").AsQueryable();
 
             return usuario;
         }
@@ -40,7 +55,27 @@ namespace DAP.API.DAL
         public Usuario Get(string Email)
         {
             Usuario usuario = null;
-            _conn.Query<Usuario, Dispenser, Usuario>(selectSql + " WHERE U.Email = @Email", (u, d) => {
+            _conn.Query<Usuario, Dispenser, DispenserMensaje, Usuario>(selectSql + " WHERE U.Email = @Email", (u, d, dm) => {
+                if (usuario == null)
+                {
+                    usuario = u;
+                    usuario.Dispensers = new List<Dispenser>();
+                }
+                if (d != null)
+                {
+                    if (!usuario.Dispensers.Contains(d))
+                    {
+                        d.Mensajes = new List<DispenserMensaje>();
+                        usuario.Dispensers.Add(d);
+                    }
+                    Dispenser dispenser = usuario.Dispensers.Find(disp => disp.ID == d.ID);
+                    if (dm != null)
+                    {
+                        dispenser.Mensajes.Add(dm);
+                    }
+                }
+                return usuario;
+                /*
                 if (usuario == null)
                 {
                     usuario = u;
@@ -49,7 +84,8 @@ namespace DAP.API.DAL
                 if (d != null)
                     usuario.Dispensers.Add(d);
                 return usuario;
-            }, new { Email }, splitOn: "UsuarioID, ID").AsQueryable();
+                */
+            }, new { Email }, splitOn: "UsuarioID, ID, ID").AsQueryable();
 
             return usuario;
         }
@@ -57,7 +93,7 @@ namespace DAP.API.DAL
         public override List<Usuario> GetAll()
         {
             var lookup = new Dictionary<int, Usuario>();
-            _conn.Query<Usuario, Dispenser, Usuario>(selectSql, (u, d) =>
+            _conn.Query<Usuario, Dispenser, DispenserMensaje, Usuario>(selectSql, (u, d, dm) =>
             {
                 if (!lookup.TryGetValue(u.ID, out Usuario usuario))
                 {
@@ -67,9 +103,42 @@ namespace DAP.API.DAL
                 {
                     usuario.Dispensers = new List<Dispenser>();
                 }
-                usuario.Dispensers.Add(d);
+                if (d != null)
+                {
+                    if (!usuario.Dispensers.Contains(d))
+                    {
+                        d.Mensajes = new List<DispenserMensaje>();
+                        usuario.Dispensers.Add(d);
+                    }
+                    if (dm != null)
+                    {
+                        Dispenser dispenser = usuario.Dispensers.Find(disp => disp.ID == d.ID);
+                        dispenser.Mensajes.Add(dm);
+                    }
+                }
                 return usuario;
-            }, splitOn: "UsuarioID, ID").AsQueryable();
+                /*
+                if (usuario == null)
+                {
+                    usuario = u;
+                    usuario.Dispensers = new List<Dispenser>();
+                }
+                if (d != null)
+                {
+                    if (!usuario.Dispensers.Contains(d))
+                    {
+                        d.Mensajes = new List<DispenserMensaje>();
+                        usuario.Dispensers.Add(d);
+                    }
+                    Dispenser dispenser = usuario.Dispensers.Find(disp => disp.ID == d.ID);
+                    if (dm != null)
+                    {
+                        dispenser.Mensajes.Add(dm);
+                    }
+                }
+                return usuario;
+                */
+            }, splitOn: "UsuarioID, ID, ID").AsQueryable();
 
             return lookup.Select(x => x.Value).ToList();
         }
@@ -80,7 +149,7 @@ namespace DAP.API.DAL
             if (usuario != null) {
                 return usuario;
             }
-            string sql = @"INSERT INTO Usuario(Nombre, Password, Salt, Email) VALUES(@Nombre, @Password, @Salt, @Email);
+            string sql = @"INSERT INTO Usuario(Nombre, Password, Salt, Email, Telefono) VALUES(@Nombre, @Password, @Salt, @Email, @Telefono);
                             SELECT LAST_INSERT_ID()";
 
             int insertedId = _conn.Query<int>(sql, t).SingleOrDefault();
@@ -90,13 +159,28 @@ namespace DAP.API.DAL
         }
 
         public bool Insert(Dispenser dispenser, Usuario usuario) {
-            string sql = @"INSERT INTO Dispenser(DireccionMAC, Nombre) VALUES(@DireccionMAC, @Nombre);
+            string sql;
+            //= @"INSERT INTO Dispenser(DireccionMAC, Nombre) VALUES(@DireccionMAC, @Nombre); SELECT LAST_INSERT_ID()";
+
+            if (dispenser.ID == 0)
+            {
+                sql = @"INSERT INTO Dispenser(DireccionMAC, Nombre) VALUES(@DireccionMAC, @Nombre);
                             SELECT LAST_INSERT_ID()";
+                int insertedId = _conn.Query<int>(sql, dispenser).SingleOrDefault();
+                dispenser.ID = insertedId;
+            }
+            else
+            {
+                sql = @"UPDATE Dispenser SET Nombre = @Nombre WHERE ID = @ID;";
+                _conn.Execute(sql, dispenser);
+            }
 
-            int insertedId = _conn.Query<int>(sql, dispenser).SingleOrDefault();
-            dispenser.ID = insertedId;
+            return CreateRelation(usuario, dispenser);
+        }
 
-            sql = @"INSERT INTO UsuarioDispenser(UsuarioID, DispenserID) VALUES(@UsuarioID, @DispenserID)";
+        public bool CreateRelation(Usuario usuario, Dispenser dispenser)
+        {
+            string sql = @"INSERT INTO UsuarioDispenser(UsuarioID, DispenserID) VALUES(@UsuarioID, @DispenserID)";
             int rowsAffected = _conn.Execute(sql, new { UsuarioID = usuario.ID, DispenserID = dispenser.ID });
 
             return (rowsAffected > 0);

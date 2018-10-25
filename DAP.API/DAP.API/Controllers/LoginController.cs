@@ -27,7 +27,7 @@ namespace DAP.API.Controllers
         }
 
         [HttpPost]
-        public IActionResult Login(LoginRequest loginRequest)
+        public IActionResult Login([FromBody] LoginRequest loginRequest)
         {
             if (loginRequest == null)
                 return BadRequest();
@@ -41,8 +41,11 @@ namespace DAP.API.Controllers
         }
 
         [HttpPost("create")]
-        public IActionResult Post(Usuario usuario)
+        public IActionResult Post([FromBody] Usuario usuario)
         {
+            Usuario u = _usuarioRepository.Get(usuario.Email);
+            if (u != null)
+                return Login(new LoginRequest { Email = usuario.Email, Password = usuario.Password });
             CreatePassword(usuario);
             var inserted = _usuarioRepository.Insert(usuario);
             if (inserted == null)
