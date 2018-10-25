@@ -7,7 +7,8 @@
     <ContentPage.ToolbarItems>
         <ToolbarItem Icon="ic_action_add.png" Command="{Binding CreateCommand}" />
     </ContentPage.ToolbarItems>
-    <ListView ItemsSource="{Binding Pills}"
+    <ListView x:Name="ItemsListView"
+              ItemsSource="{Binding Pills}"
               RefreshCommand="{Binding LoadPillsCommand}"
               IsPullToRefreshEnabled="True"
               IsRefreshing="{Binding IsLoading}"
@@ -26,8 +27,11 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                         <Label Grid.Row="0" Grid.Column="0" Text="{Binding Name}" Font="Bold" />
-                        <Label Grid.Row="0" Grid.Column="1" Text="{Binding Date, StringFormat='\{0:dd/MM/yyyy HH:mm}'}" HorizontalOptions="End" Font="Bold" />
-                        <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding Container}" />
+                        <Label Grid.Row="1" Grid.Column="0" Text="Recipiente: " />
+                        <Label Grid.Row="1" Grid.Column="1" Text="{Binding Container}" />
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding BindingContext.OpenPillCommand, Source={x:Reference Name=ItemsListView}}" CommandParameter="{Binding .}" />
+                        </Grid.GestureRecognizers>
                     </Grid>
                 </ViewCell>
             </DataTemplate>

@@ -5,6 +5,7 @@ using Prism.Navigation;
 using Prism.Services;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -16,9 +17,28 @@ namespace DAP.Mobile.ViewModels
         private readonly IApiClient apiClient;
         private readonly IPageDialogService dialogService;
 
-        public string PillName { get; set; }
-        public string Quantity { get; set; }
-        public int Container { get; set; }
+        private string pillName;
+        public string PillName
+        {
+            get => pillName;
+            set => SetProperty(ref pillName, value);
+        }
+
+        private string quantity;
+        public string Quantity
+        {
+            get => quantity;
+            set => SetProperty(ref quantity, value);
+        }
+
+        private int container;
+        public int Container
+        {
+            get => container;
+            set => SetProperty(ref container, value);
+        }
+
+        private int pillId;
 
         public IList<int> Containers { get; set; }
 
@@ -38,15 +58,16 @@ namespace DAP.Mobile.ViewModels
             AcceptCommand = new DelegateCommand(async () => await AcceptAsync());
         }
 
-        public override void OnNavigatedFrom(NavigationParameters parameters)
+        public override void OnNavigatingTo(NavigationParameters parameters)
         {
-            base.OnNavigatedFrom(parameters);
+            base.OnNavigatingTo(parameters);
             var pill = parameters.GetValue<Pill>("Pill");
             if (pill != null)
             {
                 Container = pill.Container;
                 PillName = pill.Name;
                 Quantity = pill.Quantity.ToString();
+                pillId = pill.Id;
             }
         }
 
@@ -59,21 +80,19 @@ namespace DAP.Mobile.ViewModels
                 {
                     try
                     {
-                        var qty = Convert.ToInt32(Quantity);
+                        Pill pill = new Pill { Id = pillId, Name = PillName, Container = Container, Quantity = Convert.ToInt32(Quantity) };
 
-                        Pill pill = new Pill { Name = PillName, Container = Container, Quantity = qty };
+                        //ApiClientOption option = new ApiClientOption
+                        //{
+                        //    RequestType = ApiClientRequestTypes.Post,
+                        //    Uri = "stock",
+                        //    Service = ApiClientServices.Arduino,
+                        //    RequestContent = pill
+                        //};
+
+                        //await apiClient.InvokeDataServiceAsync(option);
 
                         await sqliteService.Save(pill);
-
-                        ApiClientOption option = new ApiClientOption
-                        {
-                            RequestType = ApiClientRequestTypes.Post,
-                            Uri = "loadPills",
-                            Service = ApiClientServices.Arduino,
-                            RequestContent = pill
-                        };
-
-                        await apiClient.InvokeDataServiceAsync(option);
 
                         await dialogService.DisplayAlertAsync("Cargar pastillas", "Se cargaron las pastillas con éxito", "Aceptar");
 
@@ -102,6 +121,10 @@ namespace DAP.Mobile.ViewModels
             else if (qty <= 0)
             {
                 Message = "Debe ingresar una cantidad mayor a 0";
+            }
+            else if(sqliteService.Get<Pill>().Result.Any(p => p.Id != pillId && p.Container == this.Container))
+            {
+                Message = "El recipiente ya está siendo utilizado";
             }
 
             return string.IsNullOrEmpty(Message);

@@ -2,7 +2,7 @@
 using DAP.Mobile.Services;
 using Prism.Commands;
 using Prism.Navigation;
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace DAP.Mobile.ViewModels
@@ -14,7 +14,13 @@ namespace DAP.Mobile.ViewModels
         public DelegateCommand<Pill> OpenPillCommand { get; set; }
         public DelegateCommand LoadPillsCommand { get; set; }
         public DelegateCommand CreateCommand { get; set; }
-        public ObservableCollection<Pill> Pills { get; set; }
+
+        private IList<Pill> pills;
+        public IList<Pill> Pills
+        {
+            get => pills;
+            set => SetProperty(ref pills, value);
+        }
 
         public PillListPageViewModel(INavigationService navigationService, ISqliteService sqliteService) : base(navigationService)
         {
@@ -33,7 +39,7 @@ namespace DAP.Mobile.ViewModels
         private async Task LoadPillsAsync()
         {
             IsLoading = true;
-            Pills = new ObservableCollection<Pill>(await sqliteService.Get<Pill>());
+            Pills = await sqliteService.Get<Pill>();
             IsLoading = false;
         }
 

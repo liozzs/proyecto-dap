@@ -12,6 +12,7 @@ namespace DAP.Mobile.ViewModels
 {
     public class PlanificationActionPageViewModel : ViewModelBase
     {
+        private readonly ISqliteService sqliteService;
         private readonly IApiClient apiClient;
         private readonly IPageDialogService dialogService;
 
@@ -19,31 +20,26 @@ namespace DAP.Mobile.ViewModels
         public ICommand NextCommand { get; set; }
 
         public IList<PlanificationAction> Actions { get; set; }
-
+        
         private PlanificationAction action;
 
         public PlanificationAction Action
         {
-            get
-            {
-                return action;
-            }
-            set
-            {
-                SetProperty(ref action, value);
-            }
+            get => action;
+            set => SetProperty(ref action, value);
         }
 
-        public PlanificationActionPageViewModel(INavigationService navigationService, IPageDialogService dialogService, IApiClient apiClient) : base(navigationService)
+        public PlanificationActionPageViewModel(INavigationService navigationService, IPageDialogService dialogService, IApiClient apiClient, ISqliteService sqliteService) : base(navigationService)
         {
+            this.sqliteService = sqliteService;
             this.apiClient = apiClient;
             this.dialogService = dialogService;
 
             Actions = new List<PlanificationAction>
             {
-                new PlanificationAction() { Id = 1, Name = "Ninguna", Description= "La planificación seguirá dispensando la medicación en los horarios establecidos." },
-                new PlanificationAction() { Id = 2, Name = "Replanificar", Description= "En caso de no haber tomado la medicación en el momento indicado, se replanificarán los próximos expendios, corriendo el horario para cumplir con los intervalos establecidos." },
-                new PlanificationAction() { Id = 3, Name = "Bloquear", Description= "Al pasar una hora sin haber tomado la medicación, la planificación se bloqueará y no se dispensarán más medicamentos, dando por finalizado el tratamiento." }
+                new PlanificationAction() { Id = 2, Name = "Ninguna", Description= "La planificación seguirá dispensando la medicación en los horarios establecidos." },
+                new PlanificationAction() { Id = 0, Name = "Replanificar", Description= "En caso de no haber tomado la medicación en el momento indicado, se replanificarán los próximos expendios, corriendo el horario para cumplir con los intervalos establecidos." },
+                new PlanificationAction() { Id = 1, Name = "Bloquear", Description= "Al pasar una hora sin haber tomado la medicación, la planificación se bloqueará y no se dispensarán más medicamentos, dando por finalizado el tratamiento." }
             };
             Action = Actions[0];
 
@@ -60,11 +56,11 @@ namespace DAP.Mobile.ViewModels
             StringBuilder sb = new StringBuilder();
             sb.AppendLine($"Pastilla: {planification.Pill.Name}");
             sb.AppendLine($"Inicio: {planification.StartDate:dd/MM/yyyy} {planification.StartTime:HH:mm}");
-            if(planification.Interval>0)
+            if (planification.Interval > 0)
             {
                 sb.AppendLine($"Intervalo: Cada {planification.Interval} hs.");
             }
-            if(planification.Days != null)
+            if (planification.Days != null)
             {
                 var days = new List<string> { "Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do" };
                 string d = "";
@@ -89,15 +85,17 @@ namespace DAP.Mobile.ViewModels
             {
                 try
                 {
-                    ApiClientOption option = new ApiClientOption
-                    {
-                        RequestType = ApiClientRequestTypes.Post,
-                        Uri = "plain",
-                        Service = ApiClientServices.Arduino,
-                        RequestContent = planification
-                    };
+                    //ApiClientOption option = new ApiClientOption
+                    //{
+                    //    RequestType = ApiClientRequestTypes.Post,
+                    //    Uri = "plain",
+                    //    Service = ApiClientServices.Arduino,
+                    //    RequestContent = planification.ToJson()
+                    //};
 
-                    await apiClient.InvokeDataServiceAsync(option);
+                    //await apiClient.InvokeDataServiceAsync(option);
+
+                    await sqliteService.Save(planification);
 
                     await dialogService.DisplayAlertAsync("Planificación", "Se creó la planificación con éxito", "Aceptar");
 

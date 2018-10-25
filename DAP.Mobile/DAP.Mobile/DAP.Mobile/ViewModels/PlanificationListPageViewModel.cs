@@ -3,7 +3,7 @@ using DAP.Mobile.Services;
 using Prism.Commands;
 using Prism.Navigation;
 using Prism.Services;
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -16,7 +16,13 @@ namespace DAP.Mobile.ViewModels
 
         public DelegateCommand<Planification> OpenPlanificationCommand { get; set; }
         public DelegateCommand CreateCommand { get; set; }
-        public ObservableCollection<Planification> Planifications { get; set; }
+
+        private IList<Planification> planifications;
+        public IList<Planification> Planifications
+        {
+            get => planifications;
+            set => SetProperty(ref planifications, value);
+        }
 
         public PlanificationListPageViewModel(INavigationService navigationService, ISqliteService sqliteService, IPageDialogService pageDialogService) : base(navigationService)
         {
@@ -30,7 +36,7 @@ namespace DAP.Mobile.ViewModels
         {
             base.OnNavigatedTo(parameters);
 
-            this.Planifications = new ObservableCollection<Planification>(sqliteService.Get<Planification>().Result);
+            this.Planifications = sqliteService.Get<Planification>().Result;
         }
 
         private async Task OpenPlanificationAsync(Planification planif = null)

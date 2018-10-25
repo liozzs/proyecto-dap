@@ -8,5 +8,10 @@ namespace DAP.Mobile.Views
         {
             InitializeComponent();
         }
+
+        private void ListView_ItemTapped(object sender, ItemTappedEventArgs e)
+        {
+
+        }
     }
 }

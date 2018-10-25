@@ -25,7 +25,7 @@ namespace DAP.Mobile.Services
             {
                 if (!initialized)
                 {
-                    database.CreateTableAsync<Notification>().Wait();
+                    //database.CreateTableAsync<Notification>().Wait();
                     database.CreateTableAsync<Planification>().Wait();
                     database.CreateTableAsync<Pill>().Wait();
                     initialized = true;

@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace DAP.Mobile.Models
 {
     public enum PlanificationType
     {
-        Daily = 1,
-        Weekly = 2,
-        Custom = 3
+        Daily = 0,
+        Weekly = 1,
+        Custom = 2
     }
 
     public class Planification : Entity
@@ -21,5 +22,38 @@ namespace DAP.Mobile.Models
         public PlanificationAction Action { get; internal set; }
         public int CriticalStock { get; internal set; }
         public int QtyToDispense { get; internal set; }
+
+        public string TypeDescription
+        {
+            get
+            {
+                switch (Type)
+                {
+                    case PlanificationType.Daily:
+                        return "Diaria";
+                    case PlanificationType.Weekly:
+                        return "Semanal";
+                    case PlanificationType.Custom:
+                        return "Personalizada";
+                    default:
+                        return "";
+                }
+            }
+        }
+
+        public dynamic ToJson()
+        {
+            return new
+            {
+                StartTime = $"{StartDate:yyyyMMdd}{StartTime:HHmmss}",
+                Interval = Interval.GetValueOrDefault() * 60 * 60,
+                Quantity = QtyToDispense,
+                CriticalStock,
+                Periodicity = Convert.ToInt32(Type),
+                Days = string.Join("", Days.Select(b => b? "1" : "0")),
+                Block = Action.Id,
+                PlateId = Pill.Container * 100
+            };
+        }
     }
 }
