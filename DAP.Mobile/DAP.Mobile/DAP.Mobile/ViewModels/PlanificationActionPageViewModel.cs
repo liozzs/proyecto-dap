@@ -57,25 +57,25 @@ namespace DAP.Mobile.ViewModels
             {
                 try
                 {
-                    //ApiClientOption option = new ApiClientOption
-                    //{
-                    //    RequestType = ApiClientRequestTypes.Post,
-                    //    Uri = "plain",
-                    //    Service = ApiClientServices.Arduino,
-                    //    RequestContent = new
-                    //    {
-                    //        StartTime = $"{planif.StartDate}{planif.StartTime}",
-                    //        Interval = planif.Interval * 60 * 60,
-                    //        Quantity = planif.QtyToDispense,
-                    //        planif.CriticalStock,
-                    //        Periodicity = Convert.ToInt32(planif.Type),
-                    //        planif.Days,
-                    //        Block = planif.ActionId,
-                    //        PlateId = planif.Container * 100
-                    //    }
-                    //};
+                    ApiClientOption option = new ApiClientOption
+                    {
+                        RequestType = ApiClientRequestTypes.Post,
+                        Uri = "Plan",
+                        Service = ApiClientServices.Arduino,
+                        RequestContent = new
+                        {
+                            startTime = $"{planif.StartDate}{planif.StartTime}",
+                            interval = planif.Interval * 60 * 60,
+                            quantity = planif.QtyToDispense,
+                            criticalStock = planif.CriticalStock,
+                            periodicity = Convert.ToInt32(planif.Type),
+                            days = planif.Days,
+                            block = planif.ActionId,
+                            plateID = planif.Container * 100
+                        }
+                    };
 
-                    //await apiClient.InvokeDataServiceAsync(option);
+                    await apiClient.InvokeDataServiceAsync(option);
 
                     await sqliteService.Save(planif);
 
@@ -83,7 +83,7 @@ namespace DAP.Mobile.ViewModels
 
                     await NavigationService.GoBackToRootAsync();
                 }
-                catch
+                catch (Exception ex)
                 {
                     await dialogService.DisplayAlertAsync("Planificación", "Ocurrió un error al realizar la operación. Intente nuevamente en unos minutos.", "Aceptar");
                 }

@@ -137,7 +137,7 @@ namespace DAP.Mobile.Services
         {
             if (!string.IsNullOrEmpty(option.BaseUrl)) return new Uri(option.BaseUrl);
 
-            return new Uri(option.Service == ApiClientServices.Api ? GlobalVariables.BaseUrlApi : GlobalVariables.BaseUrlArduino);
+            return new Uri(option.Service == ApiClientServices.Api ? GlobalVariables.BaseUrlApi : Helper.GetApplicationValue<string>("ArduinoIP"));
         }
 
         public async Task<TResponse> InvokeDataServiceAsync<TResponse>(ApiClientOption option) where TResponse : class

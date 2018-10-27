@@ -82,15 +82,20 @@ namespace DAP.Mobile.ViewModels
                     {
                         Pill pill = new Pill { Id = pillId, Name = PillName, Container = Container, Quantity = Convert.ToInt32(Quantity) };
 
-                        //ApiClientOption option = new ApiClientOption
-                        //{
-                        //    RequestType = ApiClientRequestTypes.Post,
-                        //    Uri = "stock",
-                        //    Service = ApiClientServices.Arduino,
-                        //    RequestContent = pill
-                        //};
+                        ApiClientOption option = new ApiClientOption
+                        {
+                            RequestType = ApiClientRequestTypes.Post,
+                            Uri = "Stock",
+                            Service = ApiClientServices.Arduino,
+                            RequestContent = new
+                            {
+                                pillName = PillName,
+                                plateID = Container * 100,
+                                stock = Convert.ToInt32(Quantity)
+                            }
+                        };
 
-                        //await apiClient.InvokeDataServiceAsync(option);
+                        await apiClient.InvokeDataServiceAsync(option);
 
                         await sqliteService.Save(pill);
 
@@ -98,7 +103,7 @@ namespace DAP.Mobile.ViewModels
 
                         await NavigationService.GoBackAsync();
                     }
-                    catch
+                    catch (Exception ex)
                     {
                         await dialogService.DisplayAlertAsync("Cargar pastillas", "Ocurrió un error al realizar la operación. Intente nuevamente en unos minutos.", "Aceptar");
                     }

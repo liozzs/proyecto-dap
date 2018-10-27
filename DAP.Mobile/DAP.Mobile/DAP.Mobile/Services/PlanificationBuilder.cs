@@ -18,6 +18,11 @@ namespace DAP.Mobile.Services
         private static int _qtyToDispense;
         private static int _id;
 
+        public static void SetId(int id)
+        {
+            _id = id;
+        }
+
         public static void SetInterval(TimeSpan startTime, int interval, IList<bool> days)
         {
             _startTime = new DateTime(startTime.Ticks);
@@ -73,11 +78,6 @@ namespace DAP.Mobile.Services
                 CriticalStock = _criticalStock,
                 QtyToDispense = _qtyToDispense
             };
-        }
-
-        public static void SetId(int id)
-        {
-            _id = id;
         }
     }
 }

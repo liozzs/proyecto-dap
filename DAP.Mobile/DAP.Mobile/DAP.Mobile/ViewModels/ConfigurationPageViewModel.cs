@@ -51,11 +51,14 @@ namespace DAP.Mobile.ViewModels
                 IsLoading = true;
                 try
                 {
-                    await Task.Run(async () =>
+                    await Task.Run(() =>
                     {
                         ISmartConfigResult result = smartconfig.executeForResult();
-                        Helper.SetApplicationValue("ArduinoIP", result.getInetAddress());
-                        Helper.SetApplicationValue("ArduinoMAC", result.getBssid());
+                        if (result.isSuc())
+                        {
+                            Helper.SetApplicationValue("ArduinoIP", $"http://{result.getInetAddress()}");
+                            Helper.SetApplicationValue("ArduinoMAC", result.getBssid());
+                        }
                     });
                     await dialogService.DisplayAlertAsync("Configuración WiFi", "Se configuró correctamente.", "Aceptar");
                 }
@@ -67,22 +70,6 @@ namespace DAP.Mobile.ViewModels
                 {
                     IsLoading = false;
                 }
-
-                //var task = Task.Run(() =>
-                //{
-                //    var result = smartconfig.executeForResult();
-                //    string sad = "";
-                //});
-
-                //try
-                //{
-                //    task.Wait();
-                //    await dialogService.DisplayAlertAsync("Configuración WiFi", "Se configuró correctamente.", "Aceptar");
-                //}
-                //catch (Exception ex)
-                //{
-                //    await dialogService.DisplayAlertAsync("Configuración WiFi", "No fue posible conectarse.", "Aceptar");
-                //}
             }
         }
 

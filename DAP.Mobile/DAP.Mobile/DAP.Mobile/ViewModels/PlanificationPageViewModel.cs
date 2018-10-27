@@ -68,8 +68,9 @@ namespace DAP.Mobile.ViewModels
                 CriticalStock = planification.CriticalStock.ToString();
                 QtyToDispense = planification.QtyToDispense.ToString();
                 StartDate = DateTime.ParseExact(planification.StartDate, "yyyyMMdd", CultureInfo.InvariantCulture);
-                PlanificationBuilder.SetId(planification.Id);
             }
+
+            PlanificationBuilder.SetId(planification?.Id ?? 0);
         }
 
         private async Task NextAsync()

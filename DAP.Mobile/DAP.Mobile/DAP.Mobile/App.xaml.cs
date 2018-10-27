@@ -33,6 +33,8 @@ namespace DAP.Mobile
 
         public App() : this(null)
         {
+            var ip = Helper.GetApplicationValue<string>("ArduinoIP");
+            Helper.SetApplicationValue("ArduinoIP", $"http://{ip}");
         }
 
         public App(IPlatformInitializer initializer) : base(initializer)
