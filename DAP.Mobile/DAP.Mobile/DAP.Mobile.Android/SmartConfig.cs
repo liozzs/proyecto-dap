@@ -7,6 +7,10 @@ namespace DAP.Mobile.Droid
 {
     public class SmartConfig : ISmartConfigHelper
     {
+        public SmartConfig()
+        {
+        }
+
         public ISmartConfigTask CreatePlatformTask()
         {
             return new SmartConfigTask_Droid();
