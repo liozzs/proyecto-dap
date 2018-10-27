@@ -65,6 +65,7 @@ namespace DAP.Mobile.Services
                 StartTime = _startTime.ToString("HHmmss"),
                 PillId = _pill.Id,
                 PillName = _pill.Name,
+                Container = _pill.Container,
                 Interval = _interval,
                 Days = _days != null ? string.Join("", _days.Select(b => b ? "1" : "0")) : "0000000",
                 ActionId = _action.Id,

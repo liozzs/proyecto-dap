@@ -70,7 +70,8 @@ namespace DAP.Mobile.ViewModels
                     //        planif.CriticalStock,
                     //        Periodicity = Convert.ToInt32(planif.Type),
                     //        planif.Days,
-                    //        Block = planif.ActionId
+                    //        Block = planif.ActionId,
+                    //        PlateId = planif.Container * 100
                     //    }
                     //};
 

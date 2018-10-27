@@ -22,6 +22,8 @@
         public string ActionDescription { get; set; }
         public int CriticalStock { get; set; }
         public int QtyToDispense { get; set; }
+        [SQLite.Ignore]
+        public int Container { get; set; }
 
         [SQLite.Ignore]
         public string TypeDescription
@@ -41,5 +43,6 @@
                 }
             }
         }
+
     }
 }

@@ -25,7 +25,6 @@ namespace DAP.Mobile.Services
             {
                 if (!initialized)
                 {
-                    //database.CreateTableAsync<Notification>().Wait();
                     database.CreateTableAsync<PlanificationAction>().Wait();
                     if(Get<PlanificationAction>().Result.Count == 0)
                     {
@@ -38,7 +37,7 @@ namespace DAP.Mobile.Services
                     initialized = true;
                 }
             }
-            catch (Exception)
+            catch
             {
                 initialized = false;
             }
