@@ -32,6 +32,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Services\ApiClient.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\ApiClientOption.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\IApiClient.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\ISmartConfigHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\ISqliteService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\PlanificationBuilder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\SqliteService.cs" />
