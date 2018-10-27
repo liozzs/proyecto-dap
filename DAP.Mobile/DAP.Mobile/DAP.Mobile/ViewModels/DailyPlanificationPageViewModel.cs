@@ -4,6 +4,8 @@ using Prism.Commands;
 using Prism.Navigation;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -11,11 +13,17 @@ namespace DAP.Mobile.ViewModels
 {
     public class DailyPlanificationPageViewModel : ViewModelBase
     {
+        private Planification planification;
+
         public ICommand CancelCommand { get; set; }
         public ICommand NextCommand { get; set; }
 
-        public DailyInterval DailyPeriodicity { get; set; }
-        public TimeSpan StartTime { get; set; }
+        private DailyInterval dailyPeriodicity;
+        public DailyInterval DailyPeriodicity { get => dailyPeriodicity; set => SetProperty(ref dailyPeriodicity, value); }
+
+        private TimeSpan startTime;
+        public TimeSpan StartTime { get => startTime; set => SetProperty(ref startTime, value); }
+
         public IList<DailyInterval> DailyIntervals { get; set; }
 
         public DailyPlanificationPageViewModel(INavigationService navigationService) : base(navigationService)
@@ -36,7 +44,18 @@ namespace DAP.Mobile.ViewModels
         private Task Next()
         {
             PlanificationBuilder.SetInterval(StartTime, DailyPeriodicity.Id, null);
-            return NavigationService.NavigateAsync("PlanificationActionPage");
+            return NavigationService.NavigateAsync("PlanificationActionPage", new NavigationParameters() { { "Planification", planification } });
+        }
+
+        public override void OnNavigatingTo(NavigationParameters parameters)
+        {
+            base.OnNavigatedFrom(parameters);
+            planification = parameters.GetValue<Planification>("Planification");
+            if (planification != null)
+            {
+                DailyPeriodicity = DailyIntervals.SingleOrDefault(d => d.Id == planification.Interval) ?? DailyIntervals[0];
+                StartTime = TimeSpan.ParseExact(planification.StartDate, "yyyyMMdd", CultureInfo.InvariantCulture);
+            }
         }
     }
 }

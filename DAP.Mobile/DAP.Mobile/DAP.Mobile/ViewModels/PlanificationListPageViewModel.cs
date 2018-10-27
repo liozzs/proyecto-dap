@@ -36,7 +36,10 @@ namespace DAP.Mobile.ViewModels
         {
             base.OnNavigatedTo(parameters);
 
-            this.Planifications = sqliteService.Get<Planification>().Result;
+            var sqlPlanifications = sqliteService.Get<Planification>().Result;
+            var pills = sqliteService.Get<Pill>().Result;
+            sqlPlanifications.ForEach(p => p.PillName = pills.SingleOrDefault(pill => pill.Id == p.PillId)?.Name);
+            this.Planifications = sqlPlanifications;
         }
 
         private async Task OpenPlanificationAsync(Planification planif = null)

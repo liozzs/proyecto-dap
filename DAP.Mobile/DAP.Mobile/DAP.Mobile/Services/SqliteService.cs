@@ -14,7 +14,7 @@ namespace DAP.Mobile.Services
 
         public SqliteService()
         {
-            string dbPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "dap.db3");
+            string dbPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "dap.db3");
             database = new SQLiteAsyncConnection(dbPath);
             Initialize();
         }
@@ -26,6 +26,13 @@ namespace DAP.Mobile.Services
                 if (!initialized)
                 {
                     //database.CreateTableAsync<Notification>().Wait();
+                    database.CreateTableAsync<PlanificationAction>().Wait();
+                    if(Get<PlanificationAction>().Result.Count == 0)
+                    {
+                        database.InsertAsync(new PlanificationAction() { Id = 2, Name = "Ninguna", Description = "La planificación seguirá dispensando la medicación en los horarios establecidos." });
+                        database.InsertAsync(new PlanificationAction() { Id = 0, Name = "Replanificar", Description = "En caso de no haber tomado la medicación en el momento indicado, se replanificarán los próximos expendios, corriendo el horario para cumplir con los intervalos establecidos." });
+                        database.InsertAsync(new PlanificationAction() { Id = 1, Name = "Bloquear", Description = "Al pasar una hora sin haber tomado la medicación, la planificación se bloqueará y no se dispensarán más medicamentos, dando por finalizado el tratamiento." });
+                    }
                     database.CreateTableAsync<Planification>().Wait();
                     database.CreateTableAsync<Pill>().Wait();
                     initialized = true;
@@ -49,13 +56,22 @@ namespace DAP.Mobile.Services
 
         public Task<int> Save<TEntity>(TEntity item) where TEntity : Entity, new()
         {
-            if (item.Id != 0)
+            try
             {
-                return database.UpdateAsync(item);
+
+                if (item.Id != 0)
+                {
+                    return database.UpdateAsync(item);
+                }
+                else
+                {
+                    return database.InsertAsync(item);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return database.InsertAsync(item);
+
+                throw ex;
             }
         }
 

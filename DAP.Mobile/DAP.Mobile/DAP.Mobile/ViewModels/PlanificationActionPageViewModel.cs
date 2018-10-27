@@ -3,7 +3,10 @@ using DAP.Mobile.Services;
 using Prism.Commands;
 using Prism.Navigation;
 using Prism.Services;
+using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -20,9 +23,10 @@ namespace DAP.Mobile.ViewModels
         public ICommand NextCommand { get; set; }
 
         public IList<PlanificationAction> Actions { get; set; }
-        
-        private PlanificationAction action;
 
+        private Planification planification;
+
+        private PlanificationAction action;
         public PlanificationAction Action
         {
             get => action;
@@ -35,12 +39,7 @@ namespace DAP.Mobile.ViewModels
             this.apiClient = apiClient;
             this.dialogService = dialogService;
 
-            Actions = new List<PlanificationAction>
-            {
-                new PlanificationAction() { Id = 2, Name = "Ninguna", Description= "La planificación seguirá dispensando la medicación en los horarios establecidos." },
-                new PlanificationAction() { Id = 0, Name = "Replanificar", Description= "En caso de no haber tomado la medicación en el momento indicado, se replanificarán los próximos expendios, corriendo el horario para cumplir con los intervalos establecidos." },
-                new PlanificationAction() { Id = 1, Name = "Bloquear", Description= "Al pasar una hora sin haber tomado la medicación, la planificación se bloqueará y no se dispensarán más medicamentos, dando por finalizado el tratamiento." }
-            };
+            Actions = sqliteService.Get<PlanificationAction>().Result;
             Action = Actions[0];
 
             CancelCommand = new DelegateCommand(async () => await NavigationService.GoBackAsync());
@@ -51,22 +50,65 @@ namespace DAP.Mobile.ViewModels
         {
             PlanificationBuilder.SetAction(Action);
 
-            Planification planification = PlanificationBuilder.Build();
+            Planification planif = PlanificationBuilder.Build();
 
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine($"Pastilla: {planification.Pill.Name}");
-            sb.AppendLine($"Inicio: {planification.StartDate:dd/MM/yyyy} {planification.StartTime:HH:mm}");
-            if (planification.Interval > 0)
+            var response = await ShowConfirmMessage(planif);
+            if (response)
             {
-                sb.AppendLine($"Intervalo: Cada {planification.Interval} hs.");
+                try
+                {
+                    //ApiClientOption option = new ApiClientOption
+                    //{
+                    //    RequestType = ApiClientRequestTypes.Post,
+                    //    Uri = "plain",
+                    //    Service = ApiClientServices.Arduino,
+                    //    RequestContent = new
+                    //    {
+                    //        StartTime = $"{planif.StartDate}{planif.StartTime}",
+                    //        Interval = planif.Interval * 60 * 60,
+                    //        Quantity = planif.QtyToDispense,
+                    //        planif.CriticalStock,
+                    //        Periodicity = Convert.ToInt32(planif.Type),
+                    //        planif.Days,
+                    //        Block = planif.ActionId
+                    //    }
+                    //};
+
+                    //await apiClient.InvokeDataServiceAsync(option);
+
+                    await sqliteService.Save(planif);
+
+                    await dialogService.DisplayAlertAsync("Planificación", "Se creó la planificación con éxito", "Aceptar");
+
+                    await NavigationService.GoBackToRootAsync();
+                }
+                catch
+                {
+                    await dialogService.DisplayAlertAsync("Planificación", "Ocurrió un error al realizar la operación. Intente nuevamente en unos minutos.", "Aceptar");
+                }
             }
-            if (planification.Days != null)
+        }
+
+        private Task<bool> ShowConfirmMessage(Planification planif)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            var startDate = DateTime.ParseExact(planif.StartDate, "yyyyMMdd", CultureInfo.InvariantCulture);
+            var startTime = DateTime.ParseExact(planif.StartTime, "HHmmss", CultureInfo.InvariantCulture);
+
+            sb.AppendLine($"Pastilla: {planif.PillName}");
+            sb.AppendLine($"Inicio: {startDate:dd/MM/yyyy} {startTime:HH:mm}");
+            if (planif.Interval > 0)
+            {
+                sb.AppendLine($"Intervalo: Cada {planif.Interval} hs.");
+            }
+            if (planif.Days != null)
             {
                 var days = new List<string> { "Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do" };
                 string d = "";
-                for (int i = 0; i < planification.Days.Count; i++)
+                for (int i = 0; i < planif.Days.Length; i++)
                 {
-                    if (planification.Days[i])
+                    if (planif.Days[i] == '1')
                     {
                         d += days[i] + " ";
                     }
@@ -77,35 +119,19 @@ namespace DAP.Mobile.ViewModels
             {
                 sb.AppendLine($"Días: Todos");
             }
-            sb.AppendLine($"Cantidad a dispensar: {planification.QtyToDispense}");
-            sb.AppendLine($"Stock crítico: {planification.CriticalStock}");
-            sb.AppendLine($"Acción: {planification.Action.Description}");
-            var response = await dialogService.DisplayAlertAsync("Confirmar", sb.ToString(), "Sí", "No");
-            if (response)
+            sb.AppendLine($"Cantidad a dispensar: {planif.QtyToDispense}");
+            sb.AppendLine($"Stock crítico: {planif.CriticalStock}");
+            sb.AppendLine($"Acción: {planif.ActionDescription}");
+            return dialogService.DisplayAlertAsync("Confirmar", sb.ToString(), "Sí", "No");
+        }
+
+        public override void OnNavigatingTo(NavigationParameters parameters)
+        {
+            base.OnNavigatedFrom(parameters);
+            planification = parameters.GetValue<Planification>("Planification");
+            if (planification != null)
             {
-                try
-                {
-                    //ApiClientOption option = new ApiClientOption
-                    //{
-                    //    RequestType = ApiClientRequestTypes.Post,
-                    //    Uri = "plain",
-                    //    Service = ApiClientServices.Arduino,
-                    //    RequestContent = planification.ToJson()
-                    //};
-
-                    //await apiClient.InvokeDataServiceAsync(option);
-
-                    await sqliteService.Save(planification);
-
-                    await dialogService.DisplayAlertAsync("Planificación", "Se creó la planificación con éxito", "Aceptar");
-
-                    await NavigationService.GoBackToRootAsync();
-                }
-                catch
-                {
-                    await dialogService.DisplayAlertAsync("Planificación", "Ocurrió un error al realizar la operación. Intente nuevamente en unos minutos.", "Aceptar");
-                }
-
+                Action = Actions.SingleOrDefault(action => action.Id == planification.ActionId) ?? Actions[0];
             }
         }
     }

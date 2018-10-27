@@ -4,6 +4,8 @@ using Prism.Commands;
 using Prism.Navigation;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -11,18 +13,28 @@ namespace DAP.Mobile.ViewModels
 {
     public class PlanificationPageViewModel : ViewModelBase
     {
+        private Planification planification;
+
         public ICommand CancelCommand { get; set; }
         public ICommand NextCommand { get; set; }
 
         public IList<Pill> Pills { get; set; }
         public IList<Periodicity> Periodicities { get; set; }
 
-        public Pill Pill { get; set; }
-        public Periodicity Periodicity { get; set; }
-        public string CriticalStock { get; set; }
-        public string QtyToDispense { get; set; }
+        private Pill pill;
+        public Pill Pill { get => pill; set => SetProperty(ref pill, value); }
 
-        public DateTime StartDate { get; set; }
+        private Periodicity periodicity;
+        public Periodicity Periodicity { get => periodicity; set => SetProperty(ref periodicity, value); }
+
+        private string criticalStock;
+        public string CriticalStock { get => criticalStock; set => SetProperty(ref criticalStock, value); }
+
+        private string qtyToDispense;
+        public string QtyToDispense { get => qtyToDispense; set => SetProperty(ref qtyToDispense, value); }
+
+        private DateTime startDate;
+        public DateTime StartDate { get => startDate; set => SetProperty(ref startDate, value); }
 
         public PlanificationPageViewModel(INavigationService navigationService, ISqliteService sqliteService) : base(navigationService)
         {
@@ -45,13 +57,18 @@ namespace DAP.Mobile.ViewModels
             NextCommand = new DelegateCommand(async () => await NextAsync());
         }
 
-        public override void OnNavigatedFrom(NavigationParameters parameters)
+        public override void OnNavigatingTo(NavigationParameters parameters)
         {
             base.OnNavigatedFrom(parameters);
-            var planif = parameters.GetValue<Planification>("Planification");
-            if (planif != null)
+            planification = parameters.GetValue<Planification>("Planification");
+            if (planification != null)
             {
-                
+                Pill = Pills.SingleOrDefault(p => p.Id == planification.PillId) ?? Pills[0];
+                Periodicity = Periodicities.SingleOrDefault(p => p.Id == planification.Type) ?? Periodicities[0];
+                CriticalStock = planification.CriticalStock.ToString();
+                QtyToDispense = planification.QtyToDispense.ToString();
+                StartDate = DateTime.ParseExact(planification.StartDate, "yyyyMMdd", CultureInfo.InvariantCulture);
+                PlanificationBuilder.SetId(planification.Id);
             }
         }
 
@@ -59,13 +76,13 @@ namespace DAP.Mobile.ViewModels
         {
             if (Validate())
             {
-                PlanificationBuilder.SetType((PlanificationType)Periodicity.Id);
+                PlanificationBuilder.SetPlanificationType((PlanificationType)Periodicity.Id);
                 PlanificationBuilder.SetPill(Pill);
                 PlanificationBuilder.SetStartDate(StartDate);
                 PlanificationBuilder.SetCriticalStock(string.IsNullOrEmpty(CriticalStock) ? 0 : Convert.ToInt32(CriticalStock));
                 PlanificationBuilder.SetQtyToDispense(Convert.ToInt32(QtyToDispense));
 
-                await NavigationService.NavigateAsync(Periodicity.NextPage);
+                await NavigationService.NavigateAsync(Periodicity.NextPage, new NavigationParameters() { { "Planification", planification } });
             }
         }
 
