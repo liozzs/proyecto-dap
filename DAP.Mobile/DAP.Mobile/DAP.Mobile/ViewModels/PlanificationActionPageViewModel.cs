@@ -102,7 +102,7 @@ namespace DAP.Mobile.ViewModels
             {
                 sb.AppendLine($"Intervalo: Cada {planif.Interval} hs.");
             }
-            if (planif.Days != null)
+            if (!string.IsNullOrEmpty(planif.Days.TrimStart('0')))
             {
                 var days = new List<string> { "Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do" };
                 string d = "";

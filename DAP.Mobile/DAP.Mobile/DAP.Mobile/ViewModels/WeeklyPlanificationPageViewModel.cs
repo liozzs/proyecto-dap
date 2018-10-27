@@ -54,7 +54,8 @@ namespace DAP.Mobile.ViewModels
             {
                 Days = planification.Days.Select(c => c == '1').ToList();
                 Interval = planification.Interval.ToString();
-                StartTime = TimeSpan.ParseExact(planification.StartTime, "HHmmss", CultureInfo.InvariantCulture);
+                DateTime d = DateTime.ParseExact(planification.StartTime, "HHmmss", CultureInfo.InvariantCulture);
+                StartTime = new TimeSpan(d.Hour, d.Minute, 0);
             }
         }
 

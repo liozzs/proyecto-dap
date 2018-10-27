@@ -53,8 +53,9 @@ namespace DAP.Mobile.ViewModels
             planification = parameters.GetValue<Planification>("Planification");
             if (planification != null)
             {
-                DailyPeriodicity = DailyIntervals.SingleOrDefault(d => d.Id == planification.Interval) ?? DailyIntervals[0];
-                StartTime = TimeSpan.ParseExact(planification.StartDate, "yyyyMMdd", CultureInfo.InvariantCulture);
+                DailyPeriodicity = DailyIntervals.SingleOrDefault(dp => dp.Id == planification.Interval) ?? DailyIntervals[0];
+                DateTime d = DateTime.ParseExact(planification.StartTime, "HHmmss", CultureInfo.InvariantCulture);
+                StartTime = new TimeSpan(d.Hour, d.Minute, 0);
             }
         }
     }

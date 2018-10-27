@@ -29,9 +29,9 @@ namespace DAP.Mobile.Services
                     database.CreateTableAsync<PlanificationAction>().Wait();
                     if(Get<PlanificationAction>().Result.Count == 0)
                     {
-                        database.InsertAsync(new PlanificationAction() { Id = 2, Name = "Ninguna", Description = "La planificación seguirá dispensando la medicación en los horarios establecidos." });
-                        database.InsertAsync(new PlanificationAction() { Id = 0, Name = "Replanificar", Description = "En caso de no haber tomado la medicación en el momento indicado, se replanificarán los próximos expendios, corriendo el horario para cumplir con los intervalos establecidos." });
-                        database.InsertAsync(new PlanificationAction() { Id = 1, Name = "Bloquear", Description = "Al pasar una hora sin haber tomado la medicación, la planificación se bloqueará y no se dispensarán más medicamentos, dando por finalizado el tratamiento." });
+                        //database.InsertAsync(new PlanificationAction() { Id = 2, Name = "Ninguna", Description = "La planificación seguirá dispensando la medicación en los horarios establecidos." });
+                        database.InsertAsync(new PlanificationAction() { Id = 1, Name = "Replanificar", Description = "En caso de no haber tomado la medicación en el momento indicado, se replanificarán los próximos expendios, corriendo el horario para cumplir con los intervalos establecidos." });
+                        database.InsertAsync(new PlanificationAction() { Id = 2, Name = "Bloquear", Description = "Al pasar una hora sin haber tomado la medicación, la planificación se bloqueará y no se dispensarán más medicamentos, dando por finalizado el tratamiento." });
                     }
                     database.CreateTableAsync<Planification>().Wait();
                     database.CreateTableAsync<Pill>().Wait();
