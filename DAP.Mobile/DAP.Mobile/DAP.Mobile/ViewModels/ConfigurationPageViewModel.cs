@@ -45,22 +45,29 @@ namespace DAP.Mobile.ViewModels
             else
             {
                 var Ssid = "TeleCentro-8b3c";
-                var bssid = "28:9e:fc:0f:8b:41"; // int.Parse("28:9e:fc:0f:8b:41", System.Globalization.NumberStyles.HexNumber).ToString();
+                var bssid = "28:9e:fc:0f:8b:41";
 
-                smartconfig.SetSmartConfigTask(Ssid, bssid, WifiPassword);
+                smartconfig.SetSmartConfigTask(Ssid, bssid, WifiPassword, false, 60000);
                 IsLoading = true;
+
                 try
                 {
+                    bool success = false;
                     await Task.Run(() =>
                     {
                         ISmartConfigResult result = smartconfig.executeForResult();
                         if (result.isSuc())
                         {
+                            success = true;
                             Helper.SetApplicationValue("ArduinoIP", $"http://{result.getInetAddress()}");
                             Helper.SetApplicationValue("ArduinoMAC", result.getBssid());
                         }
                     });
-                    await dialogService.DisplayAlertAsync("Configuración WiFi", "Se configuró correctamente.", "Aceptar");
+
+                    if(success)
+                    {
+                        await dialogService.DisplayAlertAsync("Configuración WiFi", "Se configuró correctamente.", "Aceptar");
+                    }
                 }
                 catch (Exception ex)
                 {
