@@ -49,7 +49,6 @@ namespace DAP.Mobile.ViewModels
                     };
 
                     LoginResult result = await apiClient.InvokeDataServiceAsync<LoginResult>(options);
-                    LoginResult result = new LoginResult { Token = "asdsadasd" };
 
                     await GoToMenu(result.Token);
                 }
