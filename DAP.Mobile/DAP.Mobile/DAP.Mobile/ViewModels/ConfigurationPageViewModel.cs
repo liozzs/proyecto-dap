@@ -38,7 +38,7 @@ namespace DAP.Mobile.ViewModels
             smartconfig = Xamarin.Forms.DependencyService.Get<ISmartConfigHelper>().CreatePlatformTask();
             this.apiClient = apiClient;
             this.dialogService = dialogService;
-            ConfigWifiCommand = new DelegateCommand(async () => await ConfigWifiAsync(), () => CanConfigWifi);
+            ConfigWifiCommand = new DelegateCommand(async () => await ConfigWifiAsync(), () => CanConfigWifi && !IsLoading);
             CancelCommand = new DelegateCommand(async () => await navigationService.GoBackAsync());
             NextCommand = new DelegateCommand(async () => await NextAsync());
             SetWifiNetwork();
