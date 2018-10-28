@@ -1,9 +1,9 @@
-﻿using DAP.Mobile.Models;
+﻿using DAP.Mobile.Helpers;
+using DAP.Mobile.Models;
 using DAP.Mobile.Services;
 using Prism.Commands;
 using Prism.Navigation;
 using Prism.Services;
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -48,15 +48,14 @@ namespace DAP.Mobile.ViewModels
                 ApiClientOption option = new ApiClientOption
                 {
                     RequestType = ApiClientRequestTypes.Get,
-                    Uri = "api/usuarios/dispensers",
+                    UriParameters = new { MAC = Helper.GetApplicationValue<string>("ArduinoMAC") },
+                    Uri = "api/usuarios/dispensers/{MAC}/mensajes",
                     Service = ApiClientServices.Api
                 };
 
-                IList<Dispenser> dispensers = await apiClient.InvokeDataServiceAsync<IList<Dispenser>>(option);
-                var mensajes = dispensers.SelectMany(d => d.Mensajes)
-                    .OrderByDescending(m => m.Id);
+                IList<Mensaje> mensajes = await apiClient.InvokeDataServiceAsync<IList<Mensaje>>(option);
 
-                Notifications = new ObservableCollection<Notification>(mensajes.Select(m => new Notification { Id = m.Id, Message = GetMessage(m), Title = m.Pastilla, Date = m.Horario }));
+                Notifications = new ObservableCollection<Notification>(mensajes.OrderByDescending(m => m.Id).Select(m => new Notification { Id = m.Id, Message = GetMessage(m), Title = m.Pastilla, Date = m.Horario }));
             }
             catch
             {
@@ -77,29 +76,44 @@ namespace DAP.Mobile.ViewModels
                 { "Receptáculo", mensaje.Receptaculo.ToString() },
                 { "Pastilla", mensaje.Pastilla }
             };
-
+            
             switch (mensaje.Codigo)
             {
-                case 1:
+                case CodigoError.FALTA_DE_PASTILLAS:
+                    message = "Expendio no realizado. Cantidad de pastillas en el receptáculo menor a la cantidad de pastillas a dispensar.";
                     message += "Le informamos no se ha podido realizar el expendio del siguiente medicamento:\n";
                     parameters.Add("Horario", mensaje.Horario);
                     parameters.Add("Causa", "Cantidad de pastillas en el receptáculo menor a la cantidad de pastillas a dispensar.");
                     break;
-                case 2:
+                case CodigoError.LIMITE_DE_TIEMPO:
+                    message = "Expendio no realizado. Se superó el umbral de tiempo en que el mecanismo debe realizar el expendio.";
                     message += "Le informamos no se ha podido realizar el expendio del siguiente medicamento:\n";
                     parameters.Add("Horario", mensaje.Horario);
                     parameters.Add("Causa", "Se superó el umbral de tiempo en que el mecanismo debe realizar el expendio.");
                     break;
-                case 3:
+                case CodigoError.STOCK_CRITICO:
+                    message = "Expendio realizado. Se ha alcanzado el stock crítico.";
                     message += "Le informamos se ha alcanzado el stock crítico del siguiente medicamento:\n";
                     parameters.Add("Cantidad Restante", mensaje.CantidadRestante.ToString());
                     break;
-                case 4:
+                case CodigoError.BOTON_NO_PRESIONADO:
+                    message = "Expendio no realizado. El botón para iniciar el expendio de medicamentos no ha sido presionado.";
                     message += "Le informamos que el botón para iniciar el expendio de medicamentos no ha sido presionado. Expendio correspondiente:\n";
                     parameters.Add("Horario", mensaje.Horario);
                     break;
-                case 5:
+                case CodigoError.VASO_NO_RETIRADO:
+                    message = "Expendio realizado. El recipiente no ha sido retirado de su posición.";
+                    message += "Le informamos que el recipiente no ha sido retirado de su posición. Último expendio realizado:\n";
+                    parameters.Add("Horario", mensaje.Horario);
+                    break;
+                case CodigoError.VASO_NO_DEVUELTO:
+                    message = "Expendio realizado. El recipiente no ha sido devuelto a su posición.";
                     message += "Le informamos que el recipiente no ha sido devuelto a su posición. Último expendio realizado:\n";
+                    parameters.Add("Horario", mensaje.Horario);
+                    break;
+                case CodigoError.BLOQUEO_RECIPIENTE:
+                    message = "Le informamos se ha realizado el bloqueo del receptáculo.";
+                    message += "Le informamos se ha realizado el bloqueo del siguiente receptáculo. Expendio correspondiente:\n";
                     parameters.Add("Horario", mensaje.Horario);
                     break;
             }
@@ -112,24 +126,27 @@ namespace DAP.Mobile.ViewModels
             return message;
         }
     }
-    
+
+    public enum CodigoError
+    {
+        FALTA_DE_PASTILLAS = 1,
+        LIMITE_DE_TIEMPO = 2,
+        STOCK_CRITICO = 3,
+        BOTON_NO_PRESIONADO = 4,
+        VASO_NO_RETIRADO = 5,
+        VASO_NO_DEVUELTO = 6,
+        BLOQUEO_RECIPIENTE = 7
+    }
+
     public class Mensaje
     {
         public int Id { get; set; }
         public int DispenserID { get; set; }
-        public int Codigo { get; set; }
+        public CodigoError Codigo { get; set; }
         public int Receptaculo { get; set; }
         public string Pastilla { get; set; }
         public string Horario { get; set; }
         public int CantidadRestante { get; set; }
         public string DireccionMAC { get; set; }
-    }
-
-    public class Dispenser
-    {
-        public int Id { get; set; }
-        public string DireccionMAC { get; set; }
-        public string Nombre { get; set; }
-        public IList<Mensaje> Mensajes { get; set; }
     }
 }
