@@ -4,7 +4,8 @@
              xmlns:prism="clr-namespace:Prism.Mvvm;assembly=Prism.Forms"
              xmlns:customcontrols="clr-namespace:DAP.Mobile.CustomControls"
              prism:ViewModelLocator.AutowireViewModel="True"
-             x:Class="DAP.Mobile.Views.DailyPlanificationPage">
+             x:Class="DAP.Mobile.Views.DailyPlanificationPage"
+             Title="Planificación">
     <StackLayout Margin="10">
         <StackLayout VerticalOptions="StartAndExpand">
             <Label Text="Periodicidad diaria" />

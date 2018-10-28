@@ -3,7 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:prism="clr-namespace:Prism.Mvvm;assembly=Prism.Forms"
              prism:ViewModelLocator.AutowireViewModel="True"
-             x:Class="DAP.Mobile.Views.PlanificationListPage">
+             x:Class="DAP.Mobile.Views.PlanificationListPage"
+             Title="Planificaciones">
     <ContentPage.ToolbarItems>
         <ToolbarItem Icon="ic_action_add.png" Command="{Binding CreateCommand}" />
     </ContentPage.ToolbarItems>
