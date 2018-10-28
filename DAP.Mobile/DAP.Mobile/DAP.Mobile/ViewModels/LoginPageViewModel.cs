@@ -1,20 +1,19 @@
-﻿using Prism.Navigation;
+﻿using DAP.Mobile.Helpers;
+using DAP.Mobile.Models;
+using DAP.Mobile.Services;
+using Prism.Commands;
+using Prism.Navigation;
+using Prism.Services;
 using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using Xamarin.Forms;
 
 namespace DAP.Mobile.ViewModels
 {
     public class LoginPageViewModel : ViewModelBase
     {
-        private bool isLoading;
-
-        public bool IsLoading
-        {
-            get { return isLoading; }
-            set { SetProperty(ref isLoading, value); }
-        }
+        private readonly IPageDialogService dialogService;
+        private readonly IApiClient apiClient;
 
         public string User { get; set; }
         public string Password { get; set; }
@@ -23,39 +22,75 @@ namespace DAP.Mobile.ViewModels
         public ICommand SignUpCommand { get; set; }
         public ICommand ResetPasswordCommand { get; set; }
 
-        public LoginPageViewModel(INavigationService navigationService) : base(navigationService)
+        public LoginPageViewModel(INavigationService navigationService, IPageDialogService dialogService, IApiClient apiClient) : base(navigationService)
         {
-            LoginCommand = new Command(async () => await Login(), () => !IsLoading);
-            SignUpCommand = new Command(async () => await NavigationService.NavigateAsync("SignUpPage"), () => !IsLoading);
-            ResetPasswordCommand = new Command(async () => await NavigationService.NavigateAsync("ResetPasswordPage"), () => !IsLoading);
+            this.dialogService = dialogService;
+            this.apiClient = apiClient;
+            LoginCommand = new DelegateCommand(async () => await LoginAsync(), () => !IsLoading);
+            SignUpCommand = new DelegateCommand(async () => await NavigationService.NavigateAsync("SignUpPage"), () => !IsLoading);
+            ResetPasswordCommand = new DelegateCommand(async () => await NavigationService.NavigateAsync("ResetPasswordPage"), () => !IsLoading);
         }
 
-        private async Task Login()
+        private async Task LoginAsync()
         {
             Message = null;
             IsLoading = true;
 
             try
             {
-                //Validar datos
-                if (String.IsNullOrWhiteSpace(User))
+                if (Validate())
                 {
-                    Message = "Debe ingresar su usuario";
-                }
-                else if (String.IsNullOrWhiteSpace(Password))
-                {
-                    Message = "Debe ingresar su contraseña";
-                }
+                    var options = new ApiClientOption
+                    {
+                        RequestType = ApiClientRequestTypes.Post,
+                        Uri = "api/login",
+                        Service = ApiClientServices.Api,
+                        RequestContent = new { Email = User, Password }
+                    };
 
-                await NavigationService.NavigateAsync("/MenuPage/NavigationPage/MenuDetailPage");
+                    LoginResult result = await apiClient.InvokeDataServiceAsync<LoginResult>(options);
+                    await GoToMenu(result.Token);
+                }
             }
-            //catch 
-            //{
-            //}
+            catch (Exception e)
+            {
+                string message = "Unauthorized".Equals(e.Message) ? "Las credenciales ingresadas son incorrectas." : "Ocurrió un error al ingresar. Intente nuevamente en unos minutos.";
+
+                await dialogService.DisplayAlertAsync("Error", message, "Aceptar");
+            }
             finally
             {
                 IsLoading = false;
             }
+        }
+
+        private async Task GoToMenu(string token)
+        {
+            //Guardar token
+            Helper.SetApplicationValue("user", User);
+            Helper.SetApplicationValue("logged", true);
+            Helper.SetApplicationValue("token", token);
+
+            await NavigationService.NavigateAsync("/MenuPage/NavigationPage/MenuDetailPage");
+        }
+
+        private bool Validate()
+        {
+            //Validar datos
+            if (String.IsNullOrWhiteSpace(User))
+            {
+                Message = "Debe ingresar su usuario";
+            }
+            else if (!Helper.IsValidEmail(User))
+            {
+                Message = "El usuario ingresado es inválido";
+            }
+            else if (String.IsNullOrWhiteSpace(Password))
+            {
+                Message = "Debe ingresar su contraseña";
+            }
+
+            return string.IsNullOrEmpty(Message);
         }
     }
 }

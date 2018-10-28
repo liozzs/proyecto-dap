@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:prism="clr-namespace:Prism.Mvvm;assembly=Prism.Forms"
+             prism:ViewModelLocator.AutowireViewModel="True"
+             x:Class="DAP.Mobile.Views.PlanificationListPage">
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Icon="ic_action_add.png" Command="{Binding CreateCommand}" />
+    </ContentPage.ToolbarItems>
+    <ListView x:Name="ItemsListView"
+              ItemsSource="{Binding Planifications}"
+              HasUnevenRows="True"
+              Margin="10, 0">
+        <ListView.ItemTemplate>
+            <DataTemplate>
+                <ViewCell>
+                    <Grid Margin="0, 0, 0, 5">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding Pill.Name}" Font="Bold" />
+                        <Label Grid.Row="1" Grid.Column="0" Text="Tipo: " />
+                        <Label Grid.Row="1" Grid.Column="1" Text="{Binding TypeDescription}" />
+                        <Label Grid.Row="2" Grid.Column="0" Text="Intervalo: " />
+                        <Label Grid.Row="2" Grid.Column="1" Text="{Binding Interval, StringFormat='\{0:N0\} Hs.'}" />
+                        <Label Grid.Row="3" Grid.Column="0" Text="Cant. Dispensar: " />
+                        <Label Grid.Row="3" Grid.Column="1" Text="{Binding QtyToDispense}" />
+                        <Label Grid.Row="4" Grid.Column="0" Text="Stock crítico: " />
+                        <Label Grid.Row="4" Grid.Column="1" Text="{Binding CriticalStock}" />
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding BindingContext.OpenPlanificationCommand, Source={x:Reference Name=ItemsListView}}" CommandParameter="{Binding .}"/>
+                        </Grid.GestureRecognizers>
+                    </Grid>
+                </ViewCell>
+            </DataTemplate>
+        </ListView.ItemTemplate>
+    </ListView>
+</ContentPage>

@@ -2,10 +2,24 @@
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:prism="clr-namespace:Prism.Mvvm;assembly=Prism.Forms"
+             xmlns:customcontrols="clr-namespace:DAP.Mobile.CustomControls"
              prism:ViewModelLocator.AutowireViewModel="True"
              x:Class="DAP.Mobile.Views.LoadPillsPage"
              Title="Cargar pastillas">
-    <StackLayout>
-        <Label Text="cargarpastis" />
+    <StackLayout Margin="10">
+        <StackLayout VerticalOptions="StartAndExpand">
+            <Label Text="Pastilla" />
+            <customcontrols:RoundedEntry Text="{Binding PillName}" MaxLength="100" />
+            <Label Text="Cantidad" />
+            <customcontrols:RoundedEntry Text="{Binding Quantity}" Keyboard="Numeric" MaxLength="3" />
+            <Label Text="Contenedor" />
+            <customcontrols:RoundedPicker ItemsSource="{Binding Containers}" SelectedItem="{Binding Container}" />
+            <Label Text="{Binding Message}" Style="{StaticResource ErrorStyle}" />
+        </StackLayout>
+
+        <StackLayout Orientation="Horizontal" HorizontalOptions="Center">
+            <Button Text="Cancelar" Command="{Binding CancelCommand}" WidthRequest="150" />
+            <Button Text="Aceptar" Command="{Binding AcceptCommand}" WidthRequest="150" />
+        </StackLayout>
     </StackLayout>
 </ContentPage>

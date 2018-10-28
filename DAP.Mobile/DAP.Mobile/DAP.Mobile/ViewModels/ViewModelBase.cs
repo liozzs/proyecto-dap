@@ -8,6 +8,7 @@ namespace DAP.Mobile.ViewModels
         protected INavigationService NavigationService { get; private set; }
 
         private bool _isLoading;
+
         public bool IsLoading
         {
             get { return _isLoading; }
@@ -15,6 +16,7 @@ namespace DAP.Mobile.ViewModels
         }
 
         private string _title;
+
         public string Title
         {
             get { return _title; }
@@ -22,6 +24,7 @@ namespace DAP.Mobile.ViewModels
         }
 
         private string message;
+
         public string Message
         {
             get { return message; }
@@ -35,22 +38,18 @@ namespace DAP.Mobile.ViewModels
 
         public virtual void OnNavigatedFrom(NavigationParameters parameters)
         {
-
         }
 
         public virtual void OnNavigatedTo(NavigationParameters parameters)
         {
-
         }
 
         public virtual void OnNavigatingTo(NavigationParameters parameters)
         {
-
         }
 
         public virtual void Destroy()
         {
-
         }
     }
 }
