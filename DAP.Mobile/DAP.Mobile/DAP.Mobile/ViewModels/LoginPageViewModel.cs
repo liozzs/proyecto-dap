@@ -40,15 +40,15 @@ namespace DAP.Mobile.ViewModels
             {
                 if (Validate())
                 {
-                    //var options = new ApiClientOption
-                    //{
-                    //    RequestType = ApiClientRequestTypes.Post,
-                    //    Uri = "api/login",
-                    //    Service = ApiClientServices.Api,
-                    //    RequestContent = new { Email = User, Password }
-                    //};
+                    var options = new ApiClientOption
+                    {
+                        RequestType = ApiClientRequestTypes.Post,
+                        Uri = "api/login",
+                        Service = ApiClientServices.Api,
+                        RequestContent = new { Email = User, Password }
+                    };
 
-                    //LoginResult result = await apiClient.InvokeDataServiceAsync<LoginResult>(options);
+                    LoginResult result = await apiClient.InvokeDataServiceAsync<LoginResult>(options);
                     LoginResult result = new LoginResult { Token = "asdsadasd" };
 
                     await GoToMenu(result.Token);
