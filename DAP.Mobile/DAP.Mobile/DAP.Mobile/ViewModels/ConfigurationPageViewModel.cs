@@ -60,12 +60,22 @@ namespace DAP.Mobile.ViewModels
                         {
                             success = true;
                             Helper.SetApplicationValue("ArduinoIP", $"http://{result.getInetAddress()}");
-                            Helper.SetApplicationValue("ArduinoMAC", result.getBssid());
+                            Helper.SetApplicationValue("ArduinoMAC", Helper.FormatBssId(result.getBssid()));
                         }
                     });
 
                     if(success)
                     {
+                        ApiClientOption option = new ApiClientOption
+                        {
+                            RequestType = ApiClientRequestTypes.Post,
+                            Uri = "api/usuarios/dispensers",
+                            Service = ApiClientServices.Api,
+                            RequestContent = new { MAC = Helper.GetApplicationValue<string>("ArduinoMAC"), Name = Helper.GetApplicationValue<string>("ArduinoMAC") }
+                        };
+
+                        await apiClient.InvokeDataServiceAsync(option);
+
                         await dialogService.DisplayAlertAsync("Configuración WiFi", "Se configuró correctamente.", "Aceptar");
                     }
                 }

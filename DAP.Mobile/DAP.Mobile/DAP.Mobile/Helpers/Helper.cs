@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Text.RegularExpressions;
 using Xamarin.Forms;
 
 namespace DAP.Mobile.Helpers
@@ -32,6 +33,20 @@ namespace DAP.Mobile.Helpers
             {
                 Application.Current.Properties.Add(key, value);
             }
+        }
+
+        internal static string FormatBssId(string bssid)
+        {
+            if (string.IsNullOrWhiteSpace(bssid)) return "";
+
+            var result = bssid.ToUpper();
+
+            for (int i = result.Length - 2; i > 0; i -= 2)
+            {
+                result = result.Insert(i, ":");
+            }
+            return result;
+
         }
     }
 }
