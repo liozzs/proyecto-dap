@@ -4,6 +4,7 @@ using DAP.Mobile.Services;
 using Prism.Commands;
 using Prism.Navigation;
 using Prism.Services;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -49,7 +50,7 @@ namespace DAP.Mobile.ViewModels
                 {
                     RequestType = ApiClientRequestTypes.Get,
                     UriParameters = new { MAC = Helper.GetApplicationValue<string>("ArduinoMAC") },
-                    Uri = "api/usuarios/dispensers/{MAC}/mensajes",
+                    Uri = "api/usuarios/dispensers/{0}/mensajes",
                     Service = ApiClientServices.Api
                 };
 
@@ -57,7 +58,7 @@ namespace DAP.Mobile.ViewModels
 
                 Notifications = new ObservableCollection<Notification>(mensajes.OrderByDescending(m => m.Id).Select(m => new Notification { Id = m.Id, Message = GetMessage(m), Title = m.Pastilla, Date = m.Horario }));
             }
-            catch
+            catch (Exception EX)
             {
                 await pageDialogService.DisplayAlertAsync("Error", "Ocurrió un error al obtener las notificaciones. Intente nuevamente en unos minutos.", "Aceptar");
             }

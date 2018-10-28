@@ -33,8 +33,6 @@ namespace DAP.Mobile
 
         public App() : this(null)
         {
-            var ip = Helper.GetApplicationValue<string>("ArduinoIP");
-            Helper.SetApplicationValue("ArduinoIP", $"http://{ip}");
         }
 
         public App(IPlatformInitializer initializer) : base(initializer)
@@ -44,6 +42,7 @@ namespace DAP.Mobile
         protected override void OnInitialized()
         {
             InitializeComponent();
+            Helper.SetApplicationValue("ArduinoMAC", $"60:01:94:4A:8C:A4");
 
             if (Helper.GetApplicationValue<bool>("logged"))
             {
