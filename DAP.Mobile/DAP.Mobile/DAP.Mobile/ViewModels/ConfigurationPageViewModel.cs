@@ -1,4 +1,5 @@
-﻿using DAP.Mobile.Helpers;
+﻿using Android.Net.Wifi;
+using DAP.Mobile.Helpers;
 using DAP.Mobile.Services;
 using EspTouchMultiPlatformLIbrary;
 using Prism.Commands;
@@ -16,6 +17,13 @@ namespace DAP.Mobile.ViewModels
         private readonly IPageDialogService dialogService;
         private readonly ISmartConfigTask smartconfig;
 
+        private string bssid;
+        private bool hiddenSsid;
+
+        private bool canConfigWifi;
+        public bool CanConfigWifi { get => canConfigWifi; set => SetProperty(ref canConfigWifi, value); }
+
+        public string WifiNetwork { get; set; }
         public string WifiPassword { get; set; }
         public string ActualPassword { get; set; }
         public string NewPassword { get; set; }
@@ -30,10 +38,26 @@ namespace DAP.Mobile.ViewModels
             smartconfig = Xamarin.Forms.DependencyService.Get<ISmartConfigHelper>().CreatePlatformTask();
             this.apiClient = apiClient;
             this.dialogService = dialogService;
-            ConfigWifiCommand = new DelegateCommand(async () => await ConfigWifiAsync());
+            ConfigWifiCommand = new DelegateCommand(async () => await ConfigWifiAsync(), () => CanConfigWifi);
             CancelCommand = new DelegateCommand(async () => await navigationService.GoBackAsync());
             NextCommand = new DelegateCommand(async () => await NextAsync());
-            WifiPassword = "lionel13";
+            SetWifiNetwork();
+        }
+
+        private void SetWifiNetwork()
+        {
+            WifiManager wifiManager = (WifiManager)Android.App.Application.Context.GetSystemService(Android.Content.Context.WifiService);
+            if (wifiManager.IsWifiEnabled && wifiManager.ConnectionInfo.IpAddress != 0)
+            {
+                WifiNetwork = wifiManager.ConnectionInfo.SSID.Replace("\"", "");
+                bssid = wifiManager.ConnectionInfo.BSSID;
+                hiddenSsid = wifiManager.ConnectionInfo.HiddenSSID;
+                CanConfigWifi = true;
+            }
+            else
+            {
+                WifiNetwork = "No se pudo recuperar";
+            }
         }
 
         private async Task ConfigWifiAsync()
@@ -44,10 +68,7 @@ namespace DAP.Mobile.ViewModels
             }
             else
             {
-                var Ssid = "TeleCentro-8b3c";
-                var bssid = "28:9e:fc:0f:8b:41";
-
-                smartconfig.SetSmartConfigTask(Ssid, bssid, WifiPassword, false, 60000);
+                smartconfig.SetSmartConfigTask(WifiNetwork, bssid, WifiPassword, hiddenSsid, 60000);
                 IsLoading = true;
 
                 try
@@ -64,7 +85,7 @@ namespace DAP.Mobile.ViewModels
                         }
                     });
 
-                    if(success)
+                    if (success)
                     {
                         ApiClientOption option = new ApiClientOption
                         {
@@ -77,6 +98,10 @@ namespace DAP.Mobile.ViewModels
                         await apiClient.InvokeDataServiceAsync(option);
 
                         await dialogService.DisplayAlertAsync("Configuración WiFi", "Se configuró correctamente.", "Aceptar");
+                    }
+                    else
+                    {
+                        await dialogService.DisplayAlertAsync("Configuración WiFi", "No fue posible conectarse.", "Aceptar");
                     }
                 }
                 catch (Exception ex)
