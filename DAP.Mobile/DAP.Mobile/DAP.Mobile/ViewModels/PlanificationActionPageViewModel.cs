@@ -126,7 +126,7 @@ namespace DAP.Mobile.ViewModels
             return dialogService.DisplayAlertAsync("Confirmar", sb.ToString(), "Sí", "No");
         }
 
-        public override void OnNavigatingTo(NavigationParameters parameters)
+        public override void OnNavigatingTo(INavigationParameters parameters)
         {
             base.OnNavigatedFrom(parameters);
             planification = parameters.GetValue<Planification>("Planification");

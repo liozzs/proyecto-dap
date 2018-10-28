@@ -33,7 +33,7 @@ namespace DAP.Mobile.ViewModels
             LoadNotificationsCommand = new DelegateCommand(async () => await LoadNotificationsAsync());
         }
 
-        public override void OnNavigatedTo(NavigationParameters parameters)
+        public override void OnNavigatedTo(INavigationParameters parameters)
         {
             base.OnNavigatedTo(parameters);
             LoadNotificationsCommand.Execute();

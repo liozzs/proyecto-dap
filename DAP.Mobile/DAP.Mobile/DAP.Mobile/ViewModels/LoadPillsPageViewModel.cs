@@ -58,7 +58,7 @@ namespace DAP.Mobile.ViewModels
             AcceptCommand = new DelegateCommand(async () => await AcceptAsync());
         }
 
-        public override void OnNavigatingTo(NavigationParameters parameters)
+        public override void OnNavigatingTo(INavigationParameters parameters)
         {
             base.OnNavigatingTo(parameters);
             var pill = parameters.GetValue<Pill>("Pill");

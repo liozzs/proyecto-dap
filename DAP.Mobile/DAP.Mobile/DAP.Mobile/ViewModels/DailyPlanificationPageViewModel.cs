@@ -47,7 +47,7 @@ namespace DAP.Mobile.ViewModels
             return NavigationService.NavigateAsync("PlanificationActionPage", new NavigationParameters() { { "Planification", planification } });
         }
 
-        public override void OnNavigatingTo(NavigationParameters parameters)
+        public override void OnNavigatingTo(INavigationParameters parameters)
         {
             base.OnNavigatedFrom(parameters);
             planification = parameters.GetValue<Planification>("Planification");

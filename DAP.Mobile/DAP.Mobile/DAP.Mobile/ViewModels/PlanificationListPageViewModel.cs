@@ -32,7 +32,7 @@ namespace DAP.Mobile.ViewModels
             CreateCommand = new DelegateCommand(async () => await OpenPlanificationAsync());
         }
 
-        public override void OnNavigatedTo(NavigationParameters parameters)
+        public override void OnNavigatedTo(INavigationParameters parameters)
         {
             base.OnNavigatedTo(parameters);
 

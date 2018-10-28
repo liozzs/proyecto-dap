@@ -30,7 +30,7 @@ namespace DAP.Mobile.ViewModels
             LoadPillsCommand = new DelegateCommand(async () => await LoadPillsAsync());
         }
 
-        public override void OnNavigatedTo(NavigationParameters parameters)
+        public override void OnNavigatedTo(INavigationParameters parameters)
         {
             base.OnNavigatedTo(parameters);
             LoadPillsCommand.Execute();
