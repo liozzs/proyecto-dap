@@ -12,7 +12,7 @@ Planificador::Planificador(){
   }
   
   loadAlarms();
-  setInitTime(0);
+  rtc.begin();
 
   //MOTOR
   initServo();
@@ -28,63 +28,96 @@ Planificador::Planificador(){
 
   //WIFI
 
-  while (WIFI_OK == false) {
-    Log.Debug("Waiting for WIFI\n");
-    processCommandsWIFI();
-    delay(10);
-  }
+//  while (WIFI_OK == false) {
+//    Log.Debug("Waiting for WIFI\n");
+//    processCommandsWIFI();
+//    delay(10);
+//  }
   
   JsonObject& root = jsonBuffer.createObject();
-  root["set_server"] = "";
-  root["host"] = serverHost;
-  root["port"] = serverPort;  
+
   root["get_MAC"] = ""; //para pedir la MAC
   root["get_Time"] = ""; //para pedir time / IP
   root.printTo(Serial1);
  
 };
 
+/*
+ * Seteo de carga de pastillas. Si ya existe el plateID, reemplaza la configuracion, de lo contrario agrega una
+ * nueva configuracion.
+ */
+void Planificador::setStock(int stock, int plateID, char* pillName)
+{    
+
+  Alarm* config;
+
+  Log.Debug("seteando %d,%s\n", plateID, pillName);
+  //verifico si ya existe ese plateID para reemplazar la configuracion o agregar nueva
+  int index = getIndexForPlateID(plateID);
+  if (index != -1) {
+    config = &configDataList[index];
+    config->stock = config->stock + stock;
+    strcpy( config->pillName, pillName);
+    
+    Log.Debug("Reemplazo stock para plateID: %d, index: %d", plateID, index);
+  } else {
+    Alarm config;
+    config.plateID = plateID;
+    config.stock =  stock;
+    strcpy( config.pillName, pillName);
+    config.complete = false;
+    config.valid = 100;
+  
+    this->configDataList.Add(config);
+    this->storedAlarms = this->storedAlarms +  1;   
+    Log.Debug("Agregado de stock para plateID: %d", plateID);
+  }
+  sendCarga(plateID, pillName, stock);
+  saveAlarms();
+}
+
 void Planificador::setAlarm(DateTime startTime, int interval, int quantity, int plateID, bool block)
 {    
-  this->setAlarm(startTime, interval, quantity, 100, 3, 0, "1111111", block, plateID, "PILLX");
+  this->setAlarm(startTime, interval, quantity, 100, 0, "1111111", block, plateID);
 }
 
 /*
  * Agrega una alarma (configuracion de dispendio) asociada a un plateID. Si ya existe el plateID, reemplaza la configuracion, de lo contrario agrega una
  * nueva configuracion.
  */
-void Planificador::setAlarm(DateTime startTime, int interval, int quantity, int stock, int criticalStock, byte periodicity, char* days, bool block, int plateID, char* pillName)
+void Planificador::setAlarm(DateTime startTime, int interval, int quantity, int criticalStock, byte periodicity, char* days, bool block, int plateID)
 {    
-  Alarm config;
+  Alarm* config;
 
-  config.plateID = plateID;
-  config.startTime = startTime;
-  config.interval = interval;
-  config.quantity = quantity;
-  config.stock = stock;
-  config.criticalStock = criticalStock;
-  config.periodicity = periodicity; 
-  strcpy( config.days, days);
-  config.block = block;
-  config.blocked = false;
-  config.waitingForButton = false;
-  config.waitingForVaso = false;
-  config.dispensedTimes = 0;
-  config.times = 0;
-  config.movePlate = false;
-  strcpy( config.pillName, pillName);
-  config.valid = 100;
-
-  Log.Debug("seteando %d,%d,%d,%d,%d, %s,%d, %s\n", interval, quantity, stock, criticalStock, periodicity, days, plateID, pillName);
+  Log.Debug("seteando %d,%d,%d,%d, %d, %d\n", interval, quantity, criticalStock, periodicity, days, plateID);
   //verifico si ya existe ese plateID para reemplazar la alarma o agregar nueva
   int index = getIndexForPlateID(plateID);
   if (index != -1) {
-    this->configDataList.Replace(index, config);
-    Log.Debug("Reemplazo alarma para plateID: %d, index: %d", plateID, index);
+    config = &configDataList[index];
+    
+    config->startTime = startTime;
+    config->interval = interval;
+    config->quantity = quantity;
+    config->criticalStock = criticalStock;
+    config->periodicity = periodicity; 
+    strcpy( config->days, days);
+    config->block = block;
+    config->blocked = false;
+    config->waitingForButton = false;
+    config->waitingForVaso = false;
+    config->dispensedTimes = 0;
+    config->times = 0;
+    config->movePlate = false;
+    config->complete = true;
+    config->valid = 100;
+  
+    //this->configDataList.Replace(index, *config);
+    Log.Debug("Seteo/Reemplazo alarma para plateID: %d, index: %d", plateID, index);
+    sendPlanificacion(config);
   } else {
-    this->configDataList.Add(config);
-    this->storedAlarms = this->storedAlarms +  1;   
-    Log.Debug("Agregado de alarma para plateID: %d", plateID);
+    //this->configDataList.Add(config);
+    //this->storedAlarms = this->storedAlarms +  1;   
+    Log.Debug("Se debe configurar la carga de pastilla antes para plateID: %d", plateID);
   }
   saveAlarms();
 }
@@ -189,13 +222,18 @@ String Planificador::getAlarmString(Alarm config){
 bool Planificador::execute(){
  
   if (this->configDataList.Count() == 0) {
-    Log.Debug("Verificando dispendio: No hay alarmas configuradas\n");
+    Log.Debug("No hay alarmas configuradas\n");
   }
-
+  isVasoInPlace();
   for (int i = 0; i < this->configDataList.Count(); i++)
   {
     Alarm* config = &this->configDataList[i];
- 
+
+    if (config->complete == false) {
+      Log.Debug("Verificando configuracion stock platoID: %d, stock: %d, pasti: %s\n", config->plateID, config->stock, config->pillName);
+      continue;
+    }
+    
     Log.Debug("Verificando dispendio platoID: %d, veces activado: %d, veces dispensado: %d, cantidad: %d, pasti: %s\n", config->plateID, config->times, config->dispensedTimes,config->quantity, config->pillName);
 
     if (config->blocked == true && config->movePlate == false) {
@@ -257,12 +295,14 @@ bool Planificador::execute(){
     }
 
     //verificar si corresponde el dia. Nosotros tomamos 1er dia de la semana el lunes.
-    int day = getTime().dayOfTheWeek() - 1;
-    if (day == -1) day = 6;
-
-    if (config->days[day] != '1') {
-       Log.Debug("Dispendio no configurado para este dia");
-       continue;
+    if (config->periodicity != PERIODICIDAD_DIARIA) {
+      int day = getTime().dayOfTheWeek() - 1;
+      if (day == -1) day = 6;
+  
+      if (config->days[day] != '1') {
+         Log.Debug("Dispendio no configurado para este dia");
+         continue;
+      }
     }
 
     //verificar el retiro del vaso
@@ -319,6 +359,12 @@ bool Planificador::execute(){
       config->waitingForVaso=false;
     }
 
+    //TODO revisar logica, se activo esto cuando no se presiono el boton
+    //En caseo de apagarse el DAP, verifica si se perdieron dispendios en el medio y en tal caso bloquea
+    if (_nextDispense(config) < (BUTTON_THRESHOLD * -2)){
+      Log.Debug("DAP desconectado, se omitieron dispendios. Bloqueando plato\n"); 
+      config->blocked = true;
+    }
 
     if (config->waitingForButton == true) {
       activarBuzzer();
@@ -376,8 +422,13 @@ DateTime Planificador::nextDispenseDateTime(Alarm* config){
   return nextDispense;
 }
 
-//Devuelve el tiempo en segundos para el proximo dispendio de la alarma 'config'
+//Devuelve el tiempo en segundos ABSOLUTOS para el proximo dispendio de la alarma 'config'
 long Planificador::nextDispense(Alarm* config) {
+  return abs(_nextDispense(config));
+}
+
+//Devuelve el tiempo en segundos para el proximo dispendio de la alarma 'config'
+long Planificador::_nextDispense(Alarm* config) {
   DateTime nextDispense;
 
   nextDispense = nextDispenseDateTime(config);
@@ -387,8 +438,9 @@ long Planificador::nextDispense(Alarm* config) {
   Log.Debug("Resta para Proximo dispendio: dia:%d, hora:%d, min:%d, seg:%d\n", diff.days(), diff.hours(), diff.minutes(), diff.seconds());
   long sec = diff.days()*86400L + diff.hours()*3600L + diff.minutes()*60L + diff.seconds();
   
-  return abs(sec);
+  return sec;
 }
+
 
 bool Planificador::alarmDispensed(Alarm *config) {
   if (getSensorDetected() == -1)
@@ -417,9 +469,9 @@ bool Planificador::isVasoInPlace() {
 
   value = analogRead(PIN_VASO_PHOTO);
   
-  Log.Debug(value);
+  Log.Debug("VasoInPlace: %d\n", value);
   
-  if (value < 100)
+  if (value < 80)
     return false;
   return true;
   
@@ -535,6 +587,16 @@ void Planificador::processCommandsWIFI()
       //this->setInitTime(root["ip"].as<String>());
     } 
 
+    if (root.containsKey("stock")){
+     
+      int stock = root["stock"].as<int>();
+      int plateID = root["plateID"].as<int>();
+      char* pillName = root["pillName"].as<char *>();
+
+      this->setStock(stock, plateID, pillName);
+
+    } 
+
     if (root.containsKey("plan")){
       
       DateTime startTime;
@@ -550,16 +612,13 @@ void Planificador::processCommandsWIFI()
       
       int interval = root["interval"].as<int>();
       int quantity = root["quantity"].as<int>();
-      int stock = root["stock"].as<int>();
       int criticalStock = root["criticalStock"].as<int>();
       byte periodicity = root["periodicity"].as<byte>();
       char *days = root["days"];
-      bool block = root["block"].as<bool>();
+      bool block = root["block"].as<int>() == 2; // 1 replinificar, 2 bloquear
       int plateID = root["plateID"].as<int>();
-      char* pillName = root["pillName"].as<char *>();
       
-      //(DateTime startTime, int interval, int quantity, int stock, int criticalStock, byte periodicity, char* days, bool block, int plateID)
-      this->setAlarm(startTime, interval, quantity, stock, criticalStock, periodicity, days, block, plateID, pillName);
+      this->setAlarm(startTime, interval, quantity, criticalStock, periodicity, days, block, plateID);
 
     } 
     
@@ -600,6 +659,37 @@ int Planificador::sendNotification(int code, int containerID, String pillName, S
     root["Pastilla"] = pillName;
     root["Horario"] = time;
     root["CantidadRestante"] = stock;
+
+    root.printTo(Serial1);
+
+}
+
+int Planificador::sendPlanificacion(Alarm *config){
+
+
+    JsonObject& root = jsonBuffer.createObject();
+    root["planificacion"] = "";
+    root["DireccionMAC"] = "60:01:94:4A:8C:A4";
+    root["Receptaculo"] = config->plateID;
+    root["Pastilla"] = config->pillName;
+    root["HorarioInicio"] = getTimeString(config->startTime);
+    root["Intervalo"] = String(config->interval);
+    root["StockCritico"] = String(config->criticalStock);
+    root["Periodicidad"] = String(config->periodicity);
+    root["Dias"] = String(config->days);
+    root["Bloqueo"] = String(config->block);
+    root["Cantidad"] = String(config->quantity);
+
+    root.printTo(Serial1);
+}
+
+int Planificador::sendCarga(int containerID, String pillName, int stock){
+    JsonObject& root = jsonBuffer.createObject();
+    root["carga"] = "";
+    root["DireccionMAC"] = "60:01:94:4A:8C:A4";
+    root["Receptaculo"] = containerID;
+    root["Pastilla"] = pillName;
+    root["Stock"] = String(stock);
 
     root.printTo(Serial1);
 

@@ -41,12 +41,13 @@ struct Alarm {
   int criticalStock; // stock critico
   byte periodicity; // enum Periodicidad
   char days[7] = "1111111"; //lun-dom dias a dispensar array con unos o ceros
-  bool block; // si block es true, se bloquea si no se reprograma
-  bool blocked; // indica que esta alarma/plato dispensador esta bloqueado
-  bool waitingForButton; // si tiene que dispensar y esta esperando el boton
-  bool waitingForVaso; // si tiene que retirar el vaso
-  bool movePlate; // si tiene que mover el plato
+  bool block = false;; // si block es true, se bloquea si no se reprograma
+  bool blocked = false; // indica que esta alarma/plato dispensador esta bloqueado
+  bool waitingForButton = false; // si tiene que dispensar y esta esperando el boton
+  bool waitingForVaso = false; // si tiene que retirar el vaso
+  bool movePlate = false; // si tiene que mover el plato
   char pillName[10];
+  bool complete = false;
   byte valid; //data valida
 
 
@@ -65,6 +66,7 @@ class Planificador{
     void logEvento(String evento, String msg="");
     int plateIDToIndex(int plateID);
     long nextDispense(Alarm* config);
+    long _nextDispense(Alarm* config);
     DateTime nextDispenseDateTime(Alarm* config);
     void blockOrReschedule(Alarm* config);
     bool alarmDispensed(Alarm* config);
@@ -103,7 +105,7 @@ class Planificador{
     
     //umbrales (modificables)
     int NO_DISPENSE_THRESHOLD = 60; //segundos a esperar para que efectue el dispendio luego de apretar el boton
-    int BUTTON_THRESHOLD = 1; //segundos a esperar para que se presione el boton que inicia el dispendio
+    int BUTTON_THRESHOLD = 5; //segundos a esperar para que se presione el boton que inicia el dispendio
     int VASO_THRESHOLD = 20; //segundos a esperar para que se retire el vaso, pasado este tiempo se emite notificacion
   
     int storedAlarms = 0;
@@ -111,8 +113,9 @@ class Planificador{
     bool execute();   
     DateTime getTime();
     String getTimeString(DateTime t);
+    void setStock(int stock, int plateID, char* pillName);
     void setAlarm(DateTime startTime, int interval, int quantity, int plateID, bool block);
-    void setAlarm(DateTime startTime, int interval, int quantity, int stock, int criticalStock, byte periodicity, char* days, bool block, int plateID, char* pillName);
+    void setAlarm(DateTime startTime, int interval, int quantity, int criticalStock, byte periodicity, char* days, bool block, int plateID);
     Alarm getAlarm(int index);
     String getAlarmString(Alarm config);
     void resetAlarms();
@@ -121,6 +124,8 @@ class Planificador{
     void checkCriticalStock();
     void processCommandsWIFI();
     int sendNotification(int code, int containerID, String pillName, String time, int stock);
+    int sendPlanificacion(Alarm *config);
+    int sendCarga(int containerID, String pillName, int stock);
 
     //MOTOR
     void initServo();

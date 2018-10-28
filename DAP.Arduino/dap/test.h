@@ -29,6 +29,9 @@ extern Planificador* planif;
 //Imprime la hora
 const char *testGetTimeStringToken       = "getTimeString";       
 
+//setea una carga de pastillas. setAlarm 5(stock) 100(plateID) PILLX(pillName)
+const char *testSetStockToken            = "setStock";  
+
 //setea una alarma. setAlarm 2018(año) 7(mes) 22(dia) 30(min) 0(seg) 20(intervalo) 1(cantidad) 1(plateID)
 const char *testSetAlarmToken            = "setAlarm";                
 
@@ -40,6 +43,9 @@ const char *testClearEEPROMToken         = "clearEEPROM";
 
 //setea en true el sensor que detecta el dispendio. setDispenseTrue {PIN}
 const char *testSetDispenseTrueToken          = "setDispenseTrue"; 
+
+//envia un string al wifi
+const char *testSendWIFIToken          = "sendWIFI"; 
 
 
 
@@ -116,6 +122,14 @@ String testGetTimeString() {
   return planif->getTimeString(planif->getTime());
 }
 
+void testSetStock() {                            
+  int stock = readNumber();
+  int plateID = readNumber();
+  String pillName = readWord();
+
+  planif->setStock(stock, plateID, string2char(pillName));
+}
+
 void testSetAlarm() {                            
   int anio = readNumber();
   int mes = readNumber();
@@ -159,6 +173,13 @@ void testSetDispenseTrue() {
  
 }
 
+void testSendWIFI() {
+  String command = readWord();
+
+  Serial1.println(command);
+ 
+}
+
 /****************************************************
    DoMyCommand
 */
@@ -172,6 +193,12 @@ bool executeTestCommand(char * commandLine) {
     print2(">    La hora es = ", result);
     return true;
 
+  } 
+
+  if (strcmp(ptrToCommandName, testSetStockToken) == 0) {
+    testSetStock();
+    print2(">    Stock seteado", "");
+    return true;
   } 
 
   if (strcmp(ptrToCommandName, testSetAlarmToken) == 0) {
@@ -196,6 +223,12 @@ bool executeTestCommand(char * commandLine) {
   if (strcmp(ptrToCommandName, testSetDispenseTrueToken) == 0) {
     testSetDispenseTrue();
     print2(">    Seteado dispendio para sensor = ", "");
+    return true;
+  } 
+
+  if (strcmp(ptrToCommandName, testSendWIFIToken) == 0) {
+    testSendWIFI();
+    print2(">    Enviando comando a wifi = ", "");
     return true;
   } 
   

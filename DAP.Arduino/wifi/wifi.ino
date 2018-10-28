@@ -29,16 +29,23 @@ char * host = "18.219.97.48";
 uint16_t port = 50065;
 
 //CAMBIAR A TRUE 
-bool USE_SMART_CONFIG = false;
+bool USE_SMART_CONFIG = true;
 int MAX_RETRIES = 3;
 
 void setup() {
   Serial.begin(115200);
   delay(5000);
-  
+
+  WiFi.setAutoConnect(true);
+
 if (USE_SMART_CONFIG) {
   //Smart config
-  if (!WiFi.setAutoConnect(true)) {
+  int connRes = WiFi.waitForConnectResult();
+  if (connRes == WL_CONNECTED){
+    Serial.println("Auto connected");
+  }
+  else {
+    Serial.println("Smart config");
   /* Set ESP32 to WiFi Station mode */
     WiFi.mode(WIFI_STA);
     /* start SmartConfig */
@@ -73,8 +80,8 @@ if (USE_SMART_CONFIG) {
   }
 } 
 else {
-  char ssid[] = "liozzs6s";           
-  char pass[] = "lionel12";        
+  char ssid[] = "TeleCentro-8b3c";           
+  char pass[] = "lionel13";        
   int status = WL_IDLE_STATUS;  
  
   WiFi.begin(ssid, pass);
@@ -98,6 +105,7 @@ else {
   
   // start the web server on port 80
   server.on("/", handlePlan);               // Call the 'handleRoot' function when a client requests URI "/"
+  server.on("/Stock", handleStock);     
   server.on("/Plan", handlePlan);              
   server.on("/MAC", handleMAC);              
   server.on("/ResetWIFI", handleResetWIFI);    
@@ -122,6 +130,7 @@ void loop() {
       root["WIFI_ERROR"] = "could not connect";
       root.printTo(Serial);
       retries = 0;
+      WiFi.beginSmartConfig();
     }
     delay(500);
     retries++;
@@ -148,7 +157,7 @@ void loop() {
         //debug("WIFI: msg de arduino length: " + String(msg_in.length()));
         debug("WIFI Mensaje: " + String(msg_in));
 
-        StaticJsonBuffer<300> jsonBuffer;
+        StaticJsonBuffer<500> jsonBuffer;
         JsonObject& root = jsonBuffer.parseObject(msg_in);
         
         if (!root.success()) {
@@ -167,6 +176,12 @@ void loop() {
         if (root.containsKey("reset")){
           debug("WIFI: reiniciando");
           ESP.reset();
+          delay(5000);
+        } 
+
+        if (root.containsKey("disconnect")){
+          debug("WIFI: disconnect");
+          WiFi.disconnect(true);
           delay(5000);
         } 
 
@@ -200,50 +215,60 @@ void loop() {
         }
 
         if (root.containsKey("notification")){
-          String mac = root["DireccionMAC"].as<char *>(); 
-          int code =  root["Codigo"].as<int>(); 
-          int containerID =  root["Receptaculo"].as<int>(); 
-          String pillName = root["Pastilla"].as<char *>(); 
-          String time = root["Horario"].as<char *>(); 
-          int stock =  root["CantidadRestante"].as<int>(); 
-
-          debug("WIFI: procesando notificacion: " + mac + "," + String(code) + "," + String(containerID) + "," + pillName + "," + time + "," + String(stock));
-
-          // Use WiFiClient class to create TCP connections
-          WiFiClient client;
-
-          debug("sending to server: " + String(host) + ":" + String(port));
-          if (!client.connect(host, port)) {
-              Serial.println("connection failed");
-              msg_in = "";
-              return;
-          }
-
-          //Sending POST request with json content
-          String content;
-          root.printTo(content);
-          
-
-          String post = String("POST ") + "/api/dispensers/message" + " HTTP/1.1\r\n" +
-             "Host: 18.219.97.48\r\n" +
-             "User-Agent: Arduino/1.0\r\n" +
-             "Accept: application/json\r\n" +
-             "Content-Type: application/json\r\n" +
-             "Accept-Encoding: gzip, deflate, br\r\n" +
-             "Connection: close\r\n" +
-             "Content-Length: " + content.length() + "\r\n\r\n" + content;
-          
-          client.print(post);
-          debug(post);
-          client.stop();
-          
+          sendToServer("mensajes", &root);
           msg_in = "";
         }
+        if (root.containsKey("planificacion")){
+          sendToServer("planificacion", &root);
+          msg_in = "";
+        }
+        if (root.containsKey("carga")){
+          sendToServer("carga", &root);
+          msg_in = "";
+        }
+        
        msg_in = ""; 
        }
 }
 
+void sendToServer(String service, JsonObject* root) {
+  // Use WiFiClient class to create TCP connections
+  WiFiClient client;
+
+  debug("sending to server: " + String(host) + ":" + String(port));
+  if (!client.connect(host, port)) {
+      Serial.println("connection failed");
+      return;
+  }
+
+  //Sending POST request with json content
+  String content;
+  root->printTo(content);
+
+   String post = String("POST ") + "/api/dispensers/" + service + " HTTP/1.1\r\n" +
+     "Host: 18.219.97.48\r\n" +
+     "User-Agent: Arduino/1.0\r\n" +
+     "Accept: application/json\r\n" +
+     "Content-Type: application/json\r\n" +
+     "Accept-Encoding: gzip, deflate, br\r\n" +
+     "Connection: close\r\n" +
+     "Content-Length: " + content.length() + "\r\n\r\n" + content;
+  
+  client.print(post);
+  debug(post);
+  client.stop();
+}
+
 //SERVER
+void handleStock() {
+
+  StaticJsonBuffer<350> newBuffer;
+  JsonObject& root = newBuffer.parseObject(server.arg("plain"));
+  root.printTo(Serial);
+
+  server.send(200, "text/plain", "OK");   // Send HTTP status 200 (Ok) and send some text to the browser/client
+}
+
 void handlePlan() {
   //String arg = server.arg("plan");
   //Serial.println(arg);

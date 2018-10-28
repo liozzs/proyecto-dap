@@ -19,8 +19,6 @@ const byte PIN_PLATE_MOTOR[MAX_SUPPORTED_ALARMS] = {10,11};
 const byte PIN_DISPENSE_SENSOR[MAX_SUPPORTED_ALARMS] = {51, 52}; //interrupcion
 const byte PLATE_IDS[MAX_SUPPORTED_ALARMS] = {100, 200}; 
 
-//Server
-const String serverHost = "18.219.97.48";
-const int serverPort = "50065";
+
 
 #endif
