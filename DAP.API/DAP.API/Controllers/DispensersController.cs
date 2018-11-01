@@ -29,13 +29,13 @@ namespace DAP.API.Controllers
 
         [HttpPost("mensajes", Name = "SendMessage")]
         [AllowAnonymous]
-        public IActionResult SendMessage([FromBody] DispenserMensaje mensaje/*, [FromBody] string DireccionMAC*/) {
+        public IActionResult SendMessage([FromBody] DispenserMensaje mensaje) {
             _logger.LogInformation("SendMessage");
             
             Dispenser dispenser = _dispenserRepository.Get(mensaje.DireccionMAC);
             if (dispenser == null)
                 return NotFound();
-            string subject = "Notificacion - Dispenser: " + dispenser.Nombre;
+            string subject = "Notificación - Dispenser: " + dispenser.Nombre;
             string message = "Estimado usuario:" + NewLine();
             var parameters = new Dictionary<string, string>
             {
@@ -110,8 +110,15 @@ namespace DAP.API.Controllers
             if (dispenser == null)
                 return NotFound();
 
-            string subject = "Notificacion - Dispenser: " + dispenser.Nombre;
+            string subject = "Notificación - Dispenser: " + dispenser.Nombre;
             string message = "Estimado usuario:" + NewLine();
+            string periodicidad;
+            if (planificacion.Periodicidad.Equals("0"))
+                periodicidad = "Diaria";
+            else if (planificacion.Periodicidad.Equals("1"))
+                periodicidad = "Semanal";
+            else
+                periodicidad = "Personalizada";
 
             message += "Le informamos se ha cargado la siguiente planificación:" + NewLine();
 
@@ -120,17 +127,17 @@ namespace DAP.API.Controllers
             message += "<strong>Horario Inicio</strong>: ";
             message += planificacion.HorarioInicio + "<br>";
             message += "<strong>Intervalo</strong>: ";
-            message += planificacion.Intervalo + "<br>";
+            message += int.Parse(planificacion.Intervalo) / 60 + " Minutos<br>";
             message += "<strong>Cantidad</strong>: ";
             message += planificacion.Cantidad.ToString() + "<br>";
             message += "<strong>Stock Crítico</strong>: ";
             message += planificacion.StockCritico.ToString() + "<br>";
             message += "<strong>Periodicidad</strong>: ";
-            message += planificacion.Periodicidad + "<br>";
+            message += periodicidad + "<br>";
             message += "<strong>Días</strong>: ";
-            message += planificacion.Dias + "<br>";
-            message += "<strong>Bloquer</strong>: ";
-            message += planificacion.Bloqueo + NewLine();
+            message += ParseDias(planificacion.Dias) + "<br>";
+            message += "<strong>Bloquear</strong>: ";
+            message += (planificacion.Bloqueo.Equals("0") ? "No" : "Sí") + NewLine();
 
             message += "<em>Atte. Equipo D.A.P.</em>";
 
@@ -152,7 +159,7 @@ namespace DAP.API.Controllers
             if (dispenser == null)
                 return NotFound();
 
-            string subject = "Notificacion - Dispenser: " + dispenser.Nombre;
+            string subject = "Notificación - Dispenser: " + dispenser.Nombre;
             string message = "Estimado usuario:" + NewLine();
 
             message += "Le informamos se ha realizado la siguiente carga de stock:" + NewLine();
@@ -176,6 +183,28 @@ namespace DAP.API.Controllers
 
         private string NewLine() {
             return "<br><br>";
+        }
+
+        private string ParseDias(string dias)
+        {
+            string s = "";
+
+            if (dias[0].Equals('1'))
+                s += "L-";
+            if (dias[1].Equals('1'))
+                s += "Ma-";
+            if (dias[2].Equals('1'))
+                s += "Mi-";
+            if (dias[3].Equals('1'))
+                s += "J-";
+            if (dias[4].Equals('1'))
+                s += "V-";
+            if (dias[5].Equals('1'))
+                s += "S-";
+            if (dias[6].Equals('1'))
+                s += "D-";
+
+            return s.TrimEnd('-');
         }
     }
 }
