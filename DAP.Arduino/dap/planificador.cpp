@@ -227,7 +227,6 @@ bool Planificador::execute(){
 
   for (int i = 0; i < this->configDataList.Count(); i++)
   {
-    delay(5000);
     Alarm* config = &this->configDataList[i];
 
     if (config->complete == false) {
