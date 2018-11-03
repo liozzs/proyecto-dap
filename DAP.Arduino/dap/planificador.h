@@ -43,7 +43,12 @@ struct Alarm {
   char days[7] = "1111111"; //lun-dom dias a dispensar array con unos o ceros
   bool block = false;; // si block es true, se bloquea si no se reprograma
   bool blocked = false; // indica que esta alarma/plato dispensador esta bloqueado
+  bool shouldStartDispense = false;
   bool waitingForButton = false; // si tiene que dispensar y esta esperando el boton
+  bool notifVasoNoDevueltoEnviada = false;
+  bool notifBotonNoPresionadoEnviada = false; //si la notif por superar el button threshold fue enviada
+  bool notifExpendioNoRealizadoLimiteTiempoEnviada = false;
+  bool notifVasoNoRetiradoEnviada = false;
   bool waitingForVaso = false; // si tiene que retirar el vaso
   bool movePlate = false; // si tiene que mover el plato
   char pillName[10];
@@ -68,7 +73,8 @@ class Planificador{
     long nextDispense(Alarm* config);
     long _nextDispense(Alarm* config);
     DateTime nextDispenseDateTime(Alarm* config);
-    void blockOrReschedule(Alarm* config);
+    void blockPlate(Alarm* config);
+    void reschedulePlate(Alarm* config);
     bool alarmDispensed(Alarm* config);
     void activarBuzzer();
     void activarBuzzerRetiro();
@@ -78,6 +84,9 @@ class Planificador{
     bool isVasoInPlace();
     bool waitingForOtherPlate();
     int quantity[MAX_SUPPORTED_ALARMS] = {0, 0};
+    long vasoInPlaceSec [MAX_SUPPORTED_ALARMS] = {0, 0};
+    long buttonPressedSec[MAX_SUPPORTED_ALARMS] = {0, 0};
+    long pillThroughTubeSec[MAX_SUPPORTED_ALARMS] = {0, 0};
     String macAddress;
     bool WIFI_OK = false;
 
@@ -104,7 +113,7 @@ class Planificador{
     Planificador();
     
     //umbrales (modificables)
-    int NO_DISPENSE_THRESHOLD = 60; //segundos a esperar para que efectue el dispendio luego de apretar el boton
+    int NO_DISPENSE_THRESHOLD = 30; //segundos a esperar para que efectue el dispendio luego de apretar el boton
     int BUTTON_THRESHOLD = 5; //segundos a esperar para que se presione el boton que inicia el dispendio
     int VASO_THRESHOLD = 20; //segundos a esperar para que se retire el vaso, pasado este tiempo se emite notificacion
   
@@ -121,7 +130,7 @@ class Planificador{
     void resetAlarms();
     void processPlates();
     int getIndexForPlateID(int plateID);
-    void checkCriticalStock();
+    bool checkCriticalStock(Alarm *config);
     void processCommandsWIFI();
     int sendNotification(int code, int containerID, String pillName, String time, int stock);
     int sendPlanificacion(Alarm *config);

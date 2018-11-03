@@ -5,6 +5,7 @@
 RTC_DS3231 rtc;
 DynamicJsonBuffer  jsonBuffer;
 
+//Constructor Planificador
 Planificador::Planificador(){
   pciSetup(PIN_BUTTON);
   for (int i=0; i < MAX_SUPPORTED_ALARMS; i++){
@@ -27,7 +28,6 @@ Planificador::Planificador(){
   pinMode(PIN_LEDBLUE, OUTPUT);
 
   //WIFI
-
 //  while (WIFI_OK == false) {
 //    Log.Debug("Waiting for WIFI\n");
 //    processCommandsWIFI();
@@ -78,7 +78,7 @@ void Planificador::setStock(int stock, int plateID, char* pillName)
 
 void Planificador::setAlarm(DateTime startTime, int interval, int quantity, int plateID, bool block)
 {    
-  this->setAlarm(startTime, interval, quantity, 100, 0, "1111111", block, plateID);
+  this->setAlarm(startTime, interval, quantity, 5, 0, "1111111", block, plateID);
 }
 
 /*
@@ -224,9 +224,10 @@ bool Planificador::execute(){
   if (this->configDataList.Count() == 0) {
     Log.Debug("No hay alarmas configuradas\n");
   }
-  isVasoInPlace();
+
   for (int i = 0; i < this->configDataList.Count(); i++)
   {
+    delay(5000);
     Alarm* config = &this->configDataList[i];
 
     if (config->complete == false) {
@@ -236,23 +237,15 @@ bool Planificador::execute(){
     
     Log.Debug("Verificando dispendio platoID: %d, veces activado: %d, veces dispensado: %d, cantidad: %d, pasti: %s\n", config->plateID, config->times, config->dispensedTimes,config->quantity, config->pillName);
 
-    if (config->blocked == true && config->movePlate == false) {
+    if (config->blocked == true) {
       Log.Debug("Este plato se encuentra BLOQUEADO\n");
-      continue;
-    }
-
-    //verificar stock disponible
-     if (config->stock == 0) {
-      Log.Debug("Este plato no tiene STOCK\n");
       continue;
     }
 
     if (config->stock < config->quantity){
       Log.Debug("stock (%d) no suficiente para proximo dispendio (%d), enviando notificacion\n", config->stock, config->quantity);
       sendNotification(NOTIF_EXPENDIO_NO_REALIZADO_NO_PASTILLAS, config->plateID, config->pillName, getTimeString(nextDispenseDateTime(config)), config->stock); 
-      if (config->block == true) {
-        config->blocked = true; // se bloquea
-      }
+      blockPlate(config);
       continue;
     }
     
@@ -265,12 +258,18 @@ bool Planificador::execute(){
         Log.Debug("BOTON PRESIONADO\n");
         if (sec > BUTTON_THRESHOLD) {
           Log.Debug("Fuera de umbral\n");
-          blockOrReschedule(config);
         }
+        buttonPressedSec[i] = sec;
         config->dispensedTimes++;
         config->stock--;
         config->waitingForButton = false;
         config->movePlate = true;
+
+        if (checkCriticalStock(config)) {
+          Log.Debug("Alarma %d supero tiene stock critico de %d\n", config->plateID, config->criticalStock);
+          sendNotification(NOTIF_STOCK_CRITICO, config->plateID, config->pillName, getTimeString(nextDispenseDateTime(config)), config->stock);
+        }
+      
         desactivarBuzzer();
         saveAlarms();
         continue;
@@ -283,7 +282,7 @@ bool Planificador::execute(){
        setSensorDetected(-1);
       
        if (config->quantity == quantity[i]) {
-         config->times++;
+         pillThroughTubeSec[i] = sec;
          config->movePlate = false;
          config->waitingForVaso = true;
          previousMillisVaso = millis();
@@ -306,11 +305,19 @@ bool Planificador::execute(){
     }
 
     //verificar el retiro del vaso
-    if (config->waitingForVaso == true && !waitingForOtherPlate()){
+    if (config->waitingForVaso && !waitingForOtherPlate()){
       Log.Debug("Chequando si el vaso se retiro\n");
       activarBuzzerRetiro();
       activarLED("green", 50);
       if (!isVasoInPlace()){
+
+        if (config->notifVasoNoDevueltoEnviada || config->notifExpendioNoRealizadoLimiteTiempoEnviada || 
+                config->notifBotonNoPresionadoEnviada || config->notifVasoNoRetiradoEnviada) {
+          reschedulePlate(config);
+        } else {
+            config->times++;
+        }
+
         Log.Debug("VASO retirado\n");
         config->waitingForVaso = false;
         desactivarLED("green");
@@ -320,53 +327,85 @@ bool Planificador::execute(){
       Log.Debug("Esperando el dispendio de otro plato antes de retirar vaso\n");
     }
 
-    if (sec <= UMBRAL_ALARMA_SEG && config->waitingForButton == false && config->movePlate == false) {
+    if (sec <= UMBRAL_ALARMA_SEG && !config->waitingForButton && !config->movePlate && !config->waitingForVaso) {
+      config->shouldStartDispense = true;
+    }
+
+    if (config->shouldStartDispense && !config->waitingForButton && !config->movePlate && !config->waitingForVaso) {
       if (isVasoInPlace()) {
         Log.Debug("Dispendio SI: segundos de diferencia: %l\n", sec);
+        vasoInPlaceSec[i] = sec;
         setButtonReady(true); //habilita el presionado del boton    
+        config->shouldStartDispense = false;
         config->waitingForButton = true;
+        config->notifVasoNoDevueltoEnviada = false;
+        config->notifBotonNoPresionadoEnviada=false;
+        config->notifExpendioNoRealizadoLimiteTiempoEnviada=false;
+        config->notifVasoNoRetiradoEnviada=false;
         saveAlarms(); //guardar el cambio 
-      } 
-      else {
-        blockOrReschedule(config);
-        saveAlarms(); //guardar el cambio 
-        Log.Debug("VASO no DEVUELTO, enviando notificacion\n"); //TODO que mas se hace? se sigue como si nada?
-        sendNotification(NOTIF_VASO_NO_DEVUELTO, config->plateID, config->pillName, getTimeString(nextDispenseDateTime(config)), config->stock); 
+      } else {
+        if (sec > VASO_THRESHOLD && !config->notifVasoNoDevueltoEnviada) {
+          Log.Debug("VASO no DEVUELTO, enviando notificacion\n"); //TODO que mas se hace? se sigue como si nada?
+          sendNotification(NOTIF_VASO_NO_DEVUELTO, config->plateID, config->pillName, getTimeString(nextDispenseDateTime(config)), config->stock); 
+          config->notifVasoNoDevueltoEnviada = true;
+    
+          if (config->block) {
+            blockPlate(config);
+          }
+
+          saveAlarms(); //guardar el cambio 
+        }
       }
+ 
     }
-    //Se considera BUTTON_THRESHOLD * 2 como el umbral para el envio de notificacion si no presiona boton
-    if (sec > (BUTTON_THRESHOLD * 2) && config->waitingForButton == true) {
-       config->waitingForButton = false;
-       config->block = true;
-       setButtonReady(false); // se paso el tiempo de espera de presionado del boton
-       saveAlarms();
+
+    //Se considera BUTTON_THRESHOLD como el umbral para el envio de notificacion si no presiona boton
+    if (sec > vasoInPlaceSec[i] + BUTTON_THRESHOLD && config->waitingForButton && !config->notifBotonNoPresionadoEnviada) {
        Log.Debug("Boton no presionado, enviando notificacion\n"); 
        sendNotification(NOTIF_BOTON_NO_PRESIONADO, config->plateID, config->pillName, getTimeString(nextDispenseDateTime(config)), config->stock);
+       config->notifBotonNoPresionadoEnviada=true;
+       
+       if (config->block) {
+        blockPlate(config);
+       }      
+       
+       saveAlarms();
     }
 
-    if (sec > NO_DISPENSE_THRESHOLD && config->movePlate == true) {
-       config->movePlate = false;
-       blockOrReschedule(config);
-       saveAlarms();
+    if (sec > buttonPressedSec[i] + NO_DISPENSE_THRESHOLD && config->movePlate && !config->notifExpendioNoRealizadoLimiteTiempoEnviada) {
        Log.Debug("Tiempo de dispendio excedido, enviando notificacion\n"); 
        sendNotification(NOTIF_EXPENDIO_NO_REALIZADO_LIMITE_TIEMPO, config->plateID, config->pillName, getTimeString(nextDispenseDateTime(config)), config->stock);
+       config->notifExpendioNoRealizadoLimiteTiempoEnviada = true;
+
+       if (config->block){
+        blockPlate(config);
+       }
+       
+       saveAlarms();
     }
 
-     //Accion en caso de no retiro del vaso. No haria mas q enviar la notificacion, el dispendio ya esta hecho (no tiene sentido bloquear o reprogramar
-    if (millis() - previousMillisVaso > VASO_THRESHOLD * 1000 && config->waitingForVaso == true){
-      Log.Debug("VASO no retirado, enviando notificacion\n"); 
+    //Accion en caso de no retiro del vaso. No haria mas q enviar la notificacion, el dispendio ya esta hecho (no tiene sentido bloquear o reprogramar
+    if (sec > pillThroughTubeSec[i] + VASO_THRESHOLD && config->waitingForVaso && !config->notifVasoNoRetiradoEnviada) {
+    //if (millis() - previousMillisVaso > VASO_THRESHOLD * 1000 && config->waitingForVaso == true){
+      Log.Debug("VASO no retirado, enviando notificacion\n");
       sendNotification(NOTIF_VASO_NO_RETIRADO, config->plateID, config->pillName, getTimeString(nextDispenseDateTime(config)), config->stock); 
-      config->waitingForVaso=false;
+      config->notifVasoNoRetiradoEnviada = true;
+
+      if (config->block) {
+        blockPlate(config);
+      }
+
+      saveAlarms();
     }
 
     //TODO revisar logica, se activo esto cuando no se presiono el boton
     //En caseo de apagarse el DAP, verifica si se perdieron dispendios en el medio y en tal caso bloquea
-    if (_nextDispense(config) < (BUTTON_THRESHOLD * -2)){
-      Log.Debug("DAP desconectado, se omitieron dispendios. Bloqueando plato\n"); 
-      config->blocked = true;
-    }
+//    if (_nextDispense(config) < (BUTTON_THRESHOLD * -2)){
+//      Log.Debug("DAP desconectado, se omitieron dispendios. Bloqueando plato\n"); 
+//      config->blocked = true;
+//    }
 
-    if (config->waitingForButton == true) {
+    if (config->shouldStartDispense || config->waitingForButton == true) {
       activarBuzzer();
       activarLED("blue", 50);
     } else {
@@ -394,15 +433,26 @@ bool Planificador::execute(){
 
 }
 
-void Planificador::blockOrReschedule(Alarm* config) {
-  if (config->block == true) {
-      config->blocked = true; // se bloquea
-      Log.Debug("Bloqueando plato, enviando notificacion\n"); 
-      sendNotification(NOTIF_BLOQUEO, config->plateID, config->pillName, getTimeString(nextDispenseDateTime(config)), config->stock); 
-   } else {
-      config->startTime = getTime();
-      config->times = 1; // se reprograma 
-   }
+void Planificador::reschedulePlate(Alarm* config) {
+  config->startTime = getTime();
+  config->times = 1; // se reprograma
+}
+
+void Planificador::blockPlate(Alarm* config) {
+  config->blocked = true;
+
+  setButtonReady(false); // se paso el tiempo de espera de presionado del boton
+  config->waitingForButton = false;
+  config->movePlate = false;
+  config->waitingForVaso = false;
+
+  desactivarLED("red");
+  desactivarLED("green");
+  desactivarLED("blue");
+  desactivarLED("orange");
+  
+  Log.Debug("Bloqueando plato, enviando notificacion\n");
+  sendNotification(NOTIF_BLOQUEO, config->plateID, config->pillName, getTimeString(nextDispenseDateTime(config)), config->stock); 
 }
 
 //Devuelve DateTime para el proximo dispendio de la alarma 'config'
@@ -424,7 +474,8 @@ DateTime Planificador::nextDispenseDateTime(Alarm* config){
 
 //Devuelve el tiempo en segundos ABSOLUTOS para el proximo dispendio de la alarma 'config'
 long Planificador::nextDispense(Alarm* config) {
-  return abs(_nextDispense(config));
+  long nextDispense = _nextDispense(config);
+  return abs(nextDispense);
 }
 
 //Devuelve el tiempo en segundos para el proximo dispendio de la alarma 'config'
@@ -449,16 +500,9 @@ bool Planificador::alarmDispensed(Alarm *config) {
 
 }
 
-void Planificador::checkCriticalStock() {
-  for (int i = 0; i < this->configDataList.Count(); i++)
-  {
-    Alarm* config = &this->configDataList[i];
+bool Planificador::checkCriticalStock(Alarm *config) {
 
-    if (config->stock == config->criticalStock){
-      Log.Debug("Alarma %d supero tiene stock critico de %d\n", config->plateID, config->criticalStock);
-      sendNotification(NOTIF_STOCK_CRITICO, config->plateID, config->pillName, getTimeString(nextDispenseDateTime(config)), config->stock);
-    }
-  }
+   return (config->stock <= config->criticalStock);
 }
 
 bool Planificador::isVasoInPlace() {
@@ -469,7 +513,7 @@ bool Planificador::isVasoInPlace() {
 
   value = analogRead(PIN_VASO_PHOTO);
   
-  Log.Debug("VasoInPlace: %d\n", value);
+  //Log.Debug("VasoInPlace: %d\n", value);
   
   if (value < 80)
     return false;
