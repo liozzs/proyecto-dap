@@ -10,6 +10,7 @@ Planificador *planif;
 //Manejo de la frecuencia de chequeo del tiempo de dispendio. Esto permite no interferir con la frecuencia de los motores.
 unsigned long previousMillis = 0;  
 unsigned long previousMillisWIFI = 0;  
+unsigned long previousMillisNOTIF = 0; 
  
 void setup() {
   Serial.begin(115200);  //Monitor Serial
@@ -48,6 +49,12 @@ void loop() {
 
   //LED
   planif->processLED();
+
+  //NOTIFICACIONES
+  if (currentMillis - previousMillisNOTIF >= LOOP_DELAY_NOTIFICATIONS) {
+    planif->processNotifications();
+    previousMillisNOTIF = currentMillis;
+  }
 
   //Refrescar display
   refresh_display();

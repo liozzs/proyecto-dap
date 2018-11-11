@@ -29,6 +29,7 @@
 //ALARMA
 const int UMBRAL_ALARMA_SEG = 1; //umbral para determinar si la hora actual coincide con alguna alarma
 
+const int MAX_NOTIF_ARRAY = 6;
 
 struct Alarm {
   byte plateID;
@@ -52,6 +53,7 @@ struct Alarm {
   bool waitingForVaso = false; // si tiene que retirar el vaso
   bool movePlate = false; // si tiene que mover el plato
   char pillName[10];
+  DateTime nextDispenseDateTime; //fecha de proximo dispendio
   bool complete = false;
   byte valid; //data valida
 
@@ -63,6 +65,7 @@ class Planificador{
 
    protected:
     List<Alarm> configDataList;
+    String notificationArray[MAX_NOTIF_ARRAY] = {"","","","","",""};
     void setInitTime(time_t initTime);
     
     void loadAlarms();
@@ -72,7 +75,7 @@ class Planificador{
     int plateIDToIndex(int plateID);
     long nextDispense(Alarm* config);
     long _nextDispense(Alarm* config);
-    DateTime nextDispenseDateTime(Alarm* config);
+    void setNextDispenseDateTime(Alarm* config);
     void blockPlate(Alarm* config);
     void reschedulePlate(Alarm* config);
     bool alarmDispensed(Alarm* config);
@@ -130,9 +133,9 @@ class Planificador{
     void resetAlarms();
     void processPlates();
     int getIndexForPlateID(int plateID);
-    bool checkCriticalStock(Alarm *config);
+    void checkAndNotifyCriticalStock(Alarm *config);
     void processCommandsWIFI();
-    int sendNotification(int code, int containerID, String pillName, String time, int stock);
+    int sendNotification(int code, Alarm *config);
     int sendPlanificacion(Alarm *config);
     int sendCarga(int containerID, String pillName, int stock);
 
@@ -143,6 +146,9 @@ class Planificador{
 
     //LED
     void processLED();
+
+    //NOTIFICACIONES
+    void processNotifications();
 
 
 };

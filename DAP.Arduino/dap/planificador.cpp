@@ -43,7 +43,7 @@ Planificador::Planificador(){
 };
 
 /*
- * Seteo de carga de pastillas. Si ya existe el plateID, reemplaza la configuracion, de lo contrario agrega una
+ * Seteo de carga de pastillas. Si ya existe el plateIDy nombre de pastilla, reemplaza la configuracion, de lo contrario agrega una
  * nueva configuracion.
  */
 void Planificador::setStock(int stock, int plateID, char* pillName)
@@ -56,8 +56,14 @@ void Planificador::setStock(int stock, int plateID, char* pillName)
   int index = getIndexForPlateID(plateID);
   if (index != -1) {
     config = &configDataList[index];
-    config->stock = config->stock + stock;
-    strcpy( config->pillName, pillName);
+
+    //Incremento o seteo nuevo stock dependiendo del nombre de pastilla
+    if (strcmp (config->pillName, pillName) == 0) {
+      config->stock = config->stock + stock;
+    } else {
+      config->stock = stock;
+      strcpy( config->pillName, pillName);
+    }
     
     Log.Debug("Reemplazo stock para plateID: %d, index: %d", plateID, index);
   } else {
@@ -73,6 +79,11 @@ void Planificador::setStock(int stock, int plateID, char* pillName)
     Log.Debug("Agregado de stock para plateID: %d", plateID);
   }
   sendCarga(plateID, pillName, stock);
+
+  //Enviar notif stock critico si es una recarga
+  if (config->complete) {
+    checkAndNotifyCriticalStock(config);
+  }
   saveAlarms();
 }
 
@@ -119,6 +130,9 @@ void Planificador::setAlarm(DateTime startTime, int interval, int quantity, int 
     //this->storedAlarms = this->storedAlarms +  1;   
     Log.Debug("Se debe configurar la carga de pastilla antes para plateID: %d", plateID);
   }
+
+  setNextDispenseDateTime(config);
+  checkAndNotifyCriticalStock(config);
   saveAlarms();
 }
 
@@ -241,17 +255,10 @@ bool Planificador::execute(){
       continue;
     }
 
-    if (config->stock < config->quantity){
-      Log.Debug("stock (%d) no suficiente para proximo dispendio (%d), enviando notificacion\n", config->stock, config->quantity);
-      sendNotification(NOTIF_EXPENDIO_NO_REALIZADO_NO_PASTILLAS, config->plateID, config->pillName, getTimeString(nextDispenseDateTime(config)), config->stock); 
-      blockPlate(config);
-      continue;
-    }
-    
     long sec = nextDispense(config);
-    
+
     //verificar si existe dispendio pendiente - presionar boton
-    if (config->waitingForButton == true){
+    if (config->waitingForButton){
       Log.Debug("Alarma %d esperando por boton\n", config->plateID);
       if (isButtonPressed()){
         Log.Debug("BOTON PRESIONADO\n");
@@ -260,15 +267,9 @@ bool Planificador::execute(){
         }
         buttonPressedSec[i] = sec;
         config->dispensedTimes++;
-        config->stock--;
         config->waitingForButton = false;
         config->movePlate = true;
 
-        if (checkCriticalStock(config)) {
-          Log.Debug("Alarma %d supero tiene stock critico de %d\n", config->plateID, config->criticalStock);
-          sendNotification(NOTIF_STOCK_CRITICO, config->plateID, config->pillName, getTimeString(nextDispenseDateTime(config)), config->stock);
-        }
-      
         desactivarBuzzer();
         saveAlarms();
         continue;
@@ -278,9 +279,11 @@ bool Planificador::execute(){
     //verificar si ya se hizo el dispendio
     if (alarmDispensed(config) == true && config->movePlate == true) {
        quantity[i]++;
+       config->stock--;
        setSensorDetected(-1);
       
        if (config->quantity == quantity[i]) {
+         checkAndNotifyCriticalStock(config);
          pillThroughTubeSec[i] = sec;
          config->movePlate = false;
          config->waitingForVaso = true;
@@ -316,10 +319,11 @@ bool Planificador::execute(){
         } else {
             config->times++;
         }
-
+        setNextDispenseDateTime(config);
         Log.Debug("VASO retirado\n");
         config->waitingForVaso = false;
         desactivarLED("green");
+        saveAlarms();
       }
     }
     else if (config->waitingForVaso == true && waitingForOtherPlate()) {
@@ -331,6 +335,12 @@ bool Planificador::execute(){
     }
 
     if (config->shouldStartDispense && !config->waitingForButton && !config->movePlate && !config->waitingForVaso) {
+      if (config->stock < config->quantity) {
+        Log.Debug("stock (%d) no suficiente para proximo dispendio (%d), enviando notificacion\n", config->stock, config->quantity);
+        sendNotification(NOTIF_EXPENDIO_NO_REALIZADO_NO_PASTILLAS, config); 
+        blockPlate(config);
+        continue;
+      }
       if (isVasoInPlace()) {
         Log.Debug("Dispendio SI: segundos de diferencia: %l\n", sec);
         vasoInPlaceSec[i] = sec;
@@ -345,7 +355,7 @@ bool Planificador::execute(){
       } else {
         if (sec > VASO_THRESHOLD && !config->notifVasoNoDevueltoEnviada) {
           Log.Debug("VASO no DEVUELTO, enviando notificacion\n"); //TODO que mas se hace? se sigue como si nada?
-          sendNotification(NOTIF_VASO_NO_DEVUELTO, config->plateID, config->pillName, getTimeString(nextDispenseDateTime(config)), config->stock); 
+          sendNotification(NOTIF_VASO_NO_DEVUELTO, config); 
           config->notifVasoNoDevueltoEnviada = true;
     
           if (config->block) {
@@ -361,7 +371,7 @@ bool Planificador::execute(){
     //Se considera BUTTON_THRESHOLD como el umbral para el envio de notificacion si no presiona boton
     if (sec > vasoInPlaceSec[i] + BUTTON_THRESHOLD && config->waitingForButton && !config->notifBotonNoPresionadoEnviada) {
        Log.Debug("Boton no presionado, enviando notificacion\n"); 
-       sendNotification(NOTIF_BOTON_NO_PRESIONADO, config->plateID, config->pillName, getTimeString(nextDispenseDateTime(config)), config->stock);
+       sendNotification(NOTIF_BOTON_NO_PRESIONADO, config);
        config->notifBotonNoPresionadoEnviada=true;
        
        if (config->block) {
@@ -373,7 +383,7 @@ bool Planificador::execute(){
 
     if (sec > buttonPressedSec[i] + NO_DISPENSE_THRESHOLD && config->movePlate && !config->notifExpendioNoRealizadoLimiteTiempoEnviada) {
        Log.Debug("Tiempo de dispendio excedido, enviando notificacion\n"); 
-       sendNotification(NOTIF_EXPENDIO_NO_REALIZADO_LIMITE_TIEMPO, config->plateID, config->pillName, getTimeString(nextDispenseDateTime(config)), config->stock);
+       sendNotification(NOTIF_EXPENDIO_NO_REALIZADO_LIMITE_TIEMPO, config);
        config->notifExpendioNoRealizadoLimiteTiempoEnviada = true;
 
        if (config->block){
@@ -387,7 +397,7 @@ bool Planificador::execute(){
     if (sec > pillThroughTubeSec[i] + VASO_THRESHOLD && config->waitingForVaso && !config->notifVasoNoRetiradoEnviada) {
     //if (millis() - previousMillisVaso > VASO_THRESHOLD * 1000 && config->waitingForVaso == true){
       Log.Debug("VASO no retirado, enviando notificacion\n");
-      sendNotification(NOTIF_VASO_NO_RETIRADO, config->plateID, config->pillName, getTimeString(nextDispenseDateTime(config)), config->stock); 
+      sendNotification(NOTIF_VASO_NO_RETIRADO, config); 
       config->notifVasoNoRetiradoEnviada = true;
 
       if (config->block) {
@@ -404,7 +414,7 @@ bool Planificador::execute(){
 //      config->blocked = true;
 //    }
 
-    if (config->shouldStartDispense || config->waitingForButton == true) {
+    if (config->shouldStartDispense || config->waitingForButton) {
       activarBuzzer();
       activarLED("blue", 50);
     } else {
@@ -451,24 +461,23 @@ void Planificador::blockPlate(Alarm* config) {
   desactivarLED("orange");
   
   Log.Debug("Bloqueando plato, enviando notificacion\n");
-  sendNotification(NOTIF_BLOQUEO, config->plateID, config->pillName, getTimeString(nextDispenseDateTime(config)), config->stock); 
+  sendNotification(NOTIF_BLOQUEO, config); 
 }
 
-//Devuelve DateTime para el proximo dispendio de la alarma 'config'
-DateTime Planificador::nextDispenseDateTime(Alarm* config){
+//Guarda el date time para el proximo dispendio de la alarma 'config'
+void Planificador::setNextDispenseDateTime(Alarm* config){
   DateTime nextDispense;
   
   // Si es periodicidad diaria o semanal tiene un intervalo de toma
   if (config->periodicity == PERIODICIDAD_DIARIA || config->periodicity == PERIODICIDAD_PERSONALIZADA ) {
-    nextDispense = config->startTime + TimeSpan(config->times * config->interval); 
+    config->nextDispenseDateTime = config->startTime + TimeSpan(config->times * config->interval); 
   // Si es semanal, existe un solo horario de toma
   } else if (config->periodicity == PERIODICIDAD_SEMANAL) {
-    nextDispense = config->startTime + TimeSpan(config->times * 1,0,0,0); // intervalo seria 1 dia
+    config->nextDispenseDateTime = config->startTime + TimeSpan(config->times * 1,0,0,0); // intervalo seria 1 dia
   } else {
     Log.Debug("Configuracion de alarma incorrecta");
   }
-  
-  return nextDispense;
+
 }
 
 //Devuelve el tiempo en segundos ABSOLUTOS para el proximo dispendio de la alarma 'config'
@@ -481,7 +490,7 @@ long Planificador::nextDispense(Alarm* config) {
 long Planificador::_nextDispense(Alarm* config) {
   DateTime nextDispense;
 
-  nextDispense = nextDispenseDateTime(config);
+  nextDispense = config->nextDispenseDateTime;
   TimeSpan diff = nextDispense - this->getTime();
 
   Log.Debug("Proximo dispendio: %s\n", string2char(getTimeString(nextDispense)));
@@ -499,9 +508,12 @@ bool Planificador::alarmDispensed(Alarm *config) {
 
 }
 
-bool Planificador::checkCriticalStock(Alarm *config) {
-
-   return (config->stock <= config->criticalStock);
+void Planificador::checkAndNotifyCriticalStock(Alarm *config) {
+  Log.Debug("CHEQUEANDO STOCK CRITICO %d, %d", config->stock, config->criticalStock);
+   if (config->stock <= config->criticalStock) {
+      Log.Debug("Alarma %d supero tiene stock critico de %d\n", config->plateID, config->criticalStock);
+      sendNotification(NOTIF_STOCK_CRITICO, config);
+   }
 }
 
 bool Planificador::isVasoInPlace() {
@@ -570,7 +582,6 @@ void Planificador::initServo(){
 
 
 void Planificador::startPlate(Servo plate, int index) {
-    //Importante: esta configuracion funciona bien si la alimentacion es la del arduino.
     unsigned long currentMillis = millis();
     
     if (currentMillis - previousMillisMotor[index] >= 100) {
@@ -581,17 +592,12 @@ void Planificador::startPlate(Servo plate, int index) {
         plate.writeMicroseconds(1300);
         previousMillisMotor[index] = currentMillis;
     }
-      
-    //plate.write(180);
-    //delay(20);
-    //plate.writeMicroseconds(1500);
-    //delay(90); 
+
 }
 
 void Planificador::stopPlate(Servo plate) {
   plate.write(90);                
 }
-
 
 //Devuelve unix time en horario local
 time_t Planificador::getLocalTime(time_t utc){
@@ -693,17 +699,39 @@ void Planificador::processCommandsWIFI()
  }
 }
 
-int Planificador::sendNotification(int code, int containerID, String pillName, String time, int stock){
+int Planificador::sendNotification(int code, Alarm* config){
     JsonObject& root = jsonBuffer.createObject();
     root["notification"] = "";
     root["DireccionMAC"] = "60:01:94:4A:8C:A4";
     root["Codigo"] = code;
-    root["Receptaculo"] = containerID;
-    root["Pastilla"] = pillName;
-    root["Horario"] = time;
-    root["CantidadRestante"] = stock;
+    root["Receptaculo"] = config->plateID;
+    root["Pastilla"] = config->pillName;
+    root["Horario"] = getTimeString(config->nextDispenseDateTime);
+    root["CantidadRestante"] = config->stock;
 
-    root.printTo(Serial1);
+    String output;
+    root.printTo(output);
+
+    for (int i = 0; i < MAX_NOTIF_ARRAY; i++) {
+       if (notificationArray[i] == "") {
+          notificationArray[i] = output;
+          return;
+       }
+    }
+
+}
+
+void Planificador::processNotifications(){
+  Log.Debug("Procesando Notificaciones\n"); 
+
+  for (int i = 0; i < MAX_NOTIF_ARRAY; i++) {
+    if (notificationArray[i] != "") {
+      Log.Debug("Enviando NOTIF: %s\n", string2char(this->notificationArray[i]) );
+      Serial1.println(notificationArray[i]);
+      notificationArray[i] = "";
+      return;
+    }
+  }
 
 }
 
@@ -723,6 +751,7 @@ int Planificador::sendPlanificacion(Alarm *config){
     root["Bloqueo"] = String(config->block);
     root["Cantidad"] = String(config->quantity);
 
+    Log.Debug("Enviando NOTIF plan\n");
     root.printTo(Serial1);
 }
 
@@ -734,6 +763,7 @@ int Planificador::sendCarga(int containerID, String pillName, int stock){
     root["Pastilla"] = pillName;
     root["Stock"] = String(stock);
 
+    Log.Debug("Enviando NOTIF carga\n");
     root.printTo(Serial1);
 
 }
