@@ -65,7 +65,7 @@ namespace DAP.Mobile.ViewModels
                         RequestContent = new
                         {
                             startTime = $"{planif.StartDate}{planif.StartTime}",
-                            interval = planif.Interval * 60 * 60,
+                            interval = planif.Interval * 60,
                             quantity = planif.QtyToDispense,
                             criticalStock = planif.CriticalStock,
                             periodicity = Convert.ToInt32(planif.Type),

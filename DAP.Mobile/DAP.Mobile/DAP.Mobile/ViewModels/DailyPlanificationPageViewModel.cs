@@ -30,10 +30,12 @@ namespace DAP.Mobile.ViewModels
         {
             DailyIntervals = new List<DailyInterval>()
             {
-                new DailyInterval { Id = 6, Description = "Cada 6 hs" },
-                new DailyInterval { Id = 8, Description = "Cada 8 hs" },
-                new DailyInterval { Id = 12, Description = "Cada 12 hs" },
-                new DailyInterval { Id = 24, Description = "Cada 24 hs" }
+                new DailyInterval { Id = 6, Description = "Cada 6 hs", Minutes = 6 * 60 },
+                new DailyInterval { Id = 8, Description = "Cada 8 hs", Minutes = 8 * 60 },
+                new DailyInterval { Id = 12, Description = "Cada 12 hs", Minutes = 12 * 60 },
+                new DailyInterval { Id = 24, Description = "Cada 24 hs", Minutes = 24 * 60 },
+                new DailyInterval { Id = 1, Description = "Cada 1 min", Minutes = 1 },
+                new DailyInterval { Id = 2, Description = "Cada 2 min", Minutes = 2 }
             };
             DailyPeriodicity = DailyIntervals[0];
 
@@ -43,7 +45,7 @@ namespace DAP.Mobile.ViewModels
 
         private Task Next()
         {
-            PlanificationBuilder.SetInterval(StartTime, DailyPeriodicity.Id, null);
+            PlanificationBuilder.SetInterval(StartTime, DailyPeriodicity.Minutes, null);
             return NavigationService.NavigateAsync("PlanificationActionPage", new NavigationParameters() { { "Planification", planification } });
         }
 
