@@ -87,15 +87,22 @@ namespace DAP.Mobile.ViewModels
 
                     if (success)
                     {
-                        ApiClientOption option = new ApiClientOption
+                        try
                         {
-                            RequestType = ApiClientRequestTypes.Post,
-                            Uri = "api/usuarios/dispensers",
-                            Service = ApiClientServices.Api,
-                            RequestContent = new { DireccionMAC = Helper.GetApplicationValue<string>("ArduinoMAC"), Nombre = Helper.GetApplicationValue<string>("ArduinoMAC") }
-                        };
+                            ApiClientOption option = new ApiClientOption
+                            {
+                                RequestType = ApiClientRequestTypes.Post,
+                                Uri = "api/usuarios/dispensers",
+                                Service = ApiClientServices.Api,
+                                RequestContent = new { DireccionMAC = Helper.GetApplicationValue<string>("ArduinoMAC"), Nombre = Helper.GetApplicationValue<string>("ArduinoMAC") }
+                            };
 
-                        await apiClient.InvokeDataServiceAsync(option);
+                            await apiClient.InvokeDataServiceAsync(option);
+                        }
+                        catch (Exception ex )
+                        {
+                            //handle exception
+                        }
 
                         await dialogService.DisplayAlertAsync("Configuración WiFi", "Se configuró correctamente.", "Aceptar");
                     }

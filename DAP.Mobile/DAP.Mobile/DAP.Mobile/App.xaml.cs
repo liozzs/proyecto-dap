@@ -42,7 +42,6 @@ namespace DAP.Mobile
         protected override void OnInitialized()
         {
             InitializeComponent();
-            Helper.SetApplicationValue("ArduinoMAC", $"60:01:94:4A:8C:A4");
 
             if (Helper.GetApplicationValue<bool>("logged"))
             {
