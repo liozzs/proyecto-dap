@@ -28,24 +28,11 @@ int reqCount = 0;                // number of requests received
 char * host = "18.219.97.48";
 uint16_t port = 50065;
 
-//CAMBIAR A TRUE 
-bool USE_SMART_CONFIG = true;
 int MAX_RETRIES = 3;
 
-void setup() {
-  Serial.begin(115200);
-  delay(5000);
 
-  WiFi.setAutoConnect(true);
-
-if (USE_SMART_CONFIG) {
-  //Smart config
-  int connRes = WiFi.waitForConnectResult();
-  if (connRes == WL_CONNECTED){
-    Serial.println("Auto connected");
-  }
-  else {
-    Serial.println("Smart config");
+void initSmartConfig(){
+  Serial.println("Smart config");
   /* Set ESP32 to WiFi Station mode */
     WiFi.mode(WIFI_STA);
     /* start SmartConfig */
@@ -67,41 +54,32 @@ if (USE_SMART_CONFIG) {
     }
     Serial.println("");
     Serial.println("SmartConfig done.");
-  
-    /* Wait for WiFi to connect to AP */
-    Serial.println("Waiting for WiFi");
-    while (WiFi.status() != WL_CONNECTED) {
+}
+
+void setup() {
+  Serial.begin(115200);
+  delay(5000);
+
+  WiFi.setAutoConnect(true);
+
+  //Smart config
+  int connRes = WiFi.waitForConnectResult();
+  if (connRes == WL_CONNECTED){
+    Serial.println("Auto connected");
+  }
+  else {
+    while (connRes != WL_CONNECTED) {
+      WiFi.stopSmartConfig();
       delay(500);
-      Serial.print(".");
+      initSmartConfig();
+      connRes = WiFi.waitForConnectResult();
     }
+
     Serial.println("WiFi Connected.");
     Serial.print("IP Address: ");
     Serial.println(WiFi.localIP());
   }
-} 
-else {
-  char ssid[] = "TeleCentro-8b3c";           
-  char pass[] = "lionel13";        
-  int status = WL_IDLE_STATUS;  
- 
-  WiFi.begin(ssid, pass);
-  int retries = 0;
-  while (WiFi.status() != WL_CONNECTED) {
-    if (retries == MAX_RETRIES){
-      JsonObject& root = jsonBuffer.createObject();
-      root["WIFI_ERROR"] = "could not connect";
-      root.printTo(Serial);
-      retries = 0;
-    }
-    delay(500);
-    
-    retries++;
-  }
 
-  JsonObject& root = jsonBuffer.createObject();
-  root["WIFI_OK"] = String(WiFi.localIP());
-  root.printTo(Serial);
-}
   
   // start the web server on port 80
   server.on("/", handlePlan);               // Call the 'handleRoot' function when a client requests URI "/"
@@ -114,6 +92,7 @@ else {
   server.on("/Umbrales", handleUmbrales);  //puede ser: UmbralNoDispendio, UmbralRetiroVaso, UmbralBoton. En segundos
 
   server.on("/Time", handleTime);
+  server.on("/Debug", handleDebug);
   
   server.onNotFound(handleNotFound);        // When a client requests an unknown URI (i.e. something other than "/"), call function "handleNotFound"
   server.begin();
@@ -124,16 +103,15 @@ void loop() {
   unsigned long currentMillis = millis();
   
   int retries = 0;
-  while (WiFi.status() != WL_CONNECTED) {
-    if (retries == MAX_RETRIES){
-      JsonObject& root = jsonBuffer.createObject();
-      root["WIFI_ERROR"] = "could not connect";
-      root.printTo(Serial);
-      retries = 0;
-      WiFi.beginSmartConfig();
+
+  if (WiFi.status() != WL_CONNECTED) {
+    int connRes = WiFi.waitForConnectResult();
+    while (connRes != WL_CONNECTED) {
+        WiFi.stopSmartConfig();
+        delay(500);
+        initSmartConfig();
+        connRes = WiFi.waitForConnectResult();
     }
-    delay(500);
-    retries++;
   }
 
   if (currentMillis - previousMillisWIFI >= 10000) {
@@ -304,6 +282,14 @@ void handleNotFound(){
 void handleTime(){
   StaticJsonBuffer<350> newBuffer;
   JsonObject& root = newBuffer.parseObject(server.arg("plain"));
+  root.printTo(Serial);
+  server.send(200, "text/plain", "OK");
+}
+
+void handleDebug(){
+  StaticJsonBuffer<350> newBuffer;
+  JsonObject& root = newBuffer.parseObject(server.arg("plain"));
+  root["debug"] = true;
   root.printTo(Serial);
   server.send(200, "text/plain", "OK");
 }

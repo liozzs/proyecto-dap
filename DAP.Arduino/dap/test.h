@@ -159,17 +159,13 @@ String testGetAlarm() {
 }
 
 void testClearEEPROM() {
-  for (int i = 0 ; i < EEPROM.length() ; i++) {
-    EEPROM.write(i, 0);
-  }
-  planif->storedAlarms = 0;
-  planif->resetAlarms();
+  planif->clearEEPROM();
 }
 
 void testSetDispenseTrue() {
   int plateID = readNumber();
 
-  setSensorDetected(planif->getIndexForPlateID(plateID));
+  setSensorDetected(0, planif->getIndexForPlateID(plateID));
  
 }
 

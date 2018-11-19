@@ -3,7 +3,7 @@
 //variables globales necesarias para interrupciones
 bool buttonReady = false; 
 bool buttonPressed = false; 
-int sensorDetected = -1;
+int sensorDetected[2] = {-1, -1};
 
 /*
  * Uso de interrupciones por grupo (50-53), ya que no quedan pines libres de interrupcion (rtc, wifi y sensores)
@@ -31,14 +31,14 @@ ISR (PCINT0_vect) // handle pin change interrupt for D0 to D7 here
       if (i == 0) {
         if (digitalRead(PIN_DISPENSE_SENSOR[i]) == 0){
           //Serial.println( PIN_DISPENSE_SENSOR[i]  );
-          sensorDetected = i;
+          sensorDetected[i] = i;
          
         }
       }
       else if (i == 1){
         if (digitalRead(PIN_DISPENSE_SENSOR[i]) == 1){
           //Serial.println( PIN_DISPENSE_SENSOR[i]  );
-          sensorDetected = i;
+          sensorDetected[i] = i;
         }
       }
     }
@@ -58,10 +58,10 @@ void setButtonPressed(bool state){
 bool isButtonPressed(){
   return buttonPressed;
 }
-void setSensorDetected(int value){
-  sensorDetected = value;
+void setSensorDetected(int i, int value){
+  sensorDetected[i] = value;
 }
-int  getSensorDetected() {
-  return sensorDetected;
+int  getSensorDetected(int i) {
+  return sensorDetected[i];
 }
 

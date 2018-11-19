@@ -11,7 +11,7 @@ void setButtonReady(bool state);
 bool isButtonReady();
 void setButtonPressed(bool state);
 bool isButtonPressed();
-void setSensorDetected(int value);
-int  getSensorDetected(); //retorna el pin detectado
+void setSensorDetected(int i, int value);
+int  getSensorDetected(int i); //retorna el pin detectado
 
 #endif

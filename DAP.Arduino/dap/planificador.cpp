@@ -280,7 +280,7 @@ bool Planificador::execute(){
     if (alarmDispensed(config) == true && config->movePlate == true) {
        quantity[i]++;
        config->stock--;
-       setSensorDetected(-1);
+       setSensorDetected(i, -1);
       
        if (config->quantity == quantity[i]) {
          checkAndNotifyCriticalStock(config);
@@ -502,9 +502,10 @@ long Planificador::_nextDispense(Alarm* config) {
 
 
 bool Planificador::alarmDispensed(Alarm *config) {
-  if (getSensorDetected() == -1)
+  int i = plateIDToIndex(config->plateID);
+  if (getSensorDetected(i) == -1)
     return false;
-  return plateIDToIndex(config->plateID) == getSensorDetected();  
+  return i == getSensorDetected(i);  
 
 }
 
@@ -559,7 +560,7 @@ void Planificador::processPlates(){
     }
       
 
-    else if (getSensorDetected() == -1)
+    else if (getSensorDetected(plateIDToIndex(config->plateID)) == -1)
       stopPlate(plates[plateIDToIndex(config->plateID)]);
   }
 
@@ -599,6 +600,11 @@ void Planificador::stopPlate(Servo plate) {
   plate.write(90);                
 }
 
+void Planificador::stopAllPlates(){
+   for (int i=0; i< MAX_SUPPORTED_ALARMS; i++) 
+     plates[i].write(90);   
+}
+
 //Devuelve unix time en horario local
 time_t Planificador::getLocalTime(time_t utc){
   TimeChangeRule ART = { "ART", First, Sun, Jan, 0, -180 }; 
@@ -628,7 +634,8 @@ void Planificador::processCommandsWIFI()
       desactivarLED("red");
       activarLED("green", 2);
       Log.Debug("WIFI: time_t! %l\n", root["time"].as<time_t>());
-      this->setInitTime(root["time"].as<time_t>());
+      if (root["time"] != 0)
+        this->setInitTime(root["time"].as<time_t>());
     } 
 
     if (root.containsKey("ip")){
@@ -695,6 +702,13 @@ void Planificador::processCommandsWIFI()
     }
     if (root.containsKey("WIFI_OK")){
       WIFI_OK = true;
+    }
+
+    //DEBUG
+    if (root.containsKey("debug")){
+      if (root.containsKey("clearEEPROM")){
+        clearEEPROM();
+      }
     }
  }
 }
@@ -895,6 +909,18 @@ void Planificador::desactivarLED(String color){
 
 }
 
+void Planificador::clearEEPROM(){
+  desactivarLED("red");
+  desactivarLED("green");
+  desactivarLED("blue");
+  desactivarLED("orange");
+  stopAllPlates();
+  for (int i = 0 ; i < EEPROM.length() ; i++) {
+    EEPROM.write(i, 0);
+  }
+  storedAlarms = 0;
+  resetAlarms();
+}
 
 
 

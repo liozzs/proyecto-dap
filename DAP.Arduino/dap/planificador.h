@@ -143,12 +143,16 @@ class Planificador{
     void initServo();
     void startPlate(Servo plate, int index);
     void stopPlate(Servo plate);
+    void stopAllPlates();
 
     //LED
     void processLED();
 
     //NOTIFICACIONES
     void processNotifications();
+
+    //DEBUG
+    void clearEEPROM();
 
 
 };
