@@ -67,7 +67,7 @@ namespace DAP.Mobile.Services
                 Id = _id,
                 Type = Convert.ToInt32(_planificationType),
                 StartDate = _startDate.ToString("yyyyMMdd"),
-                StartTime = _startTime.ToString("HHmmss"),
+                StartTime = _startTime.ToString("HHmm00"),
                 PillId = _pill.Id,
                 PillName = _pill.Name,
                 Container = _pill.Container,

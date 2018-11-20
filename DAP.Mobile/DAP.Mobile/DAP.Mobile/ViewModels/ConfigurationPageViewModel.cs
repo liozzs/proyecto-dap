@@ -94,7 +94,7 @@ namespace DAP.Mobile.ViewModels
                                 RequestType = ApiClientRequestTypes.Post,
                                 Uri = "api/usuarios/dispensers",
                                 Service = ApiClientServices.Api,
-                                RequestContent = new { DireccionMAC = Helper.GetApplicationValue<string>("ArduinoMAC"), Nombre = Helper.GetApplicationValue<string>("ArduinoMAC") }
+                                RequestContent = new { DireccionMAC = Helper.GetApplicationValue<string>("ArduinoMAC"), Nombre = "EL DAP!" }
                             };
 
                             await apiClient.InvokeDataServiceAsync(option);
