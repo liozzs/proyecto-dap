@@ -92,6 +92,7 @@ class Planificador{
     long pillThroughTubeSec[MAX_SUPPORTED_ALARMS] = {0, 0};
     String macAddress;
     bool WIFI_OK = false;
+    char bufferDateTime[32]; //make this big enough to hold the resulting string
 
     //LEDs
     int ledValue = 0;

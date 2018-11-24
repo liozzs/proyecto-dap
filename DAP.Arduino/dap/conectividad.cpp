@@ -21,6 +21,7 @@ String readFromWIFI(){
   }
   //Serial.println("readFromWiFI: " + String(msg_in_wifi));
   // Serial.println("LENGTH:" + String(msg_in_wifi.length()));
+   msg_in_wifi.replace(".", "");
    if (msg_in_wifi != "") {
   
       if (msg_in_wifi.startsWith("debug:", 0)) {

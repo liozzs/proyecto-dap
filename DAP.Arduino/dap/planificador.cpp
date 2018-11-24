@@ -208,11 +208,13 @@ DateTime Planificador::getTime(){
   return rtc.now();
 }
 
-String Planificador::getTimeString(DateTime t){
-  String str = String(t.year()) + '/' + t.month() + '/' + t.day() + ' ';
-  str = str + t.hour() + ':' + t.minute() + ':' + t.second() ;
+String Planificador::getTimeString(DateTime t){  
+  //String str = String(t.year()) + '/' + t.month() + '/' + t.day() + ' ';
+  //str = str + t.hour() + ':' + t.minute() + ':' + t.second() ;
 
-  return str;
+  snprintf(bufferDateTime, sizeof(bufferDateTime), "%4d/%02d/%02d %02d:%02d:%02d", t.day(), t.month(), t.year(), t.hour(), t.minute(), t.second());
+
+  return bufferDateTime;
 }
 
 String Planificador::getAlarmString(Alarm config){
@@ -389,7 +391,7 @@ bool Planificador::execute(){
        if (config->block){
         blockPlate(config);
        }
-       
+       desactivarLED("blue");
        saveAlarms();
     }
 
@@ -631,8 +633,6 @@ void Planificador::processCommandsWIFI()
     }
 
     if (root.containsKey("time")){
-      desactivarLED("red");
-      activarLED("green", 2);
       Log.Debug("WIFI: time_t! %l\n", root["time"].as<time_t>());
       if (root["time"] != 0)
         this->setInitTime(root["time"].as<time_t>());
@@ -698,9 +698,14 @@ void Planificador::processCommandsWIFI()
 
     if (root.containsKey("WIFI_ERROR")){
       activarLED("red", 2);
+      WIFI_OK = false;
       Log.Debug("WIFI: Error connecting !\n");
     }
     if (root.containsKey("WIFI_OK")){
+      if (!WIFI_OK) {
+        desactivarLED("red");
+        activarLED("green", 2);
+      }
       WIFI_OK = true;
     }
 
